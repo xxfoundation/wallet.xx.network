@@ -1,17 +1,18 @@
-// Copyright 2017-2021 @polkadot/app-staking authors & contributors
+// Copyright 2017-2022 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type BN from 'bn.js';
 import type { DeriveHasIdentity, DeriveStakingOverview } from '@polkadot/api-derive/types';
 import type { StakerState } from '@polkadot/react-hooks/types';
+import type { u32 } from '@polkadot/types-codec';
+import type { BN } from '@polkadot/util';
 import type { NominatedBy, SortedTargets, TargetSortBy, ValidatorInfo } from '../types';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styled from 'styled-components';
 
-import { Button, Icon, Table, Toggle } from '@polkadot/react-components';
-import { useApi, useAvailableSlashes, useBlocksPerDays, useSavedFlags } from '@polkadot/react-hooks';
-import { BN_HUNDRED } from '@polkadot/util';
+import { Button, Icon, PaginationAdvanced, Table, Toggle } from '@polkadot/react-components';
+import { useApi, useAvailableSlashes, useBlocksPerDays, usePagination, useSavedFlags } from '@polkadot/react-hooks';
+import { BN_HUNDRED, BN_ZERO } from '@polkadot/util';
 
 import { MAX_NOMINATIONS } from '../constants';
 import ElectionBanner from '../ElectionBanner';
@@ -21,9 +22,11 @@ import { useTranslation } from '../translate';
 import useIdentities from '../useIdentities';
 import useNominations from '../useNominations';
 import Nominate from './Nominate';
+import StashFilters from './StashFilters';
 import Summary from './Summary';
 import useOwnNominators from './useOwnNominators';
 import Validator from './Validator';
+import useElectionPrediction from '../useElectionPrediction';
 
 interface Props {
   className?: string;
@@ -32,7 +35,7 @@ interface Props {
   stakingOverview?: DeriveStakingOverview;
   targets: SortedTargets;
   toggleFavorite: (address: string) => void;
-  toggleLedger: () => void;
+  ownNominators: StakerState[];
 }
 
 interface SavedFlags {
@@ -42,6 +45,7 @@ interface SavedFlags {
   withPayout: boolean;
   withoutComm: boolean;
   withoutOver: boolean;
+  withAccountNominations: boolean;
 }
 
 interface Flags extends SavedFlags {
@@ -56,13 +60,14 @@ interface SortState {
 }
 
 const CLASSES: Record<string, string> = {
-  rankBondOther: 'media--1600',
-  rankBondOwn: 'media--900'
+  rankBondOther: 'is-tertiary',
+  rankBondOwn: 'highlight--color',
+  rankTeamMultiplier: 'is-secondary'
 };
 const MAX_CAP_PERCENT = 100; // 75 if only using numNominators
 const MAX_COMM_PERCENT = 20; // -1 for median
 const MAX_DAYS = 7;
-const SORT_KEYS = ['rankBondTotal', 'rankBondOwn', 'rankBondOther', 'rankOverall'];
+const SORT_KEYS = ['rankComm', 'rankTeamMultiplier', 'rankBondOwn', 'rankBondOther', 'rankBondTotal', 'rankPredictedStake', 'rankOverall'];
 
 function overlapsDisplay (displays: (string[])[], test: string[]): boolean {
   return displays.some((d) =>
@@ -74,11 +79,11 @@ function overlapsDisplay (displays: (string[])[], test: string[]): boolean {
   );
 }
 
-function applyFilter (validators: ValidatorInfo[], medianComm: number, allIdentity: Record<string, DeriveHasIdentity>, { daysPayout, isBabe, maxPaid, withElected, withGroup, withIdentity, withPayout, withoutComm, withoutOver }: Flags, nominatedBy?: Record<string, NominatedBy[]>): ValidatorInfo[] {
+function applyFilter (validators: ValidatorInfo[], medianComm: number, allIdentity: Record<string, DeriveHasIdentity>, { daysPayout, isBabe, maxPaid, withAccountNominations, withElected, withGroup, withIdentity, withPayout, withoutComm, withoutOver }: Flags, nominatedBy?: Record<string, NominatedBy[]>, stashIds?: string[]): ValidatorInfo[] {
   const displays: (string[])[] = [];
   const parentIds: string[] = [];
 
-  return validators.filter(({ accountId, commissionPer, isElected, isFavorite, lastPayout, numNominators }): boolean => {
+  return validators.filter(({ accountId, commissionPer, isElected, isFavorite, lastPayout, nominatingAccounts, numNominators }): boolean => {
     if (isFavorite) {
       return true;
     }
@@ -88,6 +93,8 @@ function applyFilter (validators: ValidatorInfo[], medianComm: number, allIdenti
     const nomCount = numNominators || nominatedBy?.[stashId]?.length || 0;
 
     if (
+      (!withAccountNominations || nominatingAccounts.length > 0) &&
+      (!withAccountNominations || !stashIds || stashIds.length === 0 || stashIds.some((id) => nominatingAccounts?.includes(id))) &&
       (!withElected || isElected) &&
       (!withIdentity || !!thisIdentity?.hasIdentity) &&
       (!withPayout || !isBabe || (!!lastPayout && daysPayout.gte(lastPayout))) &&
@@ -139,6 +146,7 @@ function applyFilter (validators: ValidatorInfo[], medianComm: number, allIdenti
 
 function sort (sortBy: TargetSortBy, sortFromMax: boolean, validators: ValidatorInfo[]): ValidatorInfo[] {
   return validators
+    .slice(0)
     .sort((a, b) => sortFromMax
       ? a[sortBy] - b[sortBy]
       : b[sortBy] - a[sortBy]
@@ -176,6 +184,7 @@ function selectProfitable (list: ValidatorInfo[], maxNominations: number): strin
 }
 
 const DEFAULT_FLAGS = {
+  withAccountNominations: false,
   withElected: false,
   withGroup: true,
   withIdentity: false,
@@ -186,9 +195,9 @@ const DEFAULT_FLAGS = {
 
 const DEFAULT_NAME = { isQueryFiltered: false, nameFilter: '' };
 
-const DEFAULT_SORT: SortState = { sortBy: 'rankOverall', sortFromMax: true };
+const DEFAULT_SORT: SortState = { sortBy: 'rankNumNominators', sortFromMax: true };
 
-function Targets ({ className = '', isInElection, ownStashes, targets: { avgStaked, inflation: { stakedReturn }, lowStaked, medianComm, minNominated, minNominatorBond, nominators, totalIssuance, totalStaked, validatorIds, validators }, toggleFavorite, toggleLedger }: Props): React.ReactElement<Props> {
+function Targets ({ className = '', isInElection, ownStashes, targets: { electedAvgStaked, inflation: { stakedReturn }, custodyRewardsActive, electedLowStaked, medianComm, minNominated, minNominatorBond, nominators, totalIssuance, totalStaked, validatorIds, validators }, toggleFavorite }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
   const allSlashes = useAvailableSlashes();
@@ -202,11 +211,23 @@ function Targets ({ className = '', isInElection, ownStashes, targets: { avgStak
   const [{ sortBy, sortFromMax }, setSortBy] = useState<SortState>(DEFAULT_SORT);
   const [sorted, setSorted] = useState<ValidatorInfo[] | undefined>();
 
+  const ownStashIds = ownStashes?.map(({ stashId }) => stashId);
+  const [stashFilters, setStashFilters] = useState<string[] | undefined>();
+
+  useEffect(() => {
+    if (toggles.withAccountNominations === false) {
+      setStashFilters([]);
+    }
+  }, [setStashFilters, toggles]);
+
   const labelsRef = useRef({
     rankBondOther: t<string>('other stake'),
     rankBondOwn: t<string>('own stake'),
     rankBondTotal: t<string>('total stake'),
-    rankOverall: t<string>('return')
+    rankPredictedStake: t<string>('predicted stake'),
+    rankComm: t<string>('commission'),
+    rankOverall: t<string>('return'),
+    rankTeamMultiplier: t<string>('team multiplier')
   });
 
   const flags = useMemo(
@@ -222,8 +243,9 @@ function Targets ({ className = '', isInElection, ownStashes, targets: { avgStak
 
   const filtered = useMemo(
     () => allIdentity && validators && nominatedBy &&
-      applyFilter(validators, medianComm, allIdentity, flags, nominatedBy),
-    [allIdentity, flags, medianComm, nominatedBy, validators]
+      applyFilter(validators, medianComm, allIdentity, flags, nominatedBy, stashFilters),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [allIdentity, flags, medianComm, nominatedBy, validators, stashFilters?.join('')]
   );
 
   // We are using an effect here to get this async. Sorting will have a double-render, however it allows
@@ -235,14 +257,29 @@ function Targets ({ className = '', isInElection, ownStashes, targets: { avgStak
     );
   }, [filtered, sortBy, sortFromMax]);
 
-  useEffect((): void => {
-    toggleLedger();
-  }, [toggleLedger]);
+  const maxNominations = useMemo(
+    () => api.consts.staking.maxNominations
+      ? (api.consts.staking.maxNominations as u32).toNumber()
+      : MAX_NOMINATIONS,
+    [api]
+  );
 
   const myNominees = useMemo(
     () => extractNominees(ownNominators),
     [ownNominators]
   );
+
+  const electionPrediction = useElectionPrediction(ownNominators);
+
+  useEffect(() => {
+    if (electionPrediction && validators) {
+      validators.forEach((value) => {
+        const key = value.accountId.toString();
+        value.predictedStake = (key in electionPrediction && electionPrediction[key][1]) || BN_ZERO;
+        value.predictedElected = (key in electionPrediction && electionPrediction[key][0]) || false;
+      })
+    }
+  }, [electionPrediction, validators]);
 
   const _sort = useCallback(
     (sortBy: TargetSortBy) => setSortBy((p) => ({
@@ -265,14 +302,9 @@ function Targets ({ className = '', isInElection, ownStashes, targets: { avgStak
 
   const _selectProfitable = useCallback(
     () => filtered && setSelected(
-      selectProfitable(
-        filtered,
-        api.consts.staking.maxNominations
-          ? api.consts.staking.maxNominations.toNumber()
-          : MAX_NOMINATIONS
-      )
+      selectProfitable(filtered, maxNominations)
     ),
-    [api, filtered]
+    [filtered, maxNominations]
   );
 
   const _setNameFilter = useCallback(
@@ -282,18 +314,33 @@ function Targets ({ className = '', isInElection, ownStashes, targets: { avgStak
 
   const header = useMemo(() => [
     [t('validators'), 'start', 3],
-    [t('payout'), 'media--1400'],
     [t('nominators'), 'media--1200', 2],
-    [t('comm.'), 'media--1100'],
+    [t('cmix id')],
+    [t('location')],
     ...(SORT_KEYS as (keyof typeof labelsRef.current)[]).map((header) => [
       <>{labelsRef.current[header]}<Icon icon={sortBy === header ? (sortFromMax ? 'chevron-down' : 'chevron-up') : 'minus'} /></>,
       `${sorted ? `isClickable ${sortBy === header ? 'highlight--border' : ''} number` : 'number'} ${CLASSES[header] || ''}`,
       1,
       () => _sort(header as 'rankOverall')
     ]),
-    [],
-    []
+    [t('select')],
+    [t('stats')]
   ], [_sort, labelsRef, sortBy, sorted, sortFromMax, t]);
+
+  const tooltipNominators = useMemo(() => <div>
+    {t<string>('Left Column is the number of active nominators.')}<br/>
+    {t<string>('Right Column is the number of nominators for the next era.')}<br/>
+  </div>, [t]);
+
+  const tooltipPredictedStake = useMemo(() => <div>
+    {t<string>('Predicted stake is computed using the Phragmen algorithm.')}<br/>
+    {t<string>('Validators that will be elected are shown in green.')}<br/>
+    {t<string>('From 7PM to 11PM UTC (election period), predictions are based on the on-chain snapshot of Staking state.')}
+  </div>, [t]);
+
+  const tooltipReturn = useMemo(() => <div>
+    {t<string>('Return calculation uses predicted stake and validators\' last era points.')}
+  </div>, [t]);
 
   const filter = useMemo(() => (
     <div>
@@ -344,6 +391,12 @@ function Targets ({ className = '', isInElection, ownStashes, targets: { avgStak
           onChange={setToggle.withElected}
           value={toggles.withElected}
         />
+        <Toggle
+          className='staking--buttonToggle'
+          label={t<string>('your nominations')}
+          onChange={setToggle.withAccountNominations}
+          value={toggles.withAccountNominations}
+        />
       </Filtering>
     </div>
   ), [api, nameFilter, _setNameFilter, setToggle, t, toggles]);
@@ -351,15 +404,16 @@ function Targets ({ className = '', isInElection, ownStashes, targets: { avgStak
   const displayList = isQueryFiltered
     ? validators
     : sorted;
-  const maxNominations = api.consts.staking.maxNominations
-    ? api.consts.staking.maxNominations.toNumber()
-    : MAX_NOMINATIONS;
+
+  const paginated = usePagination(displayList, { perPage: 50 });
+  const finalList = nameFilter ? displayList : paginated.items;
 
   return (
     <div className={className}>
       <Summary
-        avgStaked={avgStaked}
-        lowStaked={lowStaked}
+        avgStaked={electedAvgStaked}
+        custodyRewardsActive={custodyRewardsActive}
+        lowStaked={electedLowStaked}
         minNominated={minNominated}
         minNominatorBond={minNominatorBond}
         numNominators={nominators?.length}
@@ -383,18 +437,28 @@ function Targets ({ className = '', isInElection, ownStashes, targets: { avgStak
       </Button.Group>
       <ElectionBanner isInElection={isInElection} />
       <Table
-        empty={sorted && t<string>('No active validators to check')}
+        empty={displayList && t<string>('No active validators to check')}
         emptySpinner={
           <>
             {!(validators && allIdentity) && <div>{t('Retrieving validators')}</div>}
             {!nominatedBy && <div>{t('Retrieving nominators')}</div>}
           </>
         }
-        filter={filter}
+        filter={<>
+          {filter}
+          {toggles.withAccountNominations && ownStashIds && ownStashIds.length > 0 && (
+            <StashFilters
+              available={ownStashIds}
+              onChange={setStashFilters}
+            />
+          )}
+        </>}
         header={header}
+        help={[tooltipNominators, tooltipPredictedStake, tooltipReturn]}
+        helpHeader={['nominators', header[9][0], header[10][0]]}
         legend={<Legend />}
       >
-        {displayList?.map((info): React.ReactNode =>
+        {finalList?.map((info): React.ReactNode =>
           <Validator
             allSlashes={allSlashes}
             canSelect={selected.length < maxNominations}
@@ -409,6 +473,7 @@ function Targets ({ className = '', isInElection, ownStashes, targets: { avgStak
           />
         )}
       </Table>
+      {!nameFilter && <PaginationAdvanced {...paginated} />}
     </div>
   );
 }

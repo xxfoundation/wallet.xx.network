@@ -1,38 +1,36 @@
-// Copyright 2017-2021 @polkadot/app-staking authors & contributors
+// Copyright 2017-2022 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type BN from 'bn.js';
 import type { AccountId, StakingLedger } from '@polkadot/types/interfaces';
+import type { BN } from '@polkadot/util';
 
 import React, { useState } from 'react';
 import styled from 'styled-components';
 
-import { InputAddress, InputBalance, Modal, Static, Toggle, TxButton } from '@polkadot/react-components';
+import { InputAddress, InputBalance, Modal, Static, TxButton } from '@polkadot/react-components';
 import { useApi } from '@polkadot/react-hooks';
-import { BlockToTime } from '@polkadot/react-query';
+import { BalanceCustomized, BlockToTime } from '@polkadot/react-query';
 
 import { useTranslation } from '../../translate';
 import useUnbondDuration from '../useUnbondDuration';
 
 interface Props {
-  className?: string;
   controllerId?: AccountId | null;
   onClose: () => void;
   stakingLedger?: StakingLedger;
   stashId: string;
 }
 
-function Unbond ({ className = '', controllerId, onClose, stakingLedger, stashId }: Props): React.ReactElement<Props> {
+function Unbond ({ controllerId, onClose, stakingLedger, stashId }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
   const bondedBlocks = useUnbondDuration();
   const [maxBalance] = useState<BN | null>(() => stakingLedger?.active?.unwrap() || null);
   const [maxUnbond, setMaxUnbond] = useState<BN | null>(null);
-  const [withMax, setWithMax] = useState(false);
+  const withMax = false;
 
   return (
     <Modal
-      className={`staking--Unbond ${className}`}
       header={t<string>('Unbond funds')}
       onClose={onClose}
       size='large'
@@ -58,16 +56,16 @@ function Unbond ({ className = '', controllerId, onClose, stakingLedger, stashId
             isDisabled={withMax}
             key={`unbondAmount-${withMax.toString()}`}
             label={t<string>('unbond amount')}
+            labelExtra={
+              <BalanceCustomized
+                balance={maxBalance}
+                label={<span className='label'>{t<string>('balance')}</span>}
+              />
+            }
             maxValue={maxBalance}
             onChange={setMaxUnbond}
             withMax
           >
-            <Toggle
-              isOverlay
-              label={t<string>('all bonded')}
-              onChange={setWithMax}
-              value={withMax}
-            />
           </InputBalance>
           {bondedBlocks?.gtn(0) && (
             <Static

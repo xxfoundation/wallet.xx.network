@@ -1,42 +1,37 @@
-// Copyright 2017-2021 @polkadot/app-staking authors & contributors
+// Copyright 2017-2022 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { DeriveOwnExposure } from '@polkadot/api-derive/types';
+import type { DeriveEraExposure ,DeriveOwnExposure } from '@polkadot/api-derive/types';
 import type { ChartInfo, LineDataEntry, Props } from './types';
 
-import BN from 'bn.js';
 import React, { useMemo } from 'react';
 
 import { Chart, Spinner } from '@polkadot/react-components';
 import { useApi, useCall } from '@polkadot/react-hooks';
-import { formatBalance } from '@polkadot/util';
+import { BN, formatBalance } from '@polkadot/util';
 
 import { useTranslation } from '../translate';
-import { balanceToNumber } from './util';
+import { balanceToNumber, calculateAverage } from './util';
 
 const COLORS_STAKE = [undefined, '#8c2200', '#acacac'];
 
-function extractStake (exposures: DeriveOwnExposure[] = [], divisor: BN): ChartInfo {
+function extractStake (exposures: DeriveOwnExposure[] = [], erasExposures: DeriveEraExposure[] = [], divisor: BN): ChartInfo {
   const labels: string[] = [];
   const cliSet: LineDataEntry = [];
   const expSet: LineDataEntry = [];
   const avgSet: LineDataEntry = [];
-  let avgCount = 0;
-  let total = 0;
 
   exposures.forEach(({ clipped, era, exposure }): void => {
     // Darwinia Crab doesn't have the total field
+    const eraExposures = erasExposures.find(({ era: e }) => e.eq(era));
+    const eraExposureTotals = Object.values(eraExposures?.validators ?? {})
+      .map(({ total }) => total?.unwrap());
+    const networkExposureAverage = balanceToNumber(calculateAverage(eraExposureTotals), divisor);
     const cli = balanceToNumber(clipped.total?.unwrap(), divisor);
     const exp = balanceToNumber(exposure.total?.unwrap(), divisor);
 
-    total += cli;
-
-    if (cli > 0) {
-      avgCount++;
-    }
-
-    avgSet.push((avgCount ? Math.ceil(total * 100 / avgCount) : 0) / 100);
-    labels.push(era.toHuman());
+    avgSet.push(networkExposureAverage);
+    labels.push(era.toNumber().toString());
     cliSet.push(cli);
     expSet.push(exp);
   });
@@ -52,6 +47,7 @@ function ChartStake ({ validatorId }: Props): React.ReactElement<Props> {
   const { api } = useApi();
   const params = useMemo(() => [validatorId, false], [validatorId]);
   const ownExposures = useCall<DeriveOwnExposure[]>(api.derive.staking.ownExposures, params);
+  const erasExposures = useCall<DeriveEraExposure[]>(api.derive.staking.erasExposure);
 
   const { currency, divisor } = useMemo((): { currency: string; divisor: BN } => ({
     currency: formatBalance.getDefaults().unit,
@@ -59,8 +55,8 @@ function ChartStake ({ validatorId }: Props): React.ReactElement<Props> {
   }), []);
 
   const { chart, labels } = useMemo(
-    () => extractStake(ownExposures, divisor),
-    [divisor, ownExposures]
+    () => extractStake(ownExposures, erasExposures, divisor),
+    [divisor, erasExposures, ownExposures]
   );
 
   const legends = useMemo(() => [

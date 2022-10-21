@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/react-components authors & contributors
+// Copyright 2017-2022 @polkadot/react-components authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { ThemeProps } from '../types';
@@ -21,7 +21,7 @@ const FACTORS = [0.2126, 0.7152, 0.0722];
 const PARTS = [0, 2, 4];
 const VERY_DARK = 16;
 
-const defaultHighlight = '#f19135'; // '#f19135'; // #999
+const defaultHighlight = '#037281'; // '#f19135'; // #999
 
 function getHighlight (uiHighlight: string | undefined): string {
   return (uiHighlight || defaultHighlight);
@@ -39,6 +39,14 @@ function getContrast (uiHighlight: string | undefined): string {
   return brightness > BRIGHTNESS
     ? 'rgba(45, 43, 41, 0.875)'
     : 'rgba(255, 253, 251, 0.875)';
+}
+
+function getDisabled (uiHighlight: string | undefined): string {
+  const brightness = countBrightness(uiHighlight);
+
+  return brightness > BRIGHTNESS
+    ? 'rgba(45, 43, 41, 1)'
+    : 'rgba(205, 205, 205, 1)';
 }
 
 function getMenuHoverContrast (uiHighlight: string | undefined): string {
@@ -64,6 +72,22 @@ function hexToRGB (hex: string, alpha?: string) {
 }
 
 export default createGlobalStyle<Props & ThemeProps>(({ theme, uiHighlight }: Props & ThemeProps) => `
+  :root {
+    --highlight: ${getHighlight(uiHighlight)};
+    --highlight-contrast: ${getContrast(uiHighlight)};
+    --highlight-disabled: ${getDisabled(uiHighlight)};
+    --secondary: #ab3502;
+    --tertiary: #6702ab;
+  }
+
+  .is-secondary {
+    color: var(--secondary) !important;
+  }
+
+  .is-tertiary {
+    color: var(--tertiary) !important;
+  }
+
   .highlight--all {
     background: ${getHighlight(uiHighlight)} !important;
     border-color: ${getHighlight(uiHighlight)} !important;
@@ -217,10 +241,6 @@ export default createGlobalStyle<Props & ThemeProps>(({ theme, uiHighlight }: Pr
       .ui--Icon {
         color: ${getHighlight(uiHighlight)};
       }
-    }
-
-    &.isSelected {
-      box-shadow: 0 0 1px ${getHighlight(uiHighlight)};
     }
 
     &:hover:not(.isDisabled):not(.isReadOnly),

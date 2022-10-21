@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/react-components authors & contributors
+// Copyright 2017-2022 @polkadot/react-components authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { AccountId, AccountIndex, Address } from '@polkadot/types/interfaces';
@@ -25,10 +25,10 @@ export interface Props extends RowProps {
   withTags?: boolean;
 }
 
-const DEFAULT_ADDR = '5'.padEnd(48, 'x');
+const DEFAULT_ADDR = '6'.padEnd(48, 'x');
 const ICON_SIZE = 32;
 
-function AddressRow ({ buttons, children, className, defaultName, fullLength = false, isContract = false, isDisabled, isEditableName, isInline, isValid: propsIsValid, overlay, value, withTags = false }: Props): React.ReactElement<Props> | null {
+function AddressRow({ buttons, children, className, defaultName, fullLength = false, isContract = false, isDisabled, isEditableName, isInline, isValid: propsIsValid, overlay, value, withTags = false }: Props): React.ReactElement<Props> | null {
   const { accountIndex, isNull, name, onSaveName, onSaveTags, setName, setTags, tags } = useAccountInfo(value ? value.toString() : null, isContract);
 
   const isValid = !isNull && (propsIsValid || value || accountIndex);

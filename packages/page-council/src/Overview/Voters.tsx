@@ -1,9 +1,9 @@
-// Copyright 2017-2021 @polkadot/app-democracy authors & contributors
+// Copyright 2017-2022 @polkadot/app-democracy authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { AccountId, Balance } from '@polkadot/types/interfaces';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { AddressMini, Expander } from '@polkadot/react-components';
 import { FormatBalance } from '@polkadot/react-query';
@@ -15,14 +15,24 @@ interface Props {
 }
 
 function Voters ({ balance, voters }: Props): React.ReactElement<Props> {
-  if (!balance || !voters || !voters.length) {
-    return <><td className='all number' /><td className='number' /></>;
+  const summary = useMemo(
+    () => balance
+      ? <FormatBalance value={balance} />
+      : formatNumber(voters?.length),
+    [balance, voters]
+  );
+
+  if (!voters || !voters.length) {
+    return <><td className='all number' /><td className='number'>0</td></>;
   }
 
   return (
     <>
-      <td className='all expand'>
-        <Expander summary={<FormatBalance value={balance} />}>
+      <td
+        className='all expand'
+        colSpan={balance ? 1 : 2}
+      >
+        <Expander summary={summary}>
           {voters.map((who): React.ReactNode =>
             <AddressMini
               key={who.toString()}
@@ -32,9 +42,11 @@ function Voters ({ balance, voters }: Props): React.ReactElement<Props> {
           )}
         </Expander>
       </td>
-      <td className='number'>
-        {formatNumber(voters.length)}
-      </td>
+      {balance && (
+        <td className='number'>
+          {formatNumber(voters?.length || 0)}
+        </td>
+      )}
     </>
   );
 }

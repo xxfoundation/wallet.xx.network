@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/apps authors & contributors
+// Copyright 2017-2022 @polkadot/apps authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Route } from '@polkadot/apps-routing/types';
@@ -58,7 +58,7 @@ function Content ({ className }: Props): React.ReactElement<Props> {
 
   return (
     <div className={className}>
-      {!missingApis
+      {!missingApis && !window.location.href.includes('generate')
         ? (
           <div className='connecting'>
             <Spinner label={t<string>('Initializing connection')} />
@@ -69,7 +69,7 @@ function Content ({ className }: Props): React.ReactElement<Props> {
             <Suspense fallback='...'>
               <ErrorBoundary trigger={name}>
                 <TabsContext.Provider value={{ icon, text }}>
-                  {missingApis.length
+                  {missingApis && missingApis.length
                     ? (
                       <NotFound
                         basePath={`/${name}`}

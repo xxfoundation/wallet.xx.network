@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/react-components authors & contributors
+// Copyright 2017-2022 @polkadot/react-components authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
@@ -23,7 +23,7 @@ interface Props {
 
 const NOOP = () => undefined;
 
-function CopyButton ({ children, className = '', icon = 'copy', label, type, value }: Props): React.ReactElement<Props> {
+function CopyButton({ children, className = '', icon = 'copy', label, type, value }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { queueAction } = useContext(StatusContext);
 

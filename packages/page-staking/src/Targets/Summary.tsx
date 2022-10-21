@@ -1,15 +1,15 @@
-// Copyright 2017-2021 @polkadot/app-staking authors & contributors
+// Copyright 2017-2022 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type BN from 'bn.js';
 import type { DeriveSessionIndexes } from '@polkadot/api-derive/types';
 import type { Option } from '@polkadot/types';
 import type { Balance } from '@polkadot/types/interfaces';
+import type { BN } from '@polkadot/util';
 
 import React, { useMemo } from 'react';
 
 import { CardSummary, SummaryBox } from '@polkadot/react-components';
-import { useApi, useCall } from '@polkadot/react-hooks';
+import { useApi, useCall, useTotalStakeableIssuance } from '@polkadot/react-hooks';
 import { FormatBalance } from '@polkadot/react-query';
 import { BN_ONE, BN_ZERO } from '@polkadot/util';
 
@@ -17,6 +17,7 @@ import { useTranslation } from '../translate';
 
 interface Props {
   avgStaked?: BN;
+  custodyRewardsActive: boolean;
   lowStaked?: BN;
   minNominated?: BN;
   minNominatorBond?: BN;
@@ -35,21 +36,26 @@ const transformEra = {
   transform: ({ activeEra }: DeriveSessionIndexes) => activeEra.gt(BN_ZERO) ? activeEra.sub(BN_ONE) : undefined
 };
 
-function Summary ({ avgStaked, lowStaked, minNominated, minNominatorBond, stakedReturn, totalIssuance, totalStaked }: Props): React.ReactElement<Props> {
+function Summary ({ avgStaked, lowStaked, custodyRewardsActive, minNominated, minNominatorBond, stakedReturn, totalIssuance, totalStaked }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
   const lastEra = useCall<BN | undefined>(api.derive.session.indexes, undefined, transformEra);
   const lastReward = useCall<BN>(lastEra && api.query.staking.erasValidatorReward, [lastEra], transformReward);
+  const totalStakeableIssuance = useTotalStakeableIssuance();
+
+  const helpReturns = t('Network overall staking return. This is calculated from the current staked ratio, current ideal interest and inflation parameters.');
+  const helpStaked = t('Team multipliers are not counted in total staked, but impact staking returns')
+  const helpLowest = t('Team multipliers are included in the lowest / avg staked numbers')
 
   const progressStake = useMemo(
-    () => totalIssuance && totalStaked && totalStaked.gtn(0)
+    () => totalStakeableIssuance && totalStaked && totalStaked.gtn(0)
       ? {
         hideValue: true,
-        total: totalIssuance,
+        total: totalStakeableIssuance,
         value: totalStaked
       }
       : undefined,
-    [totalIssuance, totalStaked]
+    [totalStakeableIssuance, totalStaked]
   );
 
   const progressAvg = useMemo(
@@ -68,6 +74,7 @@ function Summary ({ avgStaked, lowStaked, minNominated, minNominatorBond, staked
       <section className='media--800'>
         {totalIssuance && totalStaked?.gt(BN_ZERO) && (
           <CardSummary
+            help={custodyRewardsActive && helpStaked}
             label={t<string>('total staked')}
             progress={progressStake}
           >
@@ -75,12 +82,20 @@ function Summary ({ avgStaked, lowStaked, minNominated, minNominatorBond, staked
               value={totalStaked}
               withSi
             />
+            &nbsp;/&nbsp;<br />
+            <FormatBalance
+              value={totalStakeableIssuance}
+              withSi
+            />
           </CardSummary>
         )}
       </section>
       <section className='media--800'>
-        {totalIssuance && (stakedReturn > 0) && Number.isFinite(stakedReturn) && (
-          <CardSummary label={t<string>('returns')}>
+        {(stakedReturn > 0) && Number.isFinite(stakedReturn) && (
+          <CardSummary
+            help={helpReturns}
+            label={t<string>('returns')}
+          >
             {stakedReturn.toFixed(1)}%
           </CardSummary>
         )}
@@ -88,6 +103,7 @@ function Summary ({ avgStaked, lowStaked, minNominated, minNominatorBond, staked
       <section className='media--1000'>
         {avgStaked?.gtn(0) && lowStaked?.gtn(0) && (
           <CardSummary
+            help={custodyRewardsActive && helpLowest}
             label={`${t<string>('lowest / avg staked')}`}
             progress={progressAvg}
           >

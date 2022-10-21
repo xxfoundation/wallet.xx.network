@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/react-components authors & contributors
+// Copyright 2017-2022 @polkadot/react-components authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Location } from 'history';
@@ -91,7 +91,6 @@ export default React.memo(styled(Tabs)`
     margin: 0 auto;
     max-width: var(--width-full);
     padding: 0 1.5rem 0 0;
-    height: 3.286rem;
   }
 
   &::-webkit-scrollbar {
@@ -101,6 +100,7 @@ export default React.memo(styled(Tabs)`
 
   .ui--TabsList {
     display: flex;
+    flex-wrap: wrap;
     list-style: none;
     height: 100%;
     margin: 0 1.4rem;

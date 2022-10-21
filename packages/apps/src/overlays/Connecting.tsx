@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/apps authors & contributors
+// Copyright 2017-2022 @polkadot/apps authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
@@ -52,7 +52,7 @@ function Connecting ({ className }: Props): React.ReactElement<Props> | null {
         <div>{t<string>('Waiting for authorization from the extension. Please open the installed extension and approve or reject access.')}</div>
       </BaseOverlay>
     );
-  } else if (!isApiConnected) {
+  } else if (!isApiConnected && !window.location.href.includes('generate')) {
     return (
       <BaseOverlay
         className={className}

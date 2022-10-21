@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/apps authors & contributors
+// Copyright 2017-2022 @polkadot/apps authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { RuntimeVersion } from '@polkadot/types/interfaces';
@@ -6,11 +6,8 @@ import type { RuntimeVersion } from '@polkadot/types/interfaces';
 import React from 'react';
 import styled from 'styled-components';
 
-import { ChainImg, Icon } from '@polkadot/react-components';
-import { useApi, useCall, useIpfs, useToggle } from '@polkadot/react-hooks';
-import { BestNumber, Chain } from '@polkadot/react-query';
-
-import Endpoints from '../Endpoints';
+import { useApi, useCall } from '@polkadot/react-hooks';
+import { BestNumber } from '@polkadot/react-query';
 
 interface Props {
   className?: string;
@@ -19,19 +16,13 @@ interface Props {
 function ChainInfo ({ className }: Props): React.ReactElement<Props> {
   const { api, isApiReady } = useApi();
   const runtimeVersion = useCall<RuntimeVersion>(isApiReady && api.rpc.state.subscribeRuntimeVersion);
-  const { ipnsChain } = useIpfs();
-  const [isEndpointsVisible, toggleEndpoints] = useToggle();
-  const canToggle = !ipnsChain;
 
   return (
     <div className={className}>
       <div
-        className={`apps--SideBar-logo-inner${canToggle ? ' isClickable' : ''} highlight--color-contrast`}
-        onClick={toggleEndpoints}
+        className='apps--SideBar-logo-inner highlight--color-contrast'
       >
-        <ChainImg />
         <div className='info media--1000'>
-          <Chain className='chain' />
           {runtimeVersion && (
             <div className='runtimeVersion'>{runtimeVersion.specName.toString()}/{runtimeVersion.specVersion.toNumber()}</div>
           )}
@@ -40,16 +31,7 @@ function ChainInfo ({ className }: Props): React.ReactElement<Props> {
             label='#'
           />
         </div>
-        {canToggle && (
-          <Icon
-            className='dropdown'
-            icon={isEndpointsVisible ? 'caret-right' : 'caret-down'}
-          />
-        )}
       </div>
-      {isEndpointsVisible && (
-        <Endpoints onClose={toggleEndpoints} />
-      )}
     </div>
   );
 }

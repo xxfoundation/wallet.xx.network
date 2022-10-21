@@ -1,27 +1,28 @@
-// Copyright 2017-2021 @polkadot/app-staking authors & contributors
+// Copyright 2017-2022 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type BN from 'bn.js';
 import type { DeriveBalancesAll } from '@polkadot/api-derive/types';
-import type { AmountValidateState, DestinationType } from '../types';
+import type { BN } from '@polkadot/util';
+import type { AmountValidateState } from '../types';
 import type { BondInfo } from './types';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
-import { Dropdown, InputAddress, InputBalance, MarkError, Modal, Static } from '@polkadot/react-components';
-import { useApi, useCall } from '@polkadot/react-hooks';
+import { Expander, InputAddress, InputBalance, InputCmixAddress, MarkInfo, MarkWarning, Modal, Static } from '@polkadot/react-components';
+import { useApi, useCall, useToggle } from '@polkadot/react-hooks';
 import { BalanceFree, BlockToTime } from '@polkadot/react-query';
 import { BN_ZERO } from '@polkadot/util';
 
 import { useTranslation } from '../../translate';
 import InputValidateAmount from '../Account/InputValidateAmount';
+import InputValidateCmix from '../Account/InputValidateCmix';
 import InputValidationController from '../Account/InputValidationController';
-import { createDestCurr } from '../destOptions';
 import useUnbondDuration from '../useUnbondDuration';
 
 interface Props {
   className?: string;
   isNominating?: boolean;
+  isValidating?: boolean;
   minNominated?: BN;
   minNominatorBond?: BN;
   minValidatorBond?: BN;
@@ -36,28 +37,28 @@ const EMPTY_INFO = {
   stashId: null
 };
 
-function Bond ({ className = '', isNominating, minNominated, minNominatorBond, minValidatorBond, onChange }: Props): React.ReactElement<Props> {
+function Bond ({ className = '', isNominating, isValidating, minNominated, minNominatorBond, minValidatorBond, onChange }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
   const [amount, setAmount] = useState<BN | undefined>();
   const [amountError, setAmountError] = useState<AmountValidateState | null>(null);
   const [controllerError, setControllerError] = useState<boolean>(false);
+  const [cmixError, setCmixError] = useState<boolean>(false);
   const [controllerId, setControllerId] = useState<string | null>(null);
-  const [destination, setDestination] = useState<DestinationType>('Staked');
-  const [destAccount, setDestAccount] = useState<string | null>(null);
   const [stashId, setStashId] = useState<string | null>(null);
   const [startBalance, setStartBalance] = useState<BN | null>(null);
   const stashBalance = useCall<DeriveBalancesAll>(api.derive.balances?.all, [stashId]);
-  const destBalance = useCall<DeriveBalancesAll>(api.derive.balances?.all, [destAccount]);
   const bondedBlocks = useUnbondDuration();
+  const [cmixId, setCmixId] = useState<string | null>(null);
+  const [hasCmixId, setHasCmixId] = useToggle();
 
-  const options = useMemo(
-    () => createDestCurr(t),
-    [t]
+  const _setControllerError = useCallback(
+    (_: string | null, isFatal: boolean) => setControllerError(isFatal),
+    []
   );
 
-  const _setError = useCallback(
-    (_: string | null, isFatal: boolean) => setControllerError(isFatal),
+  const _setCmixAddressError = useCallback(
+    (error: string | null) => setCmixError(!!error),
     []
   );
 
@@ -74,26 +75,29 @@ function Bond ({ className = '', isNominating, minNominated, minNominatorBond, m
   }, [stashId]);
 
   useEffect((): void => {
-    const bondDest = destination === 'Account'
-      ? { Account: destAccount }
-      : destination;
-
     onChange(
-      (amount && amount.gtn(0) && !amountError?.error && !controllerError && controllerId && stashId)
+      (
+        amount &&
+        amount.gtn(0) &&
+        !amountError?.error &&
+        !controllerError &&
+        !cmixError &&
+        controllerId &&
+        stashId)
         ? {
-          bondOwnTx: api.tx.staking.bond(stashId, amount, bondDest),
-          bondTx: api.tx.staking.bond(controllerId, amount, bondDest),
+          bondOwnTx: api.tx.staking.bond(stashId, amount, cmixId),
+          bondTx: api.tx.staking.bond(controllerId, amount, cmixId),
           controllerId,
           controllerTx: api.tx.staking.setController(controllerId),
           stashId
         }
         : EMPTY_INFO
     );
-  }, [api, amount, amountError, controllerError, controllerId, destination, destAccount, stashId, onChange]);
+  }, [api, amount, amountError, controllerError, controllerId, stashId, onChange, cmixId, cmixError]);
 
   const hasValue = !!amount?.gtn(0);
-  const isAccount = destination === 'Account';
-  const isDestError = isAccount && destBalance && destBalance.accountId.eq(destAccount) && destBalance.freeBalance.isZero();
+
+  const cmixHint = t<string>('The cMix ID is the identifier of your cMix Node in the xx network. Validators are required to have a cMix ID set on-chain. This can be found in your cmix-IDF.json file, under the field “hexNodeID”.');
 
   return (
     <div className={className}>
@@ -101,7 +105,7 @@ function Bond ({ className = '', isNominating, minNominated, minNominatorBond, m
         hint={
           <>
             <p>{t<string>('Think of the stash as your cold wallet and the controller as your hot wallet. Funding operations are controlled by the stash, any other non-funding actions by the controller itself.')}</p>
-            <p>{t<string>('To ensure optimal fund security using the same stash/controller is strongly discouraged, but not forbidden.')}</p>
+            {/* <p>{t<string>('To ensure optimal fund security using the same stash/controller is strongly discouraged, but not forbidden.')}</p> */}
           </>
         }
       >
@@ -121,7 +125,7 @@ function Bond ({ className = '', isNominating, minNominated, minNominatorBond, m
         <InputValidationController
           accountId={stashId}
           controllerId={controllerId}
-          onError={_setError}
+          onError={_setControllerError}
         />
       </Modal.Columns>
       {startBalance && (
@@ -167,28 +171,63 @@ function Bond ({ className = '', isNominating, minNominated, minNominatorBond, m
           )}
         </Modal.Columns>
       )}
-      <Modal.Columns hint={t<string>('Rewards (once paid) can be deposited to either the stash or controller, with different effects.')}>
-        <Dropdown
-          defaultValue={0}
-          help={t<string>('The destination account for any payments as either a nominator or validator')}
-          label={t<string>('payment destination')}
-          onChange={setDestination}
-          options={options}
-          value={destination}
-        />
-        {isAccount && (
-          <InputAddress
-            help={t('An account that is to receive the rewards')}
-            label={t('the payment account')}
-            onChange={setDestAccount}
-            type='account'
-            value={destAccount}
+      {isValidating && (
+        <Modal.Columns hint={cmixHint}>
+          <InputCmixAddress
+            cmixId={cmixId}
+            includeToggle={false}
+            isError={cmixError}
+            onChange={setCmixId}
           />
+          <InputValidateCmix
+            onError={_setCmixAddressError}
+            required={true}
+            value={cmixId}
+          />
+          <MarkWarning
+            content={t<string>('Please make sure you set your cMix ID correctly. If you don’t, you will need to fully UNBOND your stash, and wait for the bonding duration specified above, before you can correct your cMix ID. Be aware you will NOT EARN any potential rewards during this unbonding period.')}
+          />
+        </Modal.Columns>
+      )}
+      <Modal.Columns hint={t<string>('')}>
+        {isNominating && (
+          <article style={{ margin: '0.5rem 0 0.5rem 2.25rem', padding: '1rem' }}>
+            For more information please see the
+            <a
+              href='https://xxnetwork.wiki/index.php/How_to_Nominate'
+              rel='noopener noreferrer'
+              target='_blank'
+            >{t<string>('Nomination Wiki')}</a>
+          </article>
         )}
-        {isDestError && (
-          <MarkError content={t<string>('The selected destination account does not exist and cannot be used to receive rewards')} />
-        )}
+        <MarkInfo content={t<string>('Rewards (once paid) are deposited to the stash account, increasing the amount at stake.')} />
       </Modal.Columns>
+      {!isValidating && (
+        <>
+          <Expander
+            isPadded
+            summary={t<string>('Advanced options')}
+          >
+            <Modal.Columns hint={cmixHint}>
+              <InputCmixAddress
+                cmixId={cmixId}
+                enabled={hasCmixId}
+                isError={cmixError}
+                onChange={setCmixId}
+                onEnabledChanged={setHasCmixId}
+              />
+              <InputValidateCmix
+                onError={_setCmixAddressError}
+                required={hasCmixId}
+                value={cmixId}
+              />
+              <MarkWarning
+                content={t<string>('A cMix ID is not needed if you only wish to nominate. However, if at any point you decide to use this stash account to become a validator, you MUST specify your cMix ID. In that case, please make sure you set your cMix ID correctly. If you don’t, you will need to fully UNBOND your stash, and wait for the bonding duration specified above, before you can correct your cMix ID!')}
+              />
+            </Modal.Columns>
+          </Expander>
+        </>
+      )}
     </div>
   );
 }

@@ -1,6 +1,9 @@
 {
   "Accounts": "Accounts",
+  "Add Custom Endpoint": "Add Custom Endpoint",
+  "Connecting...": "Connecting...",
   "Developer": "Developer",
+  "Files": "Files",
   "Governance": "Governance",
   "Initializing connection": "Initializing connection",
   "Network": "Network",
@@ -14,5 +17,6 @@
   "nav.github": "nav.github",
   "nav.wiki": "nav.wiki",
   "transfer received": "transfer received",
-  "update on #{{index}}": "update on #{{index}}"
+  "update on #{{index}}": "update on #{{index}}",
+  "xx wallet": "xx wallet"
 }

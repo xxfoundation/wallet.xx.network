@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/apps authors & contributors
+// Copyright 2017-2022 @polkadot/apps authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { TFunction } from 'i18next';
@@ -28,13 +28,13 @@ interface Props {
 function createExternals (t: TFunction): ItemRoute[] {
   return [
     {
-      href: 'https://github.com/polkadot-js/apps',
+      href: 'https://github.com/xx-labs',
       icon: 'code-branch',
       name: 'github',
       text: t<string>('nav.github', 'GitHub', { ns: 'apps-routing' })
     },
     {
-      href: 'https://wiki.polkadot.network',
+      href: 'https://xxnetwork.wiki/Main_Page',
       icon: 'book',
       name: 'wiki',
       text: t<string>('nav.wiki', 'Wiki', { ns: 'apps-routing' })
@@ -99,6 +99,7 @@ function Menu ({ className = '' }: Props): React.ReactElement<Props> {
   const groupRef = useRef({
     accounts: t('Accounts'),
     developer: t('Developer'),
+    files: t('Files'),
     governance: t('Governance'),
     network: t('Network'),
     settings: t('Settings')

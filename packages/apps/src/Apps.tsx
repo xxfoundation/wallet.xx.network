@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/apps authors & contributors
+// Copyright 2017-2022 @polkadot/apps authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { BareProps as Props, ThemeDef } from '@polkadot/react-components/types';
@@ -14,13 +14,28 @@ import Signer from '@polkadot/react-signer';
 
 import ConnectingOverlay from './overlays/Connecting';
 import Content from './Content';
+import Footer from './Footer';
 import Menu from './Menu';
+import SideMenu from './SideMenu';
 import WarmUp from './WarmUp';
 
 export const PORTAL_ID = 'portals';
 
+const ContentWrapper = styled.div`
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  max-width: calc(100% - var(--sidebar-width));
+`;
+
+const MainLayout = styled.div`
+  display: flex;
+  flex-grow: 1;
+`;
+
 function Apps ({ className = '' }: Props): React.ReactElement<Props> {
-  const { theme } = useContext<ThemeDef>(ThemeContext);
+  const { theme } = useContext(ThemeContext as React.Context<ThemeDef>);
   const { isDevelopment, specName, systemChain, systemName } = useApi();
 
   const uiHighlight = useMemo(
@@ -34,14 +49,20 @@ function Apps ({ className = '' }: Props): React.ReactElement<Props> {
     <>
       <GlobalStyle uiHighlight={uiHighlight} />
       <div className={`apps--Wrapper theme--${theme} ${className}`}>
-        <Menu />
-        <AccountSidebar>
-          <Signer>
-            <Content />
-          </Signer>
-          <ConnectingOverlay />
-          <div id={PORTAL_ID} />
-        </AccountSidebar>
+        <MainLayout>
+          <SideMenu />
+          <ContentWrapper>
+            <Menu />
+            <AccountSidebar>
+              <Signer>
+                <Content />
+              </Signer>
+              <ConnectingOverlay />
+              <div id={PORTAL_ID} />
+            </AccountSidebar>
+          </ContentWrapper>
+        </MainLayout>
+        <Footer />
       </div>
       <WarmUp />
     </>

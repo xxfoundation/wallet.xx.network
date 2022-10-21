@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/page-accounts authors & contributors
+// Copyright 2017-2022 @polkadot/page-accounts authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import { screen } from '@testing-library/react';
@@ -112,13 +112,6 @@ describe('Addresses page', () => {
       expect(rows).toHaveLength(1);
 
       await rows[0].assertTags('Super Tagmy tag');
-    });
-
-    it('details rows keep colouring from their primary rows', async () => {
-      addressesPage.renderDefaultContacts(3);
-      const addressesTable = await addressesPage.getTable();
-
-      await addressesTable.assertColoring();
     });
 
     it('contact details rows toggled on icon toggle click', async () => {

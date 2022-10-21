@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/react-components authors & contributors
+// Copyright 2017-2022 @polkadot/react-components authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
@@ -50,14 +50,17 @@ export default React.memo(styled(Labelled)`
     display: block;
     position: relative;
 
-    .ui--CopyButton {
+    label {
+      padding-right: 1rem;
+    }
+
+    .ui--CopyButton .ui--PasteButton {
       position: absolute;
       top: 0.9rem;
       right: 0.5rem;
     }
 
     .withEllipsis {
-      display: inline;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -87,6 +90,7 @@ export default React.memo(styled(Labelled)`
 
         > label {
           left: 3.55rem;
+          right: 0;
           text-align: left;
         }
       }

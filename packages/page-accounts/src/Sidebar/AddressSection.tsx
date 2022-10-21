@@ -1,23 +1,24 @@
-// Copyright 2017-2021 @polkadot/page-accounts authors & contributors
+// Copyright 2017-2022 @polkadot/page-accounts authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
 
-import { AccountName, IdentityIcon, Input } from '@polkadot/react-components';
+import { AccountName, CmixAddress, IdentityIcon, Input } from '@polkadot/react-components';
 import { AddressFlags } from '@polkadot/react-hooks/types';
 
 import { useTranslation } from '../translate';
 
 interface Props {
-  value: string,
-  editingName: boolean,
-  defaultValue: string,
-  onChange: (value: string) => void,
-  flags: AddressFlags,
-  accountIndex: string | undefined,
+  value: string;
+  cmixId?: string;
+  editingName: boolean;
+  defaultValue: string;
+  onChange: (value: string) => void;
+  flags: AddressFlags;
+  accountIndex: string | undefined;
 }
 
-function AddressSection ({ accountIndex, defaultValue, editingName, flags, onChange, value }: Props): React.ReactElement<Props> {
+function AddressSection ({ accountIndex, cmixId, defaultValue, editingName, flags, onChange, value }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
 
   return (
@@ -49,6 +50,11 @@ function AddressSection ({ accountIndex, defaultValue, editingName, flags, onCha
         <div className='ui--AddressMenu-addr'>
           {value}
         </div>
+        {cmixId && (
+          <div className='ui--AddressMenu-addr'>
+            <CmixAddress nodeId={cmixId} />
+          </div>
+        )}
         {accountIndex && (
           <div className='ui--AddressMenu-index'>
             <label>{t<string>('index')}:</label> {accountIndex}

@@ -1,17 +1,15 @@
-// Copyright 2017-2021 @polkadot/react-components authors & contributors
+// Copyright 2017-2022 @polkadot/react-components authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import type { QueueStatus, QueueTx, QueueTxStatus } from './types';
 
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import styled from 'styled-components';
 
 import AddressMini from '../AddressMini';
-import Button from '../Button';
 import Icon from '../Icon';
 import Spinner from '../Spinner';
-import { useTranslation } from '../translate';
 import { STATUS_COMPLETE } from './constants';
 import StatusContext from './Context';
 
@@ -21,12 +19,13 @@ interface Props {
   className?: string;
 }
 
-function iconName (status: string): IconName {
+function iconName(status: string): IconName {
   switch (status) {
     case 'error':
       return 'ban';
 
     case 'event':
+    case 'eventWarn':
       return 'assistive-listening-systems';
 
     case 'received':
@@ -37,7 +36,7 @@ function iconName (status: string): IconName {
   }
 }
 
-function signerIconName (status: QueueTxStatus): IconName {
+function signerIconName(status: QueueTxStatus): IconName {
   switch (status) {
     case 'cancelled':
       return 'ban';
@@ -58,7 +57,7 @@ function signerIconName (status: QueueTxStatus): IconName {
       return 'exclamation-triangle';
 
     case 'queued':
-    // case 'retracted':
+      // case 'retracted':
       return 'random';
 
     default:
@@ -66,7 +65,7 @@ function signerIconName (status: QueueTxStatus): IconName {
   }
 }
 
-function renderStatus ({ account, action, id, message, removeItem, status }: QueueStatus): React.ReactNode {
+function renderStatus({ account, action, id, message, removeItem, status }: QueueStatus): React.ReactNode {
   return (
     <div
       className={`item ${status}`}
@@ -100,7 +99,7 @@ function renderStatus ({ account, action, id, message, removeItem, status }: Que
   );
 }
 
-function renderItem ({ error, extrinsic, id, removeItem, rpc, status }: QueueTx): React.ReactNode {
+function renderItem({ error, extrinsic, id, removeItem, rpc, status }: QueueTx): React.ReactNode {
   let { method, section } = rpc;
 
   if (extrinsic) {
@@ -147,21 +146,18 @@ function renderItem ({ error, extrinsic, id, removeItem, rpc, status }: QueueTx)
   );
 }
 
-function filterSt (stqueue?: QueueStatus[]): QueueStatus[] {
+function filterSt(stqueue?: QueueStatus[]): QueueStatus[] {
   return (stqueue || []).filter(({ isCompleted }) => !isCompleted);
 }
 
-function filterTx (txqueue?: QueueTx[]): [QueueTx[], QueueTx[]] {
-  const allTx = (txqueue || []).filter(({ status }) => !['completed', 'incomplete'].includes(status));
-
-  return [allTx, allTx.filter(({ status }) => STATUS_COMPLETE.includes(status))];
+function filterTx(txqueue?: QueueTx[]): QueueTx[] {
+  return (txqueue || []).filter(({ status }) => !['completed', 'incomplete'].includes(status));
 }
 
-function Status ({ className = '' }: Props): React.ReactElement<Props> | null {
+function Status({ className = '' }: Props): React.ReactElement<Props> | null {
   const { stqueue, txqueue } = useContext(StatusContext);
   const [allSt, setAllSt] = useState<QueueStatus[]>([]);
-  const [[allTx, completedTx], setAllTx] = useState<[QueueTx[], QueueTx[]]>([[], []]);
-  const { t } = useTranslation();
+  const [allTx, setAllTx] = useState<QueueTx[]>([]);
 
   useEffect((): void => {
     setAllSt(filterSt(stqueue));
@@ -171,31 +167,12 @@ function Status ({ className = '' }: Props): React.ReactElement<Props> | null {
     setAllTx(filterTx(txqueue));
   }, [txqueue]);
 
-  const _onDismiss = useCallback(
-    (): void => {
-      allSt.map((s) => s.removeItem());
-      completedTx.map((t) => t.removeItem());
-    },
-    [allSt, completedTx]
-  );
-
   if (!allSt.length && !allTx.length) {
     return null;
   }
 
   return (
     <div className={`ui--Status ${className}`}>
-      {(allSt.length + completedTx.length) > 1 && (
-        <div className='dismiss'>
-          <Button
-            icon='times'
-            isBasic
-            isFull
-            label={t<string>('Dismiss all notifications')}
-            onClick={_onDismiss}
-          />
-        </div>
-      )}
       {allTx.map(renderItem)}
       {allSt.map(renderStatus)}
     </div>
@@ -203,26 +180,35 @@ function Status ({ className = '' }: Props): React.ReactElement<Props> | null {
 }
 
 export default React.memo(styled(Status)`
+  /* bottom: 0; */
   display: inline-block;
+  overflow: hidden;
   position: fixed;
   right: 0.75rem;
   top: 0.75rem;
-  width: 23rem;
+  transition-property: width;
+  transition-duration: 0.75s;
+  width: 4.5rem;
   z-index: 1001;
 
-  .dismiss {
-    margin-bottom: 0.25rem;
+  :hover {
+    transform: scale(1);
+    width: 35rem;
 
-    .ui--Button {
-      border: 1px solid white;
+    .item .desc {
+      display: block;
     }
   }
 
   .item {
     display: block;
 
+    .desc {
+      display: none;
+    }
+
     > .wrapper > .container {
-      align-items: center;
+      align-items: top;
       background: #00688b;
       border-radius: 0.25rem;
       color: white;
@@ -236,7 +222,8 @@ export default React.memo(styled(Status)`
       .desc {
         flex: 1;
         overflow: hidden;
-        padding: 0.5rem 1rem;
+        padding: 0.75rem 1rem 0.5rem;
+        width: 19rem;
 
         .status {
           font-weight: var(--font-weight-normal);
@@ -256,12 +243,25 @@ export default React.memo(styled(Status)`
 
       .short {
         font-size: 2.5rem;
+        min-width: 3rem;
         opacity:  0.75;
         padding: 0.5rem 0 0.5rem 0.5rem;
 
         .ui--Icon {
           color: white !important;
           line-height: 1;
+        }
+
+        .ui--Spinner {
+          display: inline-block;
+          height: 1em;
+          line-height: 1;
+          vertical-align: -0.125em;
+
+          img {
+            height: 1em;
+            width: 1em;
+          }
         }
       }
 
@@ -283,6 +283,10 @@ export default React.memo(styled(Status)`
 
     &.event > .wrapper > .container {
       background: teal;
+    }
+
+    &.eventWarn > .wraper > .container {
+      background: orange;
     }
 
     &.completed,

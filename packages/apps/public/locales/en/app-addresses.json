@@ -1,10 +1,15 @@
 {
   "Add an address": "Add an address",
   "Add contact": "Add contact",
+  "Export": "Export",
   "Forget this address": "Forget this address",
+  "Import": "Import",
+  "Importing contacts has failed": "Importing contacts has failed",
   "My contacts": "My contacts",
   "Paste here the address of the contact you want to add to your address book.": "Paste here the address of the contact you want to add to your address book.",
   "Save": "Save",
+  "Successfully imported {{count}} addresses": "Successfully imported {{count}} addresses",
+  "Successfully imported {{count}} addresses_plural": "Successfully imported {{count}} addresses",
   "Type the name of your contact. This name will be used across all the apps. It can be edited later on.": "Type the name of your contact. This name will be used across all the apps. It can be edited later on.",
   "address": "address",
   "address created": "address created",
@@ -17,6 +22,7 @@
   "new address": "new address",
   "no addresses saved yet, add any existing address": "no addresses saved yet, add any existing address",
   "send": "send",
-  "tags": "tags",
-  "transactions": "transactions"
+  "transactions": "transactions",
+  "{{count}} contacts successfully exported": "{{count}} contacts successfully exported",
+  "{{count}} contacts successfully exported_plural": "{{count}} contacts successfully exported"
 }

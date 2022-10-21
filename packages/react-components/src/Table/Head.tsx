@@ -1,10 +1,11 @@
-// Copyright 2017-2021 @polkadot/react-components authors & contributors
+// Copyright 2017-2022 @polkadot/react-components authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
 import styled from 'styled-components';
 
 import Icon from '../Icon';
+import LabelHelp from '../LabelHelp';
 
 type HeaderDef = [React.ReactNode?, string?, number?, (() => void)?];
 
@@ -13,9 +14,11 @@ interface Props {
   filter?: React.ReactNode;
   header?: (null | undefined | HeaderDef)[];
   isEmpty: boolean;
+  helpHeader?: Array<React.ReactNode>;
+  help?: Array<React.ReactNode>;
 }
 
-function Head ({ className = '', filter, header, isEmpty }: Props): React.ReactElement<Props> | null {
+function Head ({ className = '', filter, header, help, helpHeader, isEmpty }: Props): React.ReactElement<Props> | null {
   if (!header?.length) {
     return null;
   }
@@ -49,6 +52,7 @@ function Head ({ className = '', filter, header, isEmpty }: Props): React.ReactE
                 ? ''
                 : label
             }
+            {helpHeader && help && helpHeader.includes(label) ? <LabelHelp help={help[helpHeader.indexOf(label)]} /> : ''}
           </th>
         )}
       </tr>

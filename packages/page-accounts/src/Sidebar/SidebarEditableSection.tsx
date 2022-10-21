@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/page-accounts authors & contributors
+// Copyright 2017-2022 @polkadot/page-accounts authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useCallback, useEffect } from 'react';
@@ -14,12 +14,13 @@ import Flags from './Flags';
 interface Props {
   accountIndex: string | undefined;
   address: string;
+  cmixId?: string;
   isBeingEdited: (arg: boolean) => void;
   onUpdateName: () => void;
   sidebarRef: React.RefObject<HTMLDivElement>;
 }
 
-function SidebarEditableSection ({ accountIndex, address, isBeingEdited, onUpdateName, sidebarRef }: Props): React.ReactElement<Props> {
+function SidebarEditableSection ({ accountIndex, address, cmixId, isBeingEdited, onUpdateName, sidebarRef }: Props): React.ReactElement<Props> {
   const { flags, isEditing, isEditingName, isEditingTags, name, onForgetAddress, onSaveName, onSaveTags, setIsEditingName, setIsEditingTags, setName, setTags, tags, toggleIsEditingName, toggleIsEditingTags } = useAccountInfo(address);
 
   useEffect(() => {
@@ -48,6 +49,7 @@ function SidebarEditableSection ({ accountIndex, address, isBeingEdited, onUpdat
     <>
       <AddressSection
         accountIndex={accountIndex}
+        cmixId={cmixId}
         defaultValue={name}
         editingName={isEditingName}
         flags={flags}

@@ -1,9 +1,11 @@
-// Copyright 2017-2021 @polkadot/app-staking authors & contributors
+// Copyright 2017-2022 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type BN from 'bn.js';
+import type { Compact } from '@polkadot/types';
+import type { Perbill } from '@polkadot/types/interfaces/runtime';
 import type { Inflation } from '@polkadot/react-hooks/types';
 import type { AccountId, Balance, BlockNumber, EraIndex, Exposure, Hash, SessionIndex, ValidatorPrefs, ValidatorPrefsTo196 } from '@polkadot/types/interfaces';
+import type { BN } from '@polkadot/util';
 
 export type Nominators = Record<string, string[]>;
 
@@ -35,11 +37,18 @@ export interface SessionRewards {
 
 interface ValidatorInfoRank {
   rankBondOther: number;
+  rankComm: number;
   rankBondOwn: number;
   rankBondTotal: number;
+  rankPredictedStake: number;
   rankNumNominators: number;
   rankOverall: number;
   rankReward: number;
+  rankTeamMultiplier: number;
+}
+
+export interface ExposureWithCustody extends Exposure {
+  custody?: Compact<Balance>;
 }
 
 export interface ValidatorInfo extends ValidatorInfoRank {
@@ -48,13 +57,22 @@ export interface ValidatorInfo extends ValidatorInfoRank {
   bondOwn: BN;
   bondShare: number;
   bondTotal: BN;
+  bondTotalWithTM: BN;
+  electedStake: BN;
+  predictedStake: BN;
+  predictedElected?: boolean;
+  cmixId?: string;
+  commission?: Compact<Perbill>;
   commissionPer: number;
-  exposure: Exposure;
+  pastAvgCommission: number;
+  isCommissionReducing: boolean;
+  exposure: ExposureWithCustody;
   isActive: boolean;
   isBlocking: boolean;
   isElected: boolean;
   isFavorite: boolean;
   isNominating: boolean;
+  nominatingAccounts: string[];
   key: string;
   knownLength: BN;
   lastPayout?: BN;
@@ -66,17 +84,20 @@ export interface ValidatorInfo extends ValidatorInfoRank {
   stakedReturnCmp: number;
   validatorPrefs?: ValidatorPrefs | ValidatorPrefsTo196;
   withReturns?: boolean;
+  teamMultiplier: BN;
 }
 
 export type TargetSortBy = keyof ValidatorInfoRank;
 
 export interface SortedTargets {
-  avgStaked?: BN;
+  avgStakedWithTM?: BN;
   counterForNominators?: BN;
   counterForValidators?: BN;
+  custodyRewardsActive: boolean;
+  electedAvgStaked?: BN;
+  electedLowStaked?: BN;
   electedIds?: string[];
   inflation: Inflation;
-  lowStaked?: BN;
   medianComm: number;
   maxNominatorsCount?: BN;
   maxValidatorsCount?: BN;

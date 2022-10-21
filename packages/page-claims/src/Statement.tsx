@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/app-claims authors & contributors
+// Copyright 2017-2022 @polkadot/app-claims authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { StatementKind } from '@polkadot/types/interfaces';
@@ -16,12 +16,12 @@ export interface Props {
 }
 
 // Get the full hardcoded text for a statement
-function StatementFullText ({ statementUrl, systemChain }: { statementUrl?: string; systemChain: string }): React.ReactElement | null {
+function StatementFullText({ statementUrl, systemChain }: { statementUrl?: string; systemChain: string }): React.ReactElement | null {
   const { t } = useTranslation();
 
   switch (systemChain) {
-    case 'Polkadot':
-    case 'Polkadot CC1':
+    case 'xx network':
+    case 'phoenixx testnet':
       return statementUrl
         ? <iframe src={statementUrl} />
         : null;
@@ -31,7 +31,7 @@ function StatementFullText ({ statementUrl, systemChain }: { statementUrl?: stri
   }
 }
 
-function Statement ({ className, kind, systemChain }: Props): React.ReactElement<Props> | null {
+function Statement({ className, kind, systemChain }: Props): React.ReactElement<Props> | null {
   const { t } = useTranslation();
   const statementUrl = getStatement(systemChain, kind)?.url;
 

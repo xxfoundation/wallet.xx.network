@@ -1,0 +1,7 @@
+{
+  "name": "@xxnetwork/custom-derives",
+  "private": true,
+  "type": "module",
+  "version": "0.103.2-8",
+  "license": "Apache-2.0"
+}

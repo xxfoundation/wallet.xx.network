@@ -1,14 +1,15 @@
-// Copyright 2017-2021 @polkadot/app-staking authors & contributors
+// Copyright 2017-2022 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { DeriveStakingOverview } from '@polkadot/api-derive/types';
 import type { SortedTargets } from '../types';
 
-import React from 'react';
+import React, { useContext } from 'react';
 import styled from 'styled-components';
 
 import SummarySession from '@polkadot/app-explorer/SummarySession';
-import { CardSummary, Spinner, SummaryBox } from '@polkadot/react-components';
+import { CardSummary, IdentityIcon, Spinner, SummaryBox } from '@polkadot/react-components';
+import { BlockAuthorsContext, TotalStakeableIssuance } from '@polkadot/react-query';
 import { formatNumber } from '@polkadot/util';
 
 import { useTranslation } from '../translate';
@@ -21,8 +22,9 @@ interface Props {
   targets: SortedTargets;
 }
 
-function Summary ({ className = '', isVisible, stakingOverview, targets: { counterForNominators, inflation: { idealStake, inflation, stakedFraction }, nominators, waitingIds } }: Props): React.ReactElement<Props> {
+function Summary({ className = '', isVisible, stakingOverview, targets: { nominators, waitingIds } }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
+  const { lastBlockAuthors, lastBlockNumber } = useContext(BlockAuthorsContext);
 
   return (
     <SummaryBox className={`${className}${!isVisible ? ' staking--hidden' : ''}`}>
@@ -34,7 +36,7 @@ function Summary ({ className = '', isVisible, stakingOverview, targets: { count
           }
         </CardSummary>
         <CardSummary
-          className='media--900'
+          className='media--1000'
           label={t<string>('waiting')}
         >
           {waitingIds
@@ -43,51 +45,37 @@ function Summary ({ className = '', isVisible, stakingOverview, targets: { count
           }
         </CardSummary>
         <CardSummary
-          className='media--1000'
-          label={
-            counterForNominators
-              ? t<string>('active / nominators')
-              : t<string>('nominators')
-          }
+          className='media--1100'
+          label={t<string>('nominators')}
         >
           {nominators
-            ? (
-              <>
-                {formatNumber(nominators.length)}
-                {counterForNominators && (
-                  <>&nbsp;/&nbsp;{formatNumber(counterForNominators)}</>
-                )}
-              </>
-            )
+            ? formatNumber(nominators.length)
             : <Spinner noLabel />
           }
         </CardSummary>
       </section>
       <section>
-        {(idealStake > 0) && Number.isFinite(idealStake) && (
-          <CardSummary
-            className='media--1400'
-            label={t<string>('ideal staked')}
-          >
-            <>{(idealStake * 100).toFixed(1)}%</>
-          </CardSummary>
-        )}
-        {(stakedFraction > 0) && (
-          <CardSummary
-            className='media--1300'
-            label={t<string>('staked')}
-          >
-            <>{(stakedFraction * 100).toFixed(1)}%</>
-          </CardSummary>
-        )}
-        {(inflation > 0) && Number.isFinite(inflation) && (
-          <CardSummary
-            className='media--1200'
-            label={t<string>('inflation')}
-          >
-            <>{inflation.toFixed(1)}%</>
-          </CardSummary>
-        )}
+        <CardSummary
+          className='media--800'
+          label={t<string>('total stakeable issuance')}
+        >
+          <TotalStakeableIssuance />
+        </CardSummary>
+      </section>
+      <section>
+        <CardSummary
+          className='validator--Summary-authors'
+          label={t<string>('last block')}
+        >
+          {lastBlockAuthors?.map((author): React.ReactNode => (
+            <IdentityIcon
+              className='validator--Account-block-icon'
+              key={author}
+              value={author}
+            />
+          ))}
+          {lastBlockNumber}
+        </CardSummary>
       </section>
       <section>
         <SummarySession />

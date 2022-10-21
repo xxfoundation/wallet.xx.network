@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/react-components authors & contributors
+// Copyright 2017-2022 @polkadot/react-components authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { GroupProps } from './types';
@@ -6,7 +6,7 @@ import type { GroupProps } from './types';
 import React from 'react';
 import styled from 'styled-components';
 
-function ButtonGroup ({ children, className = '', isCentered }: GroupProps): React.ReactElement<GroupProps> {
+function ButtonGroup({ children, className = '', isCentered }: GroupProps): React.ReactElement<GroupProps> {
   return (
     <div className={`ui--Button-Group${isCentered ? ' isCentered' : ''} ${className}`}>
       {children}
@@ -31,7 +31,11 @@ export default React.memo(styled(ButtonGroup)`
     margin: 0 0.25rem;
   }
 
-  .ui--CopyButton {
+  .ui--CopyButton .ui--PasteButton {
     display: inline-block;
+  }
+
+  .ui--ToggleGroup {
+    float: left;
   }
 `);

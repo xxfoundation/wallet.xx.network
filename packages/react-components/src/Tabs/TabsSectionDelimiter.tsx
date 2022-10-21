@@ -1,4 +1,4 @@
-// Copyright 2017-2020 @polkadot/react-components authors & contributors
+// Copyright 2017-2022 @polkadot/react-components authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
@@ -8,12 +8,12 @@ interface TabsSectionDelimiterProps {
   className?: string;
 }
 
-function TabsSectionDelimiter ({ className = '' }: TabsSectionDelimiterProps): React.ReactElement {
+function TabsSectionDelimiter({ className = '' }: TabsSectionDelimiterProps): React.ReactElement {
   return (
     <div className={className}>
       <svg
         fill='none'
-        height='47'
+        height='41'
         viewBox='0 0 17 65'
         width='17'
         xmlns='http://www.w3.org/2000/svg'

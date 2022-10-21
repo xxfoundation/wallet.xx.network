@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/app-democracy authors & contributors
+// Copyright 2017-2022 @polkadot/app-democracy authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { DeriveElectionsInfo } from '@polkadot/api-derive/types';
@@ -23,7 +23,7 @@ function Candidates ({ allVotes = {}, electionsInfo }: Props): React.ReactElemen
   const headerCandidatesRef = useRef([
     [t('candidates'), 'start', 2],
     [],
-    []
+    [t('voters'), 'expand']
   ]);
 
   const headerRunnersRef = useRef([

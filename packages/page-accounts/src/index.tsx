@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/app-accounts authors & contributors
+// Copyright 2017-2022 @polkadot/app-accounts authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { AppProps as Props } from '@polkadot/react-components/types';
@@ -11,9 +11,9 @@ import { useAccounts, useIpfs } from '@polkadot/react-hooks';
 
 import basicMd from './md/basic.md';
 import Accounts from './Accounts';
+import GenerateWallet from './Generate';
 import { useTranslation } from './translate';
 import useCounter from './useCounter';
-import Vanity from './Vanity';
 
 export { useCounter };
 
@@ -27,12 +27,12 @@ function AccountsApp ({ basePath, onStatusChange }: Props): React.ReactElement<P
   const tabsRef = useRef([
     {
       isRoot: true,
-      name: 'overview',
+      name: 'accounts',
       text: t<string>('My accounts')
     },
     {
-      name: 'vanity',
-      text: t<string>('Vanity generator')
+      name: 'generate',
+      text: t<string>('Generate Account')
     }
   ]);
 
@@ -45,11 +45,8 @@ function AccountsApp ({ basePath, onStatusChange }: Props): React.ReactElement<P
         items={tabsRef.current}
       />
       <Switch>
-        <Route path={`${basePath}/vanity`}>
-          <Vanity
-            basePath={basePath}
-            onStatusChange={onStatusChange}
-          />
+        <Route path={`${basePath}/generate`}>
+          <GenerateWallet />
         </Route>
         <Route>
           <Accounts

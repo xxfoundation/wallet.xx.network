@@ -1,22 +1,24 @@
-// Copyright 2017-2021 @polkadot/app-staking authors & contributors
+// Copyright 2017-2022 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { ApiPromise } from '@polkadot/api';
-import type { DeriveSessionInfo, DeriveStakingElected, DeriveStakingWaiting } from '@polkadot/api-derive/types';
-import type { Inflation } from '@polkadot/react-hooks/types';
-import type { Option, u32 } from '@polkadot/types';
+import type { DeriveEraPrefs, DeriveSessionInfo, DeriveStakingElected, DeriveStakingQuery, DeriveStakingWaiting } from '@polkadot/api-derive/types';
+import type { Compact, Option, u32, u128 } from '@polkadot/types';
 import type { SortedTargets, TargetSortBy, ValidatorInfo } from './types';
 
-import BN from 'bn.js';
 import { useMemo } from 'react';
 
-import { useAccounts, useApi, useCall, useCallMulti, useInflation } from '@polkadot/react-hooks';
-import { arrayFlatten, BN_HUNDRED, BN_MAX_INTEGER, BN_ONE, BN_ZERO } from '@polkadot/util';
+import { createNamedHook, useAccounts, useApi, useCall, useCallMulti, useInflation } from '@polkadot/react-hooks';
+import { PalletStakingExposure } from '@polkadot/types/lookup';
+import { arrayFlatten, BN, BN_HUNDRED, BN_MAX_INTEGER, BN_ONE, BN_ZERO } from '@polkadot/util';
+import { DeriveEraPoints } from '@polkadot/api-derive/types';
+
+import useTeamMultipliers, { TeamMultipliers } from './useTeamMultipliers';
 
 interface LastEra {
   activeEra: BN;
   eraLength: BN;
-  lastEra: BN;
+  lastEras: BN[];
   sessionLength: BN;
 }
 
@@ -31,11 +33,28 @@ interface MultiResult {
   totalIssuance?: BN;
 }
 
+// Interface overrides to get custody from exposure
+interface PalletStakingExposureWithCustody extends PalletStakingExposure {
+  custody: Compact<u128>;
+}
+
+interface DeriveStakingQueryWithCustody extends DeriveStakingQuery {
+  exposure: PalletStakingExposureWithCustody;
+}
+
+interface DeriveStakingElectedWithCustody extends DeriveStakingElected {
+  info: DeriveStakingQueryWithCustody[];
+}
+
+interface DeriveStakingWaitingWithCustody extends DeriveStakingWaiting {
+  info: DeriveStakingQueryWithCustody[];
+}
+
 const EMPTY_PARTIAL: Partial<SortedTargets> = {};
 const DEFAULT_FLAGS_ELECTED = { withController: true, withExposure: true, withPrefs: true };
 const DEFAULT_FLAGS_WAITING = { withController: true, withPrefs: true };
 
-function mapIndex (mapBy: TargetSortBy): (info: ValidatorInfo, index: number) => ValidatorInfo {
+function mapIndex(mapBy: TargetSortBy): (info: ValidatorInfo, index: number) => ValidatorInfo {
   return (info, index): ValidatorInfo => {
     info[mapBy] = index + 1;
 
@@ -43,11 +62,11 @@ function mapIndex (mapBy: TargetSortBy): (info: ValidatorInfo, index: number) =>
   };
 }
 
-function isWaitingDerive (derive: DeriveStakingElected | DeriveStakingWaiting): derive is DeriveStakingWaiting {
-  return !(derive as DeriveStakingElected).nextElected;
+function isWaitingDerive(derive: DeriveStakingElectedWithCustody | DeriveStakingWaitingWithCustody): derive is DeriveStakingWaitingWithCustody {
+  return !(derive as DeriveStakingElectedWithCustody).nextElected;
 }
 
-function sortValidators (list: ValidatorInfo[]): ValidatorInfo[] {
+function sortValidators(list: ValidatorInfo[]): ValidatorInfo[] {
   const existing: string[] = [];
 
   return list
@@ -64,14 +83,16 @@ function sortValidators (list: ValidatorInfo[]): ValidatorInfo[] {
     })
     // .filter((a) => a.bondTotal.gtn(0))
     // ignored, not used atm
-    // .sort((a, b) => b.commissionPer - a.commissionPer)
-    // .map(mapIndex('rankComm'))
+    .sort((a, b) => b.commissionPer - a.commissionPer)
+    .map(mapIndex('rankComm'))
     .sort((a, b) => b.bondOther.cmp(a.bondOther))
     .map(mapIndex('rankBondOther'))
     .sort((a, b) => b.bondOwn.cmp(a.bondOwn))
     .map(mapIndex('rankBondOwn'))
-    .sort((a, b) => b.bondTotal.cmp(a.bondTotal))
+    .sort((a, b) => b.bondTotalWithTM.cmp(a.bondTotalWithTM))
     .map(mapIndex('rankBondTotal'))
+    .sort((a, b) => b.predictedStake.cmp(a.predictedStake))
+    .map(mapIndex('rankPredictedStake'))
     // .sort((a, b) => b.validatorPayment.cmp(a.validatorPayment))
     // .map(mapIndex('rankPayment'))
     .sort((a, b) => a.stakedReturnCmp - b.stakedReturnCmp)
@@ -79,12 +100,17 @@ function sortValidators (list: ValidatorInfo[]): ValidatorInfo[] {
     // ignored, not used atm
     // .sort((a, b) => b.numNominators - a.numNominators)
     // .map(mapIndex('rankNumNominators'))
+    .sort((a, b) => b.teamMultiplier.cmp(a.teamMultiplier))
+    .map(mapIndex('rankTeamMultiplier'))
     .sort((a, b) =>
       (b.stakedReturnCmp - a.stakedReturnCmp) ||
       (a.commissionPer - b.commissionPer) ||
       (b.rankBondTotal - a.rankBondTotal)
     )
-    .map(mapIndex('rankOverall'))
+    .map(mapIndex('rankOverall')).sort((a, b) =>
+      (b.nominatingAccounts.length - a.nominatingAccounts.length)
+    )
+    .map(mapIndex('rankNumNominators'))
     .sort((a, b) =>
       a.isFavorite === b.isFavorite
         ? 0
@@ -92,11 +118,11 @@ function sortValidators (list: ValidatorInfo[]): ValidatorInfo[] {
     );
 }
 
-function extractSingle (api: ApiPromise, allAccounts: string[], derive: DeriveStakingElected | DeriveStakingWaiting, favorites: string[], { activeEra, eraLength, lastEra, sessionLength }: LastEra, historyDepth?: BN, withReturns?: boolean): [ValidatorInfo[], Record<string, BN>] {
+function extractSingle(api: ApiPromise, allAccounts: string[], custodyRewardsActive: boolean, derive: DeriveStakingElectedWithCustody | DeriveStakingWaitingWithCustody, favorites: string[], { activeEra, eraLength, lastEras, sessionLength }: LastEra, historyDepth?: BN, withReturns?: boolean, teamMultipliers?: TeamMultipliers, erasPrefs?: DeriveEraPrefs[]): [ValidatorInfo[], Record<string, BN>] {
   const nominators: Record<string, BN> = {};
-  const emptyExposure = api.createType('Exposure');
+  const lastEra = lastEras.length ? lastEras[lastEras.length-1] : BN_ZERO;
   const earliestEra = historyDepth && lastEra.sub(historyDepth).iadd(BN_ONE);
-  const list = derive.info.map(({ accountId, exposure = emptyExposure, stakingLedger, validatorPrefs }): ValidatorInfo => {
+  const list = derive.info.map(({ accountId, cmixId, exposure, stakingLedger, validatorPrefs }): ValidatorInfo => {
     // some overrides (e.g. Darwinia Crab) does not have the own/total field in Exposure
     let [bondOwn, bondTotal] = exposure.total
       ? [exposure.own.unwrap(), exposure.total.unwrap()]
@@ -129,13 +155,40 @@ function extractSingle (api: ApiPromise, allAccounts: string[], derive: DeriveSt
       lastPayout = lastEra.sub(lastPayout).mul(eraLength);
     }
 
+    const validatorNominators = (exposure.others || []).map((indv) => indv.who.toString());
+    const ownNominatingAccounts = validatorNominators.filter((id) => allAccounts.includes(id));
+    const currEraPrefs = erasPrefs && erasPrefs[erasPrefs.length-1];
+    const commission = (!isWaitingDerive(derive) && currEraPrefs?.validators[key]) ? currEraPrefs?.validators[key].commission : validatorPrefs.commission;
+    const commissionPer = validatorPrefs.commission.unwrap().toNumber() / 10_000_000;
+    const pastCommissions: number[] = [];
+    erasPrefs?.forEach((eraPrefs) => {
+      const comm = eraPrefs.validators[key] && eraPrefs.validators[key].commission.unwrap().toNumber() / 10_000_000;
+      if (comm) {
+        pastCommissions.push(comm);
+      }
+    });
+    const pastAvgCommission = pastCommissions.length ? pastCommissions.reduce((total, num) => total + num, 0.0) / pastCommissions.length : commissionPer;
+    const isCommissionReducing = commissionPer < (pastAvgCommission - 20);
+
+    const teamMultiplier = (teamMultipliers && teamMultipliers[key]) || BN_ZERO;
+    const bondTotalWithTM = custodyRewardsActive ? bondTotal.add(teamMultiplier) : bondTotal;
+    const electedMultiplier = (custodyRewardsActive && !skipRewards) ? exposure.custody.unwrap() : BN_ZERO;
+    const electedStake = skipRewards ? BN_ZERO : bondTotal.add(electedMultiplier);
+
     return {
       accountId,
       bondOther: bondTotal.sub(bondOwn),
       bondOwn,
       bondShare: 0,
       bondTotal,
-      commissionPer: validatorPrefs.commission.unwrap().toNumber() / 10_000_000,
+      bondTotalWithTM,
+      electedStake,
+      predictedStake: BN_ZERO,
+      cmixId,
+      commission,
+      commissionPer,
+      pastAvgCommission,
+      isCommissionReducing,
       exposure,
       isActive: !skipRewards,
       isBlocking: !!(validatorPrefs.blocked && validatorPrefs.blocked.isTrue),
@@ -152,6 +205,7 @@ function extractSingle (api: ApiPromise, allAccounts: string[], derive: DeriveSt
       knownLength: activeEra.sub(stakingLedger.claimedRewards[0] || activeEra),
       lastPayout,
       minNominated,
+      nominatingAccounts: ownNominatingAccounts,
       numNominators: (exposure.others || []).length,
       numRecentPayouts: earliestEra
         ? stakingLedger.claimedRewards.filter((era) => era.gte(earliestEra)).length
@@ -159,12 +213,16 @@ function extractSingle (api: ApiPromise, allAccounts: string[], derive: DeriveSt
       rankBondOther: 0,
       rankBondOwn: 0,
       rankBondTotal: 0,
+      rankPredictedStake: 0,
+      rankComm: 0,
       rankNumNominators: 0,
       rankOverall: 0,
       rankReward: 0,
+      rankTeamMultiplier: 0,
       skipRewards,
       stakedReturn: 0,
       stakedReturnCmp: 0,
+      teamMultiplier,
       validatorPrefs,
       withReturns
     };
@@ -173,36 +231,58 @@ function extractSingle (api: ApiPromise, allAccounts: string[], derive: DeriveSt
   return [list, nominators];
 }
 
-function addReturns (inflation: Inflation, baseInfo: Partial<SortedTargets>): Partial<SortedTargets> {
-  const avgStaked = baseInfo.avgStaked;
+function addReturns(inflation: { stakedReturn: number }, baseInfo: Partial<SortedTargets>, lastErasPoints: DeriveEraPoints[]): Partial<SortedTargets> {
+  const avgStaked = baseInfo.avgStakedWithTM;
   const validators = baseInfo.validators;
+  const avgPoints = lastErasPoints.map(( { eraPoints, validators }) => {
+    const len = Object.keys(validators).length;
+    return len ? eraPoints.toNumber() / len : 1.0
+  });
 
   if (!validators) {
     return baseInfo;
   }
 
   avgStaked && !avgStaked.isZero() && validators.forEach((v): void => {
-    if (!v.skipRewards && v.withReturns) {
-      const adjusted = avgStaked.mul(BN_HUNDRED).imuln(inflation.stakedReturn).div(v.bondTotal);
+    const denom = v.predictedElected === undefined ? v.bondTotalWithTM : v.predictedStake;
+    const adjusted = denom.isZero() ? BN_ZERO : avgStaked.mul(BN_HUNDRED).imuln(inflation.stakedReturn).div(denom);
+    const performance: number[] = [];
+    avgPoints.forEach((avg, index) => {
+      const points = lastErasPoints[index].validators[v.accountId.toString()];
+      points && performance.push(points.toNumber() / avg);
+    });
+    const avgPerformance = performance.length ? performance.reduce((sum, val) => sum + val, 0) / performance.length : 1.0;
 
-      // in some cases, we may have overflows... protect against those
-      v.stakedReturn = (adjusted.gt(BN_MAX_INTEGER) ? BN_MAX_INTEGER : adjusted).toNumber() / BN_HUNDRED.toNumber();
-      v.stakedReturnCmp = v.stakedReturn * (100 - v.commissionPer) / 100;
-    }
+    // in some cases, we may have overflows... protect against those
+    v.stakedReturn = (adjusted.gt(BN_MAX_INTEGER) ? BN_MAX_INTEGER : adjusted).toNumber() / BN_HUNDRED.toNumber();
+    v.stakedReturnCmp = v.stakedReturn * avgPerformance * (100 - v.commissionPer) / 100;
   });
 
   return { ...baseInfo, validators: sortValidators(validators) };
 }
 
-function extractBaseInfo (api: ApiPromise, allAccounts: string[], electedDerive: DeriveStakingElected, waitingDerive: DeriveStakingWaiting, favorites: string[], totalIssuance: BN, lastEraInfo: LastEra, historyDepth?: BN): Partial<SortedTargets> {
-  const [elected, nominators] = extractSingle(api, allAccounts, electedDerive, favorites, lastEraInfo, historyDepth, true);
-  const [waiting] = extractSingle(api, allAccounts, waitingDerive, favorites, lastEraInfo);
+function extractBaseInfo(api: ApiPromise, allAccounts: string[], custodyRewardsActive: boolean, electedDerive: DeriveStakingElectedWithCustody, waitingDerive: DeriveStakingWaitingWithCustody, favorites: string[], totalIssuance: BN, lastEraInfo: LastEra, historyDepth?: BN, teamMultipliers?: TeamMultipliers, erasPrefs?: DeriveEraPrefs[]): Partial<SortedTargets> {
+  const [elected, nominators] = extractSingle(api, allAccounts, custodyRewardsActive, electedDerive, favorites, lastEraInfo, historyDepth, true, teamMultipliers, erasPrefs);
+  const [waiting] = extractSingle(api, allAccounts, custodyRewardsActive, waitingDerive, favorites, lastEraInfo, undefined, undefined, teamMultipliers, erasPrefs);
+  // Active real stake
   const activeTotals = elected
     .filter(({ isActive }) => isActive)
     .map(({ bondTotal }) => bondTotal)
     .sort((a, b) => a.cmp(b));
+  // Total real stake
   const totalStaked = activeTotals.reduce((total: BN, value) => total.iadd(value), new BN(0));
-  const avgStaked = totalStaked.divn(activeTotals.length);
+  // Total (live) multipliers
+  const totalTeamMultipliers = teamMultipliers ? teamMultipliers && Object.values(teamMultipliers).reduce((total, val) => total.add(val), BN_ZERO) : BN_ZERO;
+  // Average staked with live TM (used for return computation)
+  const avgStakedWithTM = totalStaked.add(totalTeamMultipliers).divn(activeTotals.length);
+
+  // Active elected stake (real + elected multiplier)
+  const electedTotals = elected
+  .filter(({ isActive }) => isActive)
+  .map(({ electedStake }) => electedStake)
+  .sort((a, b) => a.cmp(b));
+  // Average elected stake
+  const electedAvgStaked = electedTotals.reduce((total: BN, value) => total.iadd(value), new BN(0)).divn(electedTotals.length);
 
   // all validators, calc median commission
   const minNominated = Object.values(nominators).reduce((min: BN, value) => {
@@ -231,8 +311,9 @@ function extractBaseInfo (api: ApiPromise, allAccounts: string[], electedDerive:
   ]);
 
   return {
-    avgStaked,
-    lowStaked: activeTotals[0] || BN_ZERO,
+    avgStakedWithTM,
+    electedAvgStaked,
+    electedLowStaked: electedTotals[0] || BN_ZERO,
     medianComm,
     minNominated,
     nominateIds,
@@ -246,12 +327,20 @@ function extractBaseInfo (api: ApiPromise, allAccounts: string[], electedDerive:
 }
 
 const transformEra = {
-  transform: ({ activeEra, eraLength, sessionLength }: DeriveSessionInfo): LastEra => ({
-    activeEra,
-    eraLength,
-    lastEra: activeEra.isZero() ? BN_ZERO : activeEra.subn(1),
-    sessionLength
-  })
+  transform: ({ activeEra, eraLength, sessionLength }: DeriveSessionInfo): LastEra => {
+    const firstEra = activeEra.toNumber() < 7 ? BN_ZERO : activeEra.subn(7);
+    const lastEra = activeEra.isZero() ? BN_ZERO : activeEra.subn(1);
+    const lastEras: BN[] = [];
+    for (let era = firstEra; era.lte(lastEra); era = era.addn(1)) {
+      lastEras.push(era);
+    }
+    return {
+      activeEra,
+      eraLength,
+      lastEras,
+      sessionLength
+    }
+  }
 };
 
 const transformMulti = {
@@ -272,7 +361,7 @@ const transformMulti = {
   })
 };
 
-export default function useSortedTargets (favorites: string[], withLedger: boolean): SortedTargets {
+function useSortedTargetsImpl(favorites: string[]): SortedTargets {
   const { api } = useApi();
   const { allAccounts } = useAccounts();
   const { counterForNominators, counterForValidators, historyDepth, maxNominatorsCount, maxValidatorsCount, minNominatorBond, minValidatorBond, totalIssuance } = useCallMulti<MultiResult>([
@@ -285,29 +374,37 @@ export default function useSortedTargets (favorites: string[], withLedger: boole
     api.query.staking.minValidatorBond,
     api.query.balances?.totalIssuance
   ], transformMulti);
-  const electedInfo = useCall<DeriveStakingElected>(api.derive.staking.electedInfo, [{ ...DEFAULT_FLAGS_ELECTED, withLedger }]);
-  const waitingInfo = useCall<DeriveStakingWaiting>(api.derive.staking.waitingInfo, [{ ...DEFAULT_FLAGS_WAITING, withLedger }]);
+  const electedInfo = useCall<DeriveStakingElectedWithCustody>(api.derive.staking.electedInfo, [{ ...DEFAULT_FLAGS_ELECTED, withLedger: true }]);
+  const waitingInfo = useCall<DeriveStakingWaitingWithCustody>(api.derive.staking.waitingInfo, [{ ...DEFAULT_FLAGS_WAITING, withLedger: true }]);
   const lastEraInfo = useCall<LastEra>(api.derive.session.info, undefined, transformEra);
+  const lastErasPoints = useCall<DeriveEraPoints[]>(lastEraInfo?.lastEras && api.derive.staking._erasPoints, [lastEraInfo?.lastEras, false]);
+  const teamNominations = useTeamMultipliers();
+  const eras = (lastEraInfo && lastEraInfo.lastEras.length > 1) ? lastEraInfo?.lastEras.slice(1).concat(lastEraInfo?.activeEra) : [lastEraInfo?.activeEra];
+  const erasPrefs = useCall<DeriveEraPrefs[]>(api.derive.staking._erasPrefs, [eras, false]);
+
+  const custodyRewardsActive = electedInfo ? ('custody' in electedInfo.info[0].exposure) : false;
+  const totalTeamMultipliers = custodyRewardsActive ? teamNominations && Object.values(teamNominations).reduce((total, val) => total.add(val), BN_ZERO) : BN_ZERO;
 
   const baseInfo = useMemo(
-    () => electedInfo && lastEraInfo && totalIssuance && waitingInfo
-      ? extractBaseInfo(api, allAccounts, electedInfo, waitingInfo, favorites, totalIssuance, lastEraInfo, historyDepth)
+    () => electedInfo && lastEraInfo && totalIssuance && waitingInfo && teamNominations
+      ? extractBaseInfo(api, allAccounts, custodyRewardsActive, electedInfo, waitingInfo, favorites, totalIssuance, lastEraInfo, historyDepth, teamNominations, erasPrefs)
       : EMPTY_PARTIAL,
-    [api, allAccounts, electedInfo, favorites, historyDepth, lastEraInfo, totalIssuance, waitingInfo]
+    [electedInfo, lastEraInfo, totalIssuance, waitingInfo, teamNominations, api, allAccounts, custodyRewardsActive, favorites, historyDepth, erasPrefs]
   );
 
-  const inflation = useInflation(baseInfo?.totalStaked);
+  const inflation = useInflation(baseInfo?.totalStaked, totalTeamMultipliers);
 
   const partial = useMemo(
-    () => inflation && inflation.stakedReturn
-      ? addReturns(inflation, baseInfo)
+    () => inflation && inflation.stakedReturn && lastErasPoints
+      ? addReturns(inflation, baseInfo, lastErasPoints)
       : baseInfo,
-    [baseInfo, inflation]
+    [baseInfo, inflation, lastErasPoints]
   );
 
   return {
     counterForNominators,
     counterForValidators,
+    custodyRewardsActive,
     inflation,
     maxNominatorsCount,
     maxValidatorsCount,
@@ -318,3 +415,5 @@ export default function useSortedTargets (favorites: string[], withLedger: boole
     ...partial
   };
 }
+
+export default createNamedHook('useSortedTargets', useSortedTargetsImpl);

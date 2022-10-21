@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/react-components authors & contributors
+// Copyright 2017-2022 @polkadot/react-components authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { PopupWindowProps } from './types';
@@ -15,8 +15,9 @@ function PopupWindow ({ children, className = '', position, triggerRef, windowRe
   return createPortal(
     <div
       className={`${className}${verticalPosition === 'top' ? ' pointerTop' : ' pointerBottom'}`}
+      data-testid='popup-window'
       ref={windowRef}
-      style={renderWindowPosition && { transform: `translate3d(${renderWindowPosition.x}px, ${renderWindowPosition.y}px, 0)`, zIndex: 300 }}
+      style={renderWindowPosition && { transform: `translate3d(${renderWindowPosition.x}px, ${renderWindowPosition.y}px, 0)`, zIndex: 1000 }}
     >
       {children}
     </div>,

@@ -1,15 +1,14 @@
-// Copyright 2017-2021 @polkadot/app-staking authors & contributors
+// Copyright 2017-2022 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { DeriveBalancesAll } from '@polkadot/api-derive/types';
 import type { AmountValidateState } from '../types';
 
-import BN from 'bn.js';
 import React, { useEffect, useState } from 'react';
 
 import { MarkError, MarkWarning } from '@polkadot/react-components';
 import { useApi, useCall } from '@polkadot/react-hooks';
-import { BN_TEN, BN_THOUSAND, BN_ZERO, formatBalance } from '@polkadot/util';
+import { BN, BN_TEN, BN_THOUSAND, BN_ZERO, formatBalance } from '@polkadot/util';
 
 import { useTranslation } from '../../translate';
 
@@ -25,7 +24,7 @@ interface Props {
   value?: BN | null;
 }
 
-function formatExistential (value: BN): string {
+function formatExistential(value: BN): string {
   let fmt = (
     value
       .mul(BN_THOUSAND)
@@ -46,7 +45,7 @@ function formatExistential (value: BN): string {
   return fmt;
 }
 
-function ValidateAmount ({ currentAmount, isNominating, minNominated, minNominatorBond, minValidatorBond, onError, stashId, value }: Props): React.ReactElement<Props> | null {
+function ValidateAmount({ currentAmount, isNominating, minNominated, minNominatorBond, minValidatorBond, onError, stashId, value }: Props): React.ReactElement<Props> | null {
   const { t } = useTranslation();
   const { api } = useApi();
   const stashBalance = useCall<DeriveBalancesAll>(api.derive.balances?.all, [stashId]);
@@ -62,7 +61,7 @@ function ValidateAmount ({ currentAmount, isNominating, minNominated, minNominat
       let newWarning: string | null = null;
 
       if (check.gte(maxBond)) {
-        newError = t('The specified value is too large and does not allow funds to pay future transaction fees.');
+        newWarning = t('The specified value is large and may not allow enough funds to pay future transaction fees.');
       } else if (check.lt(existentialDeposit)) {
         newError = t('The bonded amount is less than the minimum bond amount of {{existentialDeposit}}', {
           replace: { existentialDeposit: formatExistential(existentialDeposit) }
@@ -71,10 +70,6 @@ function ValidateAmount ({ currentAmount, isNominating, minNominated, minNominat
         if (minNominatorBond && check.lt(minNominatorBond)) {
           newError = t('The bonded amount is less than the minimum threshold of {{minBond}} for nominators', {
             replace: { minBond: formatBalance(minNominatorBond) }
-          });
-        } else if (minNominated && check.lt(minNominated)) {
-          newWarning = t('The bonded amount is less than the current active minimum nominated amount of {{minNomination}} and depending on the network state, may not be selected to participate', {
-            replace: { minNomination: formatBalance(minNominated) }
           });
         }
       } else {
@@ -98,7 +93,7 @@ function ValidateAmount ({ currentAmount, isNominating, minNominated, minNominat
         return { error, warning };
       });
     }
-  }, [api, currentAmount, isNominating, minNominated, minNominatorBond, minValidatorBond, onError, stashBalance, t, value]);
+  }, [api, currentAmount, isNominating, minNominated, minNominatorBond, minValidatorBond, onError, stashBalance, t, value, setResult]);
 
   if (error) {
     return <MarkError content={error} />;

@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/app-staking authors & contributors
+// Copyright 2017-2022 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { DeriveBalancesAll } from '@polkadot/api-derive/types';
@@ -38,7 +38,7 @@ const transformStash = {
       : null
 };
 
-function ValidateController ({ accountId, controllerId, defaultController, onError }: Props): React.ReactElement<Props> | null {
+function ValidateController({ accountId, controllerId, defaultController, onError }: Props): React.ReactElement<Props> | null {
   const { t } = useTranslation();
   const { api } = useApi();
   const bondedId = useCall<string | null>(controllerId ? api.query.staking.bonded : null, [controllerId], transformBonded);
@@ -62,9 +62,10 @@ function ValidateController ({ accountId, controllerId, defaultController, onErr
       } else if (allBalances?.freeBalance.isZero()) {
         isFatal = true;
         newError = t('The controller does not have sufficient funds available to cover transaction fees. Ensure that a funded controller is used.');
-      } else if (controllerId === accountId) {
-        newError = t('Distinct stash and controller accounts are recommended to ensure fund security. You will be allowed to make the transaction, but take care to not tie up all funds, only use a portion of the available funds during this period.');
       }
+      //  else if (controllerId === accountId) {
+      //   newError = t('Distinct stash and controller accounts are recommended to ensure fund security. You will be allowed to make the transaction, but take care to not tie up all funds, only use a portion of the available funds during this period.');
+      // }
 
       onError(newError, isFatal);
       setError((state) => state.error !== newError ? { error: newError, isFatal } : state);

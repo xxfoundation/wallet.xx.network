@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/app-explorer authors & contributors
+// Copyright 2017-2022 @polkadot/app-explorer authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { EventRecord } from '@polkadot/types/interfaces';
@@ -12,12 +12,13 @@ interface Props {
   value: EventRecord;
 }
 
-function Event ({ className = '', value: { event } }: Props): React.ReactElement<Props> {
+function Event({ className = '', value: { event } }: Props): React.ReactElement<Props> {
   return (
     <Expander
       className={className}
       summary={`${event.section}.${event.method}`}
       summaryMeta={event.meta}
+      data={event.data}
     >
       <EventDisplay
         className='details'

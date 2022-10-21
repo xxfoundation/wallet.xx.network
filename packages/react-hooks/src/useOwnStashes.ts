@@ -1,18 +1,20 @@
-// Copyright 2017-2021 @polkadot/react-hooks authors & contributors
+// Copyright 2017-2022 @polkadot/react-hooks authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Option } from '@polkadot/types';
-import type { AccountId, StakingLedger } from '@polkadot/types/interfaces';
+import type { AccountId } from '@polkadot/types/interfaces';
+import type { PalletStakingStakingLedger } from '@polkadot/types/lookup';
 
 import { useMemo } from 'react';
 
+import { createNamedHook } from './createNamedHook';
 import { useAccounts } from './useAccounts';
 import { useApi } from './useApi';
 import { useCall } from './useCall';
 
 type IsInKeyring = boolean;
 
-function getStashes (allAccounts: string[], ownBonded: Option<AccountId>[], ownLedger: Option<StakingLedger>[]): [string, IsInKeyring][] {
+function getStashes (allAccounts: string[], ownBonded: Option<AccountId>[], ownLedger: Option<PalletStakingStakingLedger>[]): [string, IsInKeyring][] {
   const result: [string, IsInKeyring][] = [];
 
   ownBonded.forEach((value, index): void => {
@@ -30,11 +32,11 @@ function getStashes (allAccounts: string[], ownBonded: Option<AccountId>[], ownL
   return result;
 }
 
-export function useOwnStashes (): [string, IsInKeyring][] | undefined {
+function useOwnStashesImpl (): [string, IsInKeyring][] | undefined {
   const { allAccounts, hasAccounts } = useAccounts();
   const { api } = useApi();
   const ownBonded = useCall<Option<AccountId>[]>(hasAccounts && api.query.staking?.bonded.multi, [allAccounts]);
-  const ownLedger = useCall<Option<StakingLedger>[]>(hasAccounts && api.query.staking?.ledger.multi, [allAccounts]);
+  const ownLedger = useCall<Option<PalletStakingStakingLedger>[]>(hasAccounts && api.query.staking?.ledger.multi, [allAccounts]);
 
   return useMemo(
     () => hasAccounts
@@ -46,7 +48,9 @@ export function useOwnStashes (): [string, IsInKeyring][] | undefined {
   );
 }
 
-export function useOwnStashIds (): string[] | undefined {
+export const useOwnStashes = createNamedHook('useOwnStashes', useOwnStashesImpl);
+
+function useOwnStashIdsImpl (): string[] | undefined {
   const ownStashes = useOwnStashes();
 
   return useMemo(
@@ -56,3 +60,5 @@ export function useOwnStashIds (): string[] | undefined {
     [ownStashes]
   );
 }
+
+export const useOwnStashIds = createNamedHook('useOwnStashIds', useOwnStashIdsImpl);

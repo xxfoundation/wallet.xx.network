@@ -1,13 +1,12 @@
-// Copyright 2017-2021 @polkadot/app-bounties authors & contributors
+// Copyright 2017-2022 @polkadot/app-bounties authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { StakingLedger } from '@polkadot/types/interfaces';
-
-import BN from 'bn.js';
+import type { PalletStakingStakingLedger } from '@polkadot/types/lookup';
 
 import { TypeRegistry } from '@polkadot/types/create';
+import { BN } from '@polkadot/util';
 
-export function makeStakingLedger (active: BN | number | string): StakingLedger {
+export function makeStakingLedger (active: BN | number | string): PalletStakingStakingLedger {
   const reg = new TypeRegistry();
 
   // Constructing the whole StakingLedger structure is hard,
@@ -17,5 +16,5 @@ export function makeStakingLedger (active: BN | number | string): StakingLedger 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   return {
     active: reg.createType('Compact<Balance>', reg.createType('Balance', new BN(active)))
-  } as StakingLedger;
+  } as PalletStakingStakingLedger;
 }

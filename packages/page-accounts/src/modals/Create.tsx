@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/app-accounts authors & contributors
+// Copyright 2017-2022 @polkadot/app-accounts authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { ActionStatus } from '@polkadot/react-components/Status/types';
@@ -7,24 +7,24 @@ import type { AddressState, CreateOptions, CreateProps, DeriveValidationOutput, 
 import React, { useCallback, useRef, useState } from 'react';
 import styled from 'styled-components';
 
-import { DEV_PHRASE } from '@polkadot/keyring/defaults';
-import { AddressRow, Button, Checkbox, CopyButton, Dropdown, Expander, Input, MarkError, MarkWarning, Modal, TextArea } from '@polkadot/react-components';
-import { useApi, useLedger, useStepper } from '@polkadot/react-hooks';
+import { AddressRow, Button, Checkbox, Dropdown, Expander, Input, MarkError, MarkWarning, Modal, TextArea } from '@polkadot/react-components';
+import { useLedger, useStepper } from '@polkadot/react-hooks';
 import { keyring } from '@polkadot/ui-keyring';
 import { settings } from '@polkadot/ui-settings';
 import { isHex, u8aToHex } from '@polkadot/util';
-import { hdLedger, hdValidatePath, keyExtractSuri, mnemonicGenerate, mnemonicValidate, randomAsU8a } from '@polkadot/util-crypto';
+import { hdLedger, hdValidatePath, keyExtractSuri, mnemonicValidate } from '@polkadot/util-crypto';
 
 import { useTranslation } from '../translate';
 import { tryCreateAccount } from '../util';
 import CreateAccountInputs from './CreateAccountInputs';
 import CreateConfirmation from './CreateConfirmation';
-import CreateEthDerivationPath, { ETH_DEFAULT_PATH } from './CreateEthDerivationPath';
+import CreateEthDerivationPath from './CreateEthDerivationPath';
 import CreateSuriLedger from './CreateSuriLedger';
 import ExternalWarning from './ExternalWarning';
 
 const DEFAULT_PAIR_TYPE = 'sr25519';
 const STEPS_COUNT = 3;
+const genesisHashString = '0x50dd5d206917bf10502c68fb4d18a59fc8aa31586f4e8856b493e43544aa82aa';
 
 function getSuri (seed: string, derivePath: string, pairType: PairType): string {
   return pairType === 'ed25519-ledger'
@@ -78,26 +78,15 @@ function addressFromSeed (seed: string, derivePath: string, pairType: PairType):
     .address;
 }
 
-function newSeed (seed: string | undefined | null, seedType: SeedType): string {
-  switch (seedType) {
-    case 'bip':
-      return mnemonicGenerate();
-    case 'dev':
-      return DEV_PHRASE;
-    default:
-      return seed || u8aToHex(randomAsU8a());
-  }
-}
-
-function generateSeed (_seed: string | undefined | null, derivePath: string, seedType: SeedType, pairType: PairType = DEFAULT_PAIR_TYPE): AddressState {
-  const seed = newSeed(_seed, seedType);
-  const address = addressFromSeed(seed, derivePath, pairType);
+function placeholderSeed (_seed: string | undefined | null, derivePath: string, seedType: SeedType, pairType: PairType = DEFAULT_PAIR_TYPE): AddressState {
+  const seed = _seed || '';
+  const address = seed ? addressFromSeed(seed, derivePath, pairType) : '';
 
   return {
     address,
     derivePath,
-    deriveValidation: undefined,
-    isSeedValid: true,
+    deriveValidation: deriveValidate(seed, seedType, derivePath, pairType),
+    isSeedValid: mnemonicValidate(seed),
     pairType,
     seed,
     seedType
@@ -107,9 +96,21 @@ function generateSeed (_seed: string | undefined | null, derivePath: string, see
 function updateAddress (seed: string, derivePath: string, seedType: SeedType, pairType: PairType): AddressState {
   let address: string | null = null;
   let deriveValidation: DeriveValidationOutput = deriveValidate(seed, seedType, derivePath, pairType);
-  let isSeedValid = seedType === 'raw'
-    ? rawValidate(seed)
-    : mnemonicValidate(seed);
+  let isSeedValid = false;
+
+  if (seedType === 'raw') {
+    isSeedValid = rawValidate(seed);
+  } else {
+    const words = seed.split(' ');
+
+    if (pairType === 'ed25519-ledger' && words.length === 25) {
+      words.pop();
+
+      isSeedValid = mnemonicValidate(words.join(' '));
+    } else {
+      isSeedValid = mnemonicValidate(seed);
+    }
+  }
 
   if (!deriveValidation?.error && isSeedValid) {
     try {
@@ -141,18 +142,17 @@ function createAccount (seed: string, derivePath: string, pairType: PairType, { 
 
 function Create ({ className = '', onClose, onStatusChange, seed: propsSeed, type: propsType }: CreateProps): React.ReactElement<CreateProps> {
   const { t } = useTranslation();
-  const { api, isDevelopment, isEthereum } = useApi();
   const { isLedgerEnabled } = useLedger();
-  const [{ address, derivePath, deriveValidation, isSeedValid, pairType, seed, seedType }, setAddress] = useState<AddressState>(() => generateSeed(
+  const [{ address, derivePath, deriveValidation, isSeedValid, pairType, seed, seedType }, setAddress] = useState<AddressState>(() => placeholderSeed(
     propsSeed,
-    isEthereum ? ETH_DEFAULT_PATH : '',
-    propsSeed ? 'raw' : 'bip', isEthereum ? 'ethereum' : propsType
+    '',
+    'bip', propsType
   ));
   const [isMnemonicSaved, setIsMnemonicSaved] = useState<boolean>(false);
   const [step, nextStep, prevStep] = useStepper();
   const [isBusy, setIsBusy] = useState(false);
-  const [{ isNameValid, name }, setName] = useState({ isNameValid: false, name: '' });
-  const [{ isPasswordValid, password }, setPassword] = useState({ isPasswordValid: false, password: '' });
+  const [{ isNameValid, name }, setName] = useState(() => ({ isNameValid: false, name: '' }));
+  const [{ isPasswordValid, password }, setPassword] = useState(() => ({ isPasswordValid: false, password: '' }));
   const isFirstStepValid = !!address && isMnemonicSaved && !deriveValidation?.error && isSeedValid;
   const isSecondStepValid = isNameValid && isPasswordValid;
   const isValid = isFirstStepValid && isSecondStepValid;
@@ -164,17 +164,6 @@ function Create ({ className = '', onClose, onStatusChange, seed: propsSeed, typ
     WARNING_SLASH_PASSWORD: t<string>('Your password contains at least one "/" character. Disregard this warning if it is intended.')
   });
 
-  const seedOpt = useRef((
-    isDevelopment
-      ? [{ text: t<string>('Development'), value: 'dev' }]
-      : []
-  ).concat(
-    { text: t<string>('Mnemonic'), value: 'bip' },
-    isEthereum
-      ? { text: t<string>('Private Key'), value: 'raw' }
-      : { text: t<string>('Raw seed'), value: 'raw' }
-  ));
-
   const _onChangePath = useCallback(
     (newDerivePath: string) => setAddress(
       updateAddress(seed, newDerivePath, seedType, pairType)
@@ -183,26 +172,19 @@ function Create ({ className = '', onClose, onStatusChange, seed: propsSeed, typ
   );
 
   const _onChangeSeed = useCallback(
-    (newSeed: string) => setAddress(
-      updateAddress(newSeed, derivePath, seedType, pairType)
-    ),
+    (newSeed: string) => {
+      setAddress(
+        updateAddress(newSeed, derivePath, seedType, pairType)
+      );
+    },
     [derivePath, pairType, seedType]
   );
 
   const _onChangePairType = useCallback(
     (newPairType: PairType) => setAddress(
-      updateAddress(seed, isEthereum ? ETH_DEFAULT_PATH : '', seedType, newPairType)
+      updateAddress(seed, '', seedType, newPairType)
     ),
-    [seed, seedType, isEthereum]
-  );
-
-  const _selectSeedType = useCallback(
-    (newSeedType: SeedType): void => {
-      if (newSeedType !== seedType) {
-        setAddress(generateSeed(null, derivePath, newSeedType, pairType));
-      }
-    },
-    [derivePath, pairType, seedType]
+    [seed, seedType]
   );
 
   const _toggleMnemonicSaved = useCallback(
@@ -218,15 +200,14 @@ function Create ({ className = '', onClose, onStatusChange, seed: propsSeed, typ
 
       setIsBusy(true);
       setTimeout((): void => {
-        const options = { genesisHash: isDevelopment ? undefined : api.genesisHash.toString(), isHardware: false, name: name.trim() };
+        const options = { genesisHash: genesisHashString, isHardware: false, name: name.trim() };
         const status = createAccount(seed, derivePath, pairType, options, password, t<string>('created account'));
 
         onStatusChange(status);
         setIsBusy(false);
         onClose();
       }, 0);
-    },
-    [api, derivePath, isDevelopment, isValid, name, onClose, onStatusChange, pairType, password, seed, t]
+    }, [derivePath, isValid, name, onClose, onStatusChange, pairType, password, seed, t]
   );
 
   return (
@@ -249,60 +230,45 @@ function Create ({ className = '', onClose, onStatusChange, seed: propsSeed, typ
         {step === 1 && <>
           <Modal.Columns hint={t<string>('The secret seed value for this account. Ensure that you keep this in a safe place, with access to the seed you can re-create the account.')}>
             <TextArea
-              help={isEthereum
-                ? t<string>("Your ethereum key pair is derived from your private key. Don't divulge this key.")
-                : t<string>('The private key for your account is derived from this seed. This seed must be kept secret as anyone in its possession has access to the funds of this account. If you validate, use the seed of the session account as the "--key" parameter of your node.')}
+              help={t<string>('The private key for your account is derived from this seed. This seed must be kept secret as anyone in its possession has access to the funds of this account.')}
               isAction
               isError={!isSeedValid}
               isReadOnly={seedType === 'dev'}
               label={
                 seedType === 'bip'
-                  ? t<string>('mnemonic seed')
+                  ? t<string>('standard recovery phrase (mnemonic seed)')
                   : seedType === 'dev'
                     ? t<string>('development seed')
-                    : isEthereum
-                      ? t<string>('ethereum private key')
-                      : t<string>('seed (hex or string)')
+                    : t<string>('seed (hex or string)')
               }
               onChange={_onChangeSeed}
               seed={seed}
               withLabel
             >
-              <CopyButton
-                className='copyMoved'
-                type={seedType === 'bip' ? t<string>('mnemonic') : seedType === 'raw' ? isEthereum ? t<string>('private key') : 'seed' : t<string>('raw seed')}
-                value={seed}
-              />
-              <Dropdown
-                defaultValue={seedType}
-                isButton
-                onChange={_selectSeedType}
-                options={seedOpt.current}
-              />
             </TextArea>
+            <MarkWarning content={t<string>('Make sure you insert your STANDARD RECOVERY PHRASE here!')} />
           </Modal.Columns>
           <Expander
             className='accounts--Creator-advanced'
             isPadded
             summary={t<string>('Advanced creation options')}
           >
-            {
-              pairType !== 'ethereum' && <Modal.Columns hint={t<string>('If you are moving accounts between applications, ensure that you use the correct type.')}>
+            {pairType !== 'ethereum' && (
+              <Modal.Columns hint={t<string>('If you are moving accounts between applications, ensure that you use the correct type.')}>
                 <Dropdown
                   defaultValue={pairType}
                   help={t<string>('Determines what cryptography will be used to create this account. Note that to validate on Polkadot, the session account must use "ed25519".')}
                   label={t<string>('keypair crypto type')}
                   onChange={_onChangePairType}
                   options={
-                    isEthereum
-                      ? settings.availableCryptosEth
-                      : isLedgerEnabled
-                        ? settings.availableCryptosLedger
-                        : settings.availableCryptos
+                    isLedgerEnabled
+                      ? settings.availableCryptosLedger
+                      : settings.availableCryptos
                   }
                   tabIndex={-1}
                 />
-              </Modal.Columns>}
+              </Modal.Columns>
+            )}
             {pairType === 'ed25519-ledger'
               ? (
                 <CreateSuriLedger
@@ -366,7 +332,7 @@ function Create ({ className = '', onClose, onStatusChange, seed: propsSeed, typ
             onCommit={_onCommit}
             setName={setName}
             setPassword={setPassword}
-          />;
+          />
           <Modal.Columns>
             <ExternalWarning />
           </Modal.Columns>
@@ -441,6 +407,18 @@ export default React.memo(styled(Create)`
     position: absolute;
     right: 9.25rem;
     top: 1.15rem;
+  }
+
+  .ui--PasteButton.pasteMoved {
+    position: absolute;
+    right: 1.15rem;
+    top: 1.15rem;
+  }
+
+  && .TextAreaWithoutDropdown {
+    textarea {
+      width: 100%;
+    }
   }
 
   && .TextAreaWithDropdown {

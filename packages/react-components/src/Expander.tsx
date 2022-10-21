@@ -1,8 +1,8 @@
-// Copyright 2017-2021 @polkadot/react-components authors & contributors
+// Copyright 2017-2022 @polkadot/react-components authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
-import type { Text } from '@polkadot/types';
+import type { GenericEventData, Text } from '@polkadot/types';
 
 import React, { useMemo } from 'react';
 import styled from 'styled-components';
@@ -19,6 +19,7 @@ interface Meta {
 
 export interface Props {
   children?: React.ReactNode;
+  data?: GenericEventData;
   className?: string;
   help?: string;
   helpIcon?: IconName;
@@ -61,9 +62,14 @@ function formatMeta (meta?: Meta): React.ReactNode | null {
   return <>{parts.map((part, index) => index % 2 ? <em key={index}>[{part}]</em> : <span key={index}>{part}</span>)}&nbsp;</>;
 }
 
-function Expander ({ children, className = '', help, helpIcon, isOpen, isPadded, onClick, renderChildren, summary, summaryHead, summaryMeta, summarySub, withBreaks, withHidden }: Props): React.ReactElement<Props> {
+function Expander ({ children, className = '', data, help, helpIcon, isOpen, isPadded, onClick, renderChildren, summary, summaryHead, summaryMeta, summarySub, withBreaks, withHidden }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const [isExpanded, toggleExpanded] = useToggle(isOpen, onClick);
+
+  const hasData = useMemo(
+    () => data ? data?.length > 0 : true,
+    [data]
+  );
 
   const demandChildren = useMemo(
     () => isExpanded && renderChildren && renderChildren(),
@@ -104,16 +110,16 @@ function Expander ({ children, className = '', help, helpIcon, isOpen, isPadded,
             <div className='ui--Expander-summary-header-sub'>{headerSub}</div>
           )}
         </div>
-        <Icon
+        {hasData && <Icon
           color={hasContent ? undefined : 'transparent'}
           icon={
             isExpanded
               ? 'caret-up'
               : 'caret-down'
           }
-        />
+        />}
       </div>
-      {hasContent && (isExpanded || withHidden) && (
+      {hasData && hasContent && (isExpanded || withHidden) && (
         <div className='ui--Expander-content'>{children || demandChildren}</div>
       )}
     </div>
@@ -134,16 +140,6 @@ export default React.memo(styled(Expander)`
 
     .body.column {
       justify-content: end;
-    }
-  }
-
-  &.hasContent .ui--Expander-summary {
-    cursor: pointer;
-  }
-
-  &.isPadded {
-    .ui--Expander-summary {
-      margin-left: 2.25rem;
     }
   }
 
@@ -188,5 +184,13 @@ export default React.memo(styled(Expander)`
       overflow: hidden;
       text-overflow: ellipsis;
     }
+  }
+
+  &.hasContent .ui--Expander-summary {
+    cursor: pointer;
+  }
+
+  &.isPadded .ui--Expander-summary {
+    margin-left: 2.25rem;
   }
 `);

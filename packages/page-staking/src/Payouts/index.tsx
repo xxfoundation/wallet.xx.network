@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/app-staking authors & contributors
+// Copyright 2017-2022 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { TFunction } from 'i18next';
@@ -6,7 +6,6 @@ import type { DeriveStakerReward } from '@polkadot/api-derive/types';
 import type { StakerState } from '@polkadot/react-hooks/types';
 import type { PayoutStash, PayoutValidator } from './types';
 
-import BN from 'bn.js';
 import React, { useMemo, useRef, useState } from 'react';
 import styled from 'styled-components';
 
@@ -14,7 +13,7 @@ import { ApiPromise } from '@polkadot/api';
 import { Button, Table, ToggleGroup } from '@polkadot/react-components';
 import { useApi, useCall, useOwnEraRewards } from '@polkadot/react-hooks';
 import { FormatBalance } from '@polkadot/react-query';
-import { BN_THREE } from '@polkadot/util';
+import { BN, BN_THREE } from '@polkadot/util';
 
 import ElectionBanner from '../ElectionBanner';
 import { useTranslation } from '../translate';
@@ -228,14 +227,14 @@ function Payouts ({ className = '', isInElection, ownValidators }: Props): React
     <div className={className}>
       <Button.Group>
         <ToggleGroup
-          onChange={setEraSelectionIndex}
-          options={eraSelection}
-          value={eraSelectionIndex}
-        />
-        <ToggleGroup
           onChange={setMyStashesIndex}
           options={valOptions}
           value={myStashesIndex}
+        />
+        <ToggleGroup
+          onChange={setEraSelectionIndex}
+          options={eraSelection}
+          value={eraSelectionIndex}
         />
         <PayButton
           isAll
@@ -248,6 +247,11 @@ function Payouts ({ className = '', isInElection, ownValidators }: Props): React
         <article className='warning centered'>
           <p>{t('Payouts of rewards for a validator can be initiated by any account. This means that as soon as a validator or nominator requests a payout for an era, all the nominators for that validator will be rewarded. Each user does not need to claim individually and the suggestion is that validators should claim rewards for everybody as soon as an era ends.')}</p>
           <p>{t('If you have not claimed rewards straight after the end of the era, the validator is in the active set and you are seeing no rewards, this would mean that the reward payout transaction was made by another account on your behalf. Always check your favorite explorer to see any historic payouts made to your accounts.')}</p>
+        </article>
+      )}
+      {!isLoadingRewards && !!stashes?.length && myStashesIndex === 0 && (
+        <article className='warning centered'>
+          <p>{t('Please note that the number of coins displayed below is the total that your own validator(s) made in the specified eras, which will be split with nominators. If you wish to see the amount of coins earned by your validator stash (commission + stake based rewards) please select "Own stashes".')}</p>
         </article>
       )}
       <Table

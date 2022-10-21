@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/app-accounts authors & contributors
+// Copyright 2017-2022 @polkadot/app-accounts authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import { detect } from 'detect-browser';
@@ -22,11 +22,11 @@ const browserInfo = detect();
 const browserName: Browser | null = (browserInfo && (browserInfo.name as Browser)) || null;
 const isSupported = browserName && Object.keys(availableExtensions).includes(browserName);
 
-function BannerExtension (): React.ReactElement | null {
+function BannerExtension(): React.ReactElement | null {
   const { t } = useTranslation();
   const { hasInjectedAccounts } = useApi();
   const upgradableCount = useExtensionCounter();
-  const phishing = useRef<string>(t<string>('Since some extensions, such as the polkadot-js extension, protects you against all community reported phishing sites, there are valid reasons to use them for additional protection, even if you are not storing accounts in it.'));
+  const phishing = useRef<string>(t<string>('Since some extensions protect you against all community reported phishing sites, there are valid reasons to use them for additional protection, even if you are not storing accounts in it.'));
 
   if (!isSupported || !browserName) {
     return null;
@@ -40,7 +40,13 @@ function BannerExtension (): React.ReactElement | null {
 
       return (
         <Banner type='warning'>
-          <p>{t<string>('You have {{upgradableCount}} extensions that need to be updated with the latest chain properties in order to display the correct information for the chain you are connected to. This update includes chain metadata and chain properties.', { replace: { upgradableCount } })}</p>
+          <p>
+            {upgradableCount === 1
+              ? t<string>('You have 1 extension that needs to be updated with the latest chain properties in order to display the correct information for the chain you are connected to.')
+              : t<string>('You have {{upgradableCount}} extensions that need to be updated with the latest chain properties in order to display the correct information for the chain you are connected to.', { replace: { upgradableCount } })
+            }
+            {t<string>(' This update includes chain metadata and chain properties.')}
+          </p>
           <p><Trans key='extensionUpgrade'>Visit your <a href='#/settings/metadata'>settings page</a> to apply the updates to the injected extensions.</Trans></p>
         </Banner>
       );

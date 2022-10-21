@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/react-components authors & contributors
+// Copyright 2017-2022 @polkadot/react-components authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 export * from '@polkadot/react-qr';
@@ -10,6 +10,7 @@ export { default as AddressMini } from './AddressMini';
 export { default as AddressRow } from './AddressRow';
 export { default as AddressSmall } from './AddressSmall';
 export { default as AddressToggle } from './AddressToggle';
+export { default as AnimatedEllipsis } from './AnimatedEllipsis';
 export { default as Available } from './Available';
 export { default as AvatarItem } from './AvatarItem';
 export { default as Badge } from './Badge';
@@ -26,6 +27,7 @@ export { default as ChainImg } from './ChainImg';
 export { default as ChainLock } from './ChainLock';
 export { default as Chart } from './Chart';
 export { default as Checkbox } from './Checkbox';
+export { default as CmixAddress } from './CmixAddress';
 export { default as Columar } from './Columar';
 export { default as ConvictionDropdown } from './ConvictionDropdown';
 export { default as CopyButton } from './CopyButton';
@@ -46,11 +48,13 @@ export { default as Icon } from './Icon';
 export { default as IconLink } from './IconLink';
 export { default as IdentityIcon } from './IdentityIcon';
 export { default as InfoForInput } from './InfoForInput';
+export { default as Inspect } from './Inspect';
 export { default as Input } from './Input';
 export { default as InputAddress } from './InputAddress';
 export { default as InputAddressMulti } from './InputAddressMulti';
 export { default as InputAddressSimple } from './InputAddressSimple';
 export { default as InputBalance } from './InputBalance';
+export { default as InputCmixAddress } from './InputCmixAddress';
 export { default as InputConsts } from './InputConsts';
 export { default as InputExtrinsic } from './InputExtrinsic';
 export { default as InputFile } from './InputFile';
@@ -65,15 +69,19 @@ export { default as LabelHelp } from './LabelHelp';
 export { default as Labelled } from './Labelled';
 export { default as LinkExternal } from './LinkExternal';
 export { default as LockedVote } from './LockedVote';
+export { default as MarkInfo } from './MarkInfo';
 export { default as MarkError } from './MarkError';
 export { default as MarkWarning } from './MarkWarning';
 export { default as Menu } from './Menu';
 export { default as Modal } from './Modal';
 export { default as Nonce } from './Nonce';
 export { default as Output } from './Output';
+export { default as PaginationAdvanced } from './Pagination/Advanced';
+export { default as PaginationSimple } from './Pagination/Simple';
 export { default as Password } from './Password';
 export { default as PasswordStrength } from './PasswordStrength';
 export { default as ParaLink } from './ParaLink';
+export { default as PasteButton } from './PasteButton';
 export { default as Popup } from './Popup';
 export { default as Progress } from './Progress';
 export { default as ProposedAction } from './ProposedAction';
@@ -99,5 +107,6 @@ export { default as VoteValue } from './VoteValue';
 export { default as TextArea } from './TextArea';
 export { default as ExpandButton } from './ExpandButton';
 export { default as SortDropdown } from './SortDropdown';
+export { default as FilterInput } from './FilterInput';
 
 export { default as media } from './media';

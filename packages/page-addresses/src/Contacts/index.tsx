@@ -1,17 +1,21 @@
-// Copyright 2017-2021 @polkadot/app-addresses authors & contributors
+// Copyright 2017-2022 @polkadot/app-addresses authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
+import type { ActionStatus } from '@polkadot/react-components/Status/types';
 import type { ComponentProps as Props } from '../types';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { saveAs } from 'file-saver';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 
-import { Button, Input, Table } from '@polkadot/react-components';
+import { Button, FilterInput, SummaryBox, Table } from '@polkadot/react-components';
 import { useAddresses, useFavorites, useLoadingDelay, useToggle } from '@polkadot/react-hooks';
+import { keyring } from '@polkadot/ui-keyring';
 
 import CreateModal from '../modals/Create';
 import { useTranslation } from '../translate';
 import Address from './Address';
+import FileInputButton from './FileInputButton';
 
 type SortedAddress = { address: string; isFavorite: boolean };
 
@@ -48,43 +52,105 @@ function Overview ({ className = '', onStatusChange }: Props): React.ReactElemen
     );
   }, [allAddresses, favorites]);
 
-  const filter = useMemo(() => (
-    <div className='filter--tags'>
-      <Input
-        autoFocus
-        isFull
-        label={t<string>('filter by name or tags')}
-        onChange={setFilter}
-        value={filterOn}
-      />
-    </div>
-  ), [filterOn, t]);
+  const importAddresses = useCallback((json: unknown) => {
+    let success = false;
+
+    if (typeof json === 'object' && json !== null) {
+      success = Object.entries(json).every(([address, name]) => {
+        let result = true;
+
+        if (typeof name === 'string') {
+          try {
+            keyring.decodeAddress(address); // acts as a test to see if its valid
+            keyring.saveAddress(address, { genesisHash: keyring.genesisHash, name: name, tags: [] });
+          } catch (err) {
+            result = false;
+          }
+        } else {
+          result = false;
+        }
+
+        return result;
+      });
+    }
+
+    const count = success ? Object.keys(json as Record<string, unknown>).length : 0;
+    const status: ActionStatus = {
+      action: 'import',
+      message: success
+        ? t<string>('Successfully imported {{count}} addresses', { count })
+        : t<string>('Importing contacts has failed'),
+      status: success ? 'success' : 'error'
+    };
+
+    onStatusChange(status);
+  }, [onStatusChange, t]);
+
+  const exportAddresses = useCallback(
+    (): void => {
+      const addressInfos = allAddresses.map(
+        (addr) => keyring.getAddress(addr)
+      );
+
+      const json = addressInfos.reduce((acc: Record<string, string>, cur) => ({
+        ...(cur !== undefined && { [cur?.address]: cur?.meta.name || '' }),
+        ...acc
+      }), {});
+
+      const blob = new Blob([JSON.stringify(json)], { type: 'application/json; charset=utf-8' });
+
+      saveAs(blob, `exported_contacts_${Date.now()}.json`);
+
+      onStatusChange({
+        action: 'export',
+        message: t<string>('{{count}} contacts successfully exported', { count: Object.keys(json).length }),
+        status: 'success'
+      });
+    },
+    [allAddresses, onStatusChange, t]
+  );
 
   return (
     <div className={className}>
-      <Button.Group>
-        <Button
-          icon='plus'
-          label={t<string>('Add contact')}
-          onClick={toggleCreate}
-        />
-      </Button.Group>
       {isCreateOpen && (
         <CreateModal
           onClose={toggleCreate}
           onStatusChange={onStatusChange}
         />
       )}
+      <SummaryBox className='summary-box-contacts'>
+        <section>
+          <FilterInput
+            filterOn={filterOn}
+            label={t<string>('filter by name or tags')}
+            setFilter={setFilter}
+          />
+        </section>
+        <Button.Group>
+          <Button
+            icon='plus'
+            label={t<string>('Add contact')}
+            onClick={toggleCreate}
+          />
+          <FileInputButton
+            onChange={importAddresses}
+          />
+          <Button
+            icon='share-square'
+            label={t<string>('Export')}
+            onClick={exportAddresses}
+          />
+        </Button.Group>
+      </SummaryBox>
       <Table
         empty={!isLoading && sortedAddresses && t<string>('no addresses saved yet, add any existing address')}
-        filter={filter}
         header={headerRef.current}
+        withCollapsibleRows
       >
-        {!isLoading && sortedAddresses?.map(({ address, isFavorite }, index): React.ReactNode => (
+        {!isLoading && sortedAddresses?.map(({ address, isFavorite }): React.ReactNode => (
           <Address
             address={address}
             filter={filterOn}
-            isEven={!!(index % 2) }
             isFavorite={isFavorite}
             key={address}
             toggleFavorite={toggleFavorite}
@@ -96,13 +162,7 @@ function Overview ({ className = '', onStatusChange }: Props): React.ReactElemen
 }
 
 export default React.memo(styled(Overview)`
-  .filter--tags {
-    .ui--Dropdown {
-      padding-left: 0;
-
-      label {
-        left: 1.55rem;
-      }
-    }
+  .summary-box-contacts {
+    align-items: center;
   }
 `);

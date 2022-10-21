@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/react-components authors & contributors
+// Copyright 2017-2022 @polkadot/react-components authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useCallback } from 'react';
@@ -16,14 +16,16 @@ interface Props {
   onChange?: (arg: string) => void;
   seed?: string;
   withLabel?: boolean;
+  noDropdown: boolean;
+  maxLength?: number;
 }
 
-function TextArea ({ children, className, help, isError, isReadOnly, label, onChange, seed, withLabel }: Props): React.ReactElement<Props> {
+function TextArea({ children, className, help, isError, isReadOnly, label, maxLength, noDropdown, onChange, seed, withLabel }: Props): React.ReactElement<Props> {
   const _onChange = useCallback(
     ({ target: { value } }: React.ChangeEvent<HTMLTextAreaElement>): void => {
-      onChange && onChange(value);
+      (!maxLength || value.length < maxLength) && onChange && onChange(value);
     },
-    [onChange]
+    [maxLength, onChange]
   );
 
   return (
@@ -33,7 +35,7 @@ function TextArea ({ children, className, help, isError, isReadOnly, label, onCh
       label={label}
       withLabel={withLabel}
     >
-      <div className='TextAreaWithDropdown'>
+      <div className={`TextAreaWithoutDropdown ${noDropdown ? 'no-dropdown' : ''}`}>
         <textarea
           autoCapitalize='off'
           autoCorrect='off'
@@ -52,12 +54,13 @@ function TextArea ({ children, className, help, isError, isReadOnly, label, onCh
 }
 
 export default React.memo(styled(TextArea)`
-  .TextAreaWithDropdown {
+  .TextAreaWithoutDropdown {
+
     display: flex;
+
     textarea {
       border-radius: 0.25rem 0 0 0.25rem;
       border: 1px solid #DDE1EB;
-      border-right: none;
       background: var(--bg-input);
       box-sizing: border-box;
       color: var(--color-text);

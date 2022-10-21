@@ -1,32 +1,35 @@
-// Copyright 2017-2021 @polkadot/app-staking authors & contributors
+// Copyright 2017-2022 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { ValidateInfo } from './types';
 
-import BN from 'bn.js';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Dropdown, InputAddress, InputNumber, Modal } from '@polkadot/react-components';
 import { useApi } from '@polkadot/react-hooks';
-import { BN_HUNDRED as MAX_COMM, isFunction } from '@polkadot/util';
+import { BN, BN_HUNDRED as MAX_COMM, isFunction } from '@polkadot/util';
 
 import { useTranslation } from '../../translate';
 
 interface Props {
   className?: string;
   controllerId: string;
+  onChangeCommission?: (isCommissionValid: boolean) => void;
   onChange: (info: ValidateInfo) => void;
   stashId: string;
-  withFocus?: boolean;
   withSenders?: boolean;
 }
 
-const COMM_MUL = new BN(1e7);
+const COMM_MUL = new BN(1e2);
+const DEFAULT_LENGTH = new BN(1e9);
+const DECIMALS = 2;
+const MIN_COMM = new BN(2);
 
-function Validate ({ className = '', controllerId, onChange, stashId, withFocus, withSenders }: Props): React.ReactElement<Props> {
+function Validate ({ className = '', controllerId, onChange, onChangeCommission, stashId, withSenders }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
-  const [commission, setCommission] = useState<BN | number>(1);
+  const [commission, setCommission] = useState<BN>(MIN_COMM);
+  const [maxLengthWithDecimals, setMaxLengthWithDecimals] = useState<number>(3);
   const [allowNoms, setAllowNoms] = useState(true);
 
   const blockedOptions = useRef([
@@ -39,7 +42,7 @@ function Validate ({ className = '', controllerId, onChange, stashId, withFocus,
       onChange({
         validateTx: api.tx.staking.validate({
           blocked: !allowNoms,
-          commission
+          commission: commission
         })
       });
     } catch {
@@ -48,12 +51,21 @@ function Validate ({ className = '', controllerId, onChange, stashId, withFocus,
   }, [api, allowNoms, commission, onChange]);
 
   const _setCommission = useCallback(
-    (value?: BN) => value && setCommission(
-      value.isZero()
-        ? 1 // small non-zero set to avoid isEmpty
-        : value.mul(COMM_MUL)
-    ),
-    []
+    (value?: BN) => {
+      if (value) {
+        setMaxLengthWithDecimals(value.div(DEFAULT_LENGTH).toString().split('.')[0].length + 1 + DECIMALS);
+      }
+
+      value && setCommission(
+        value.isZero()
+          ? MIN_COMM // small non-zero set to avoid isEmpty
+          : value.div(COMM_MUL)
+      );
+      value
+        ? onChangeCommission && onChangeCommission(value.lte(MAX_COMM.mul(DEFAULT_LENGTH)))
+        : onChangeCommission && onChangeCommission(false);
+    },
+    [onChangeCommission]
   );
 
   return (
@@ -74,11 +86,14 @@ function Validate ({ className = '', controllerId, onChange, stashId, withFocus,
       )}
       <Modal.Columns hint={t<string>('The commission is deducted from all rewards before the remainder is split with nominators.')}>
         <InputNumber
-          autoFocus={withFocus}
-          help={t<string>('The percentage reward (0-100) that should be applied for the validator')}
-          isZeroable
+          bitLength={128}
+          commission={true}
+          help={t<string>('The percentage reward (2-100) that should be applied for the validator')}
+          isSi
           label={t<string>('reward commission percentage')}
-          maxValue={MAX_COMM}
+          maxLength={maxLengthWithDecimals}
+          maxValue={MAX_COMM.mul(DEFAULT_LENGTH)}
+          minValue={MIN_COMM.mul(DEFAULT_LENGTH)}
           onChange={_setCommission}
         />
       </Modal.Columns>

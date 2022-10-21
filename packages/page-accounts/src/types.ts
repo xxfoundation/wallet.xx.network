@@ -1,10 +1,11 @@
-// Copyright 2017-2021 @polkadot/app-accounts authors & contributors
+// Copyright 2017-2022 @polkadot/app-accounts authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type BN from 'bn.js';
 import type { ActionStatus } from '@polkadot/react-components/Status/types';
 import type { Balance, Conviction } from '@polkadot/types/interfaces';
 import type { KeyringAddress } from '@polkadot/ui-keyring/types';
+import type { BN } from '@polkadot/util';
+import type { KeypairType } from '@polkadot/util-crypto/types';
 
 import { WithTranslation } from 'react-i18next';
 
@@ -74,4 +75,11 @@ export interface CreateOptions {
 export interface DeriveValidationOutput {
   error?: string;
   warning?: string;
+}
+
+export interface AccountInfo {
+  address: string;
+  name: string;
+  genesisHash: string;
+  type: KeypairType;
 }

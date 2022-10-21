@@ -1,39 +1,43 @@
-// Copyright 2017-2021 @polkadot/app-staking authors & contributors
+// Copyright 2017-2022 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { DeriveStakerPrefs } from '@polkadot/api-derive/types';
+import type { DeriveEraPrefs, DeriveStakerPrefs } from '@polkadot/api-derive/types';
 import type { ChartInfo, LineDataEntry, Props } from './types';
 
-import BN from 'bn.js';
 import React, { useMemo, useRef } from 'react';
 
 import { Chart, Spinner } from '@polkadot/react-components';
 import { useApi, useCall } from '@polkadot/react-hooks';
-import { BN_BILLION } from '@polkadot/util';
+import { BN, BN_BILLION, BN_ZERO } from '@polkadot/util';
 
 import { useTranslation } from '../translate';
 
 const MULT = new BN(100 * 100);
-const COLORS_POINTS = [undefined, '#acacac'];
+const COLORS_POINTS = [undefined, '#acacac', ''];
 
-function extractPrefs (prefs: DeriveStakerPrefs[] = []): ChartInfo {
+function commToNumber (num: BN) {
+  return num.mul(MULT).div(BN_BILLION).toNumber() / 100;
+}
+
+function extractPrefs (prefs: DeriveStakerPrefs[] = [], erasPrefs: DeriveEraPrefs[] = []): ChartInfo {
   const labels: string[] = [];
   const avgSet: LineDataEntry = [];
   const idxSet: LineDataEntry = [];
-  let avgCount = 0;
-  let total = 0;
 
   prefs.forEach(({ era, validatorPrefs }): void => {
-    const comm = validatorPrefs.commission.unwrap().mul(MULT).div(BN_BILLION).toNumber() / 100;
+    const comm = commToNumber(validatorPrefs.commission.unwrap());
+    const eraPrefs = erasPrefs.find(({ era: e }) => e.eq(era));
 
-    total += comm;
-    labels.push(era.toHuman());
+    const comms = Object.values(eraPrefs?.validators ?? {})
+      .map((v) => v?.commission.unwrap());
 
-    if (comm !== 0) {
-      avgCount++;
-    }
+    const networkValidatorCommsAvg = commToNumber(
+      comms.reduce((a, b) => a.add(b), BN_ZERO).divn(comms.length)
+    );
 
-    avgSet.push((avgCount ? Math.ceil(total * 100 / avgCount) : 0) / 100);
+    labels.push(era.toNumber().toString());
+    avgSet.push(networkValidatorCommsAvg);
+
     idxSet.push(comm);
   });
 
@@ -47,11 +51,12 @@ function ChartPrefs ({ validatorId }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
   const params = useMemo(() => [validatorId, false], [validatorId]);
+  const erasPrefs = useCall<DeriveEraPrefs[]>(api.derive.staking.erasPrefs);
   const stakerPrefs = useCall<DeriveStakerPrefs[]>(api.derive.staking.stakerPrefs, params);
 
   const { chart, labels } = useMemo(
-    () => extractPrefs(stakerPrefs),
-    [stakerPrefs]
+    () => extractPrefs(stakerPrefs, erasPrefs),
+    [stakerPrefs, erasPrefs]
   );
 
   const legendsRef = useRef([

@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/react-components authors & contributors
+// Copyright 2017-2022 @polkadot/react-components authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
@@ -15,8 +15,10 @@ export interface ColumnsProps {
   hint?: React.ReactNode;
 }
 
+type ModalSize = 'large' | 'medium' | 'small'
+
 export interface ModalProps {
-  size?: 'large' | 'medium' | 'small';
+  size?: ModalSize;
   children: React.ReactNode;
   className?: string;
   header?: React.ReactNode;
@@ -32,7 +34,7 @@ export interface ActionsProps {
 }
 
 export interface BodyProps {
-  size: 'large' | 'medium' | 'small'
+  size: ModalSize;
 }
 
 export interface ContentProps {
@@ -40,8 +42,16 @@ export interface ContentProps {
   children: React.ReactNode;
 }
 
+export interface RadioGroupProps {
+  title: string;
+  defaultValue: string;
+  value: { header: string[], options: string[] };
+  OnChangeOption: (option: string) => void;
+}
+
 export type ModalType = React.FC<ModalProps> & {
   Actions: React.FC<ActionsProps>;
   Columns: React.FC<ColumnsProps>;
   Content: React.FC<ContentProps>;
+  RadioGroup: React.FC<RadioGroupProps>;
 };

@@ -1,7 +1,7 @@
-// Copyright 2017-2021 @polkadot/app-staking authors & contributors
+// Copyright 2017-2022 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type BN from 'bn.js';
+import type { BN } from '@polkadot/util';
 
 import { BN_THOUSAND, BN_ZERO, isBn, isFunction } from '@polkadot/util';
 
@@ -17,4 +17,10 @@ export function balanceToNumber (amount: BN | ToBN = BN_ZERO, divisor: BN): numb
       : BN_ZERO;
 
   return value.mul(BN_THOUSAND).div(divisor).toNumber() / 1000;
+}
+
+export function calculateAverage(totals: BN[]): BN {
+  const count = totals.length;
+  const sum = totals.reduce((a, b) => a.add(b), BN_ZERO);
+  return count > 0 ? sum.idivn(count) : BN_ZERO;
 }

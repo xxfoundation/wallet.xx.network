@@ -1,21 +1,21 @@
-// Copyright 2017-2021 @polkadot/app-staking authors & contributors
+// Copyright 2017-2022 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { DeriveBalancesAll, DeriveStakingAccount } from '@polkadot/api-derive/types';
+import type { DeriveBalancesAll, DeriveSessionProgress, DeriveStakingAccount } from '@polkadot/api-derive/types';
 import type { StakerState } from '@polkadot/react-hooks/types';
-import type { Option } from '@polkadot/types';
-import type { SlashingSpans, UnappliedSlash } from '@polkadot/types/interfaces';
+import type { Option, StorageKey } from '@polkadot/types';
+import type { AccountId32, SlashingSpans, UnappliedSlash } from '@polkadot/types/interfaces';
+import type { PalletStakingStakingLedger, PalletStakingValidatorPrefs } from '@polkadot/types/lookup';
 import type { SortedTargets } from '../../types';
 import type { Slash } from '../types';
 
-import BN from 'bn.js';
-import React, { useCallback, useContext, useMemo } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 
 import { ApiPromise } from '@polkadot/api';
-import { AddressInfo, AddressMini, AddressSmall, Badge, Button, Menu, Popup, StakingBonded, StakingRedeemable, StakingUnbonding, StatusContext, TxButton } from '@polkadot/react-components';
+import { AddressInfo, AddressMini, AddressSmall, Badge, Button, Checkbox, Menu, Popup, StakingBonded, StakingRedeemable, StakingUnbonding, StatusContext, TxButton } from '@polkadot/react-components';
 import { useApi, useCall, useToggle } from '@polkadot/react-hooks';
-import { formatNumber, isFunction } from '@polkadot/util';
+import { BN, formatNumber, isFunction } from '@polkadot/util';
 
 import { useTranslation } from '../../translate';
 import BondExtra from './BondExtra';
@@ -23,19 +23,25 @@ import InjectKeys from './InjectKeys';
 import KickNominees from './KickNominees';
 import ListNominees from './ListNominees';
 import Nominate from './Nominate';
+import Rebond from './Rebond';
+import SetCmixId from './SetCmixId';
 import SetControllerAccount from './SetControllerAccount';
-import SetRewardDestination from './SetRewardDestination';
 import SetSessionKey from './SetSessionKey';
+import TransferCmixId from './TransferCmixId';
 import Unbond from './Unbond';
 import Validate from './Validate';
 import WarnBond from './WarnBond';
+
+const ELECTION_FACTOR = 1.5;
 
 interface Props {
   allSlashes?: [BN, UnappliedSlash[]][];
   className?: string;
   isDisabled?: boolean;
+  isSelectable: boolean;
   info: StakerState;
   next?: string[];
+  onSelect: (stashId: string, controllerId: string, isSelected: boolean) => void;
   stashId: string;
   targets: SortedTargets;
   validators?: string[];
@@ -64,11 +70,22 @@ function useStashCalls (api: ApiPromise, stashId: string) {
   const balancesAll = useCall<DeriveBalancesAll>(api.derive.balances?.all, params);
   const spanCount = useCall<number>(api.query.staking.slashingSpans, params, transformSpan);
   const stakingAccount = useCall<DeriveStakingAccount>(api.derive.staking.account, params);
+  const stakingValidators = useCall<[StorageKey, PalletStakingValidatorPrefs][]>(api.query.staking.validators.entries);
+  const activeValidators = useCall<string[]>(api.query.session.validators);
+  const stakingLedgers = useCall<[StorageKey, Option<PalletStakingStakingLedger>][]>(api.query.staking.ledger.entries);
+  const bonded = useCall<[StorageKey, Option<AccountId32>][]>(api.query.staking.bonded.entries);
 
-  return { balancesAll, spanCount, stakingAccount };
+  return { activeValidators, balancesAll, bonded, spanCount, stakingAccount, stakingLedgers, stakingValidators };
 }
 
-function Account ({ allSlashes, className = '', info: { controllerId, destination, hexSessionIdNext, hexSessionIdQueue, isLoading, isOwnController, isOwnStash, isStashNominating, isStashValidating, nominating, sessionIds, stakingLedger, stashId }, isDisabled, targets }: Props): React.ReactElement<Props> {
+function useControllerCalls (api: ApiPromise, controllerId: string | null) {
+  const params = useMemo(() => [controllerId], [controllerId]);
+  const stakingLedger = useCall<Option<PalletStakingStakingLedger>>(api.query.staking.ledger, params);
+
+  return stakingLedger?.unwrapOr(undefined);
+}
+
+function Account ({ allSlashes, className = '', info: { controllerId, destination, hexSessionIdNext, hexSessionIdQueue, isLoading, isOwnController, isOwnStash, isStashNominating, isStashValidating, nominating, sessionIds, stakingLedger, stashId }, isDisabled, isSelectable, onSelect, targets }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
   const { queueExtrinsic } = useContext(StatusContext);
@@ -76,12 +93,35 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
   const [isInjectOpen, toggleInject] = useToggle();
   const [isKickOpen, toggleKick] = useToggle();
   const [isNominateOpen, toggleNominate] = useToggle();
-  const [isRewardDestinationOpen, toggleRewardDestination] = useToggle();
   const [isSetControllerOpen, toggleSetController] = useToggle();
   const [isSetSessionOpen, toggleSetSession] = useToggle();
   const [isUnbondOpen, toggleUnbond] = useToggle();
+  const [isRebondOpen, toggleRebond] = useToggle();
   const [isValidateOpen, toggleValidate] = useToggle();
-  const { balancesAll, spanCount, stakingAccount } = useStashCalls(api, stashId);
+  const [isSetCmixIdOpen, toggleSetCmixId] = useToggle();
+  const [isTransferCmixIdOpen, toggleTransferCmixId] = useToggle();
+  const { activeValidators, balancesAll, bonded, spanCount, stakingAccount, stakingLedgers, stakingValidators } = useStashCalls(api, stashId);
+  const totalUnlocking = stakingAccount && (stakingAccount.unlocking || []).reduce((acc, { value }) => acc.iadd(value), new BN(0));
+
+  const ledger = useControllerCalls(api, controllerId);
+  const cmixId = ledger?.cmixId.isSome ? ledger?.cmixId.unwrap().toString() : undefined;
+
+  const sessionInfo = useCall<DeriveSessionProgress>(api.derive.session?.progress);
+  const lastEraSession = sessionInfo ? sessionInfo.eraLength.toNumber() - sessionInfo.sessionLength.toNumber() * 2 : 0;
+  const electionCutoffLength = sessionInfo ? sessionInfo.eraLength.toNumber() - sessionInfo.sessionLength.toNumber() * ELECTION_FACTOR : 0;
+  const transferWindow = sessionInfo && (sessionInfo?.eraProgress.toNumber() < electionCutoffLength || sessionInfo?.eraProgress.toNumber() > lastEraSession);
+
+  const stakingValAddresses = stakingValidators?.filter(([key]) => key.args.length).map(([key]) => key.args[0].toString()) || [];
+  const bondedAddresses = bonded?.filter(([key]) => key.args.length).map(([key]) => key.args[0].toString()) || [];
+
+  const validToTransferCmixId = cmixId && activeValidators && stashId && !activeValidators.some((element) => element === stashId) && !stakingValAddresses?.some((elem) => elem === stashId) && transferWindow;
+
+  const _onSelect = useCallback(
+    (isSelected: boolean) => controllerId && onSelect(stashId, controllerId, isSelected),
+    [controllerId, stashId, onSelect]
+  );
+
+  const [isSelected, , setSelected] = useToggle(false, _onSelect);
 
   const slashes = useMemo(
     () => extractSlashes(stashId, allSlashes),
@@ -148,18 +188,18 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
             targets={targets}
           />
         )}
+        {isRebondOpen && (
+          <Rebond
+            controllerId={controllerId}
+            onClose={toggleRebond}
+            stakingInfo={stakingAccount}
+            stashId={stashId}
+          />
+        )}
         {isSetControllerOpen && controllerId && (
           <SetControllerAccount
             defaultControllerId={controllerId}
             onClose={toggleSetController}
-            stashId={stashId}
-          />
-        )}
-        {isRewardDestinationOpen && controllerId && (
-          <SetRewardDestination
-            controllerId={controllerId}
-            defaultDestination={destination}
-            onClose={toggleRewardDestination}
             stashId={stashId}
           />
         )}
@@ -183,6 +223,22 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
             controllerId={controllerId}
             onClose={toggleValidate}
             stashId={stashId}
+          />
+        )}
+        {isSetCmixIdOpen && (
+          <SetCmixId
+            controllerId={controllerId || stashId}
+            onClose={toggleSetCmixId}
+            stashId={stashId}
+          />
+        )}
+        {isTransferCmixIdOpen && cmixId && (
+          <TransferCmixId
+            cmixId={cmixId}
+            ledger={stakingLedgers?.map((elem) => { return elem[1].unwrap(); }) || []}
+            onClose={toggleTransferCmixId}
+            stashId={stashId}
+            stashes={bondedAddresses}
           />
         )}
       </td>
@@ -284,47 +340,47 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
               value={
                 <Menu>
                   <Menu.Item
-                    disabled={!isOwnStash || !balancesAll?.freeBalance.gtn(0)}
+                    isDisabled={!isOwnStash || !balancesAll?.freeBalance.gtn(0)}
                     onClick={toggleBondExtra}
                   >
                     {t<string>('Bond more funds')}
                   </Menu.Item>
                   <Menu.Item
-                    disabled={!isOwnController || !stakingAccount || !stakingAccount.stakingLedger || stakingAccount.stakingLedger.active?.isEmpty}
+                    isDisabled={!isOwnController || !stakingAccount || !stakingAccount.stakingLedger || stakingAccount.stakingLedger.active?.isEmpty}
                     onClick={toggleUnbond}
                   >
                     {t<string>('Unbond funds')}
                   </Menu.Item>
                   <Menu.Item
-                    disabled={!isOwnController || !stakingAccount || !stakingAccount.redeemable || !stakingAccount.redeemable.gtn(0)}
+                    isDisabled={!isOwnController || !stakingAccount || !totalUnlocking || !totalUnlocking.gtn(0)}
+                    onClick={toggleRebond}
+                  >
+                    {t<string>('Rebond unlocked funds')}
+                  </Menu.Item>
+                  <Menu.Item
+                    isDisabled={!isOwnController || !stakingAccount || !stakingAccount.redeemable || !stakingAccount.redeemable.gtn(0)}
                     onClick={withdrawFunds}
                   >
                     {t<string>('Withdraw unbonded funds')}
                   </Menu.Item>
                   <Menu.Divider />
                   <Menu.Item
-                    disabled={!isOwnStash}
+                    isDisabled={!isOwnStash}
                     onClick={toggleSetController}
                   >
                     {t<string>('Change controller account')}
                   </Menu.Item>
-                  <Menu.Item
-                    disabled={!isOwnController}
-                    onClick={toggleRewardDestination}
-                  >
-                    {t<string>('Change reward destination')}
-                  </Menu.Item>
                   {isStashValidating && (
                     <>
                       <Menu.Item
-                        disabled={!isOwnController}
+                        isDisabled={!isOwnController}
                         onClick={toggleValidate}
                       >
                         {t<string>('Change validator preferences')}
                       </Menu.Item>
                       {isFunction(api.tx.staking.kick) && (
                         <Menu.Item
-                          disabled={!isOwnController}
+                          isDisabled={!isOwnController}
                           onClick={toggleKick}
                         >
                           {t<string>('Remove nominees')}
@@ -333,31 +389,56 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
                     </>
                   )}
                   <Menu.Divider />
-                  {!isStashNominating &&
-                  <Menu.Item
-                    disabled={!isOwnController}
-                    onClick={toggleSetSession}
-                  >
-                    {t<string>('Change session keys')}
-                  </Menu.Item>
+                  {!isStashNominating && (
+                    <Menu.Item
+                      isDisabled={!isOwnController}
+                      onClick={toggleSetSession}
+                    >
+                      {t<string>('Change session keys')}
+                    </Menu.Item>
+                  )}
+                  {isStashNominating && (
+                    <Menu.Item
+                      isDisabled={!isOwnController || !targets.validators?.length}
+                      onClick={toggleNominate}
+                    >
+                      {t<string>('Set nominees')}
+                    </Menu.Item>
+                  )}
+                  {!isStashNominating && (
+                    <Menu.Item onClick={toggleInject}>
+                      {t<string>('Inject session keys (advanced)')}
+                    </Menu.Item>
+                  )}
+                  <Menu.Divider />
+                  {
+                    <Menu.Item
+                      isDisabled={!!cmixId}
+                      onClick={toggleSetCmixId}
+                    >
+                      {t<string>('Set Cmix ID')}
+                    </Menu.Item>
                   }
-                  {isStashNominating &&
-                  <Menu.Item
-                    disabled={!isOwnController || !targets.validators?.length}
-                    onClick={toggleNominate}
-                  >
-                    {t<string>('Set nominees')}
-                  </Menu.Item>
-                  }
-                  {!isStashNominating &&
-                  <Menu.Item onClick={toggleInject}>
-                    {t<string>('Inject session keys (advanced)')}
-                  </Menu.Item>
+                  {
+                    <Menu.Item
+                      isDisabled={!validToTransferCmixId}
+                      onClick={toggleTransferCmixId}
+                    >
+                      {t<string>('Transfer Cmix ID')}
+                    </Menu.Item>
                   }
                 </Menu>
               }
             />
           </>
+        )}
+      </td>
+      <td className='hidden'>
+        {isSelectable && controllerId && (
+          <Checkbox
+            onChange={setSelected}
+            value={isSelected}
+          />
         )}
       </td>
     </tr>
@@ -369,5 +450,9 @@ export default React.memo(styled(Account)`
     display: inline-block;
     margin-right: 0.25rem;
     vertical-align: inherit;
+  }
+
+  .hidden {
+    display: none;
   }
 `);

@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/page-accounts authors & contributors
+// Copyright 2017-2022 @polkadot/page-accounts authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import { fireEvent, screen, waitForElementToBeRemoved } from '@testing-library/react';
@@ -64,6 +64,7 @@ describe('Create an account modal', () => {
     await expectThirdStep();
     pressEnterKey();
 
+    await waitForElementToBeRemoved(() => screen.queryByText('Add an account via seed 3/3'));
     expectCreateAnAccountCall();
   });
 

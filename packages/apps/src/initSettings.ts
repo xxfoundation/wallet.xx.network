@@ -1,5 +1,7 @@
-// Copyright 2017-2021 @polkadot/apps authors & contributors
+// Copyright 2017-2022 @polkadot/apps authors & contributors
 // SPDX-License-Identifier: Apache-2.0
+
+import './transferLocalStorage';
 
 import queryString from 'query-string';
 import store from 'store';
@@ -62,6 +64,6 @@ function getApiUrl (): string {
 const apiUrl = getApiUrl();
 
 // set the default as retrieved here
-settings.set({ apiUrl });
+settings.set({ apiUrl, ledgerConn: 'webusb' });
 
 networkOrUrl(apiUrl);

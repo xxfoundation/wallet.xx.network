@@ -1,11 +1,11 @@
-// Copyright 2017-2021 @polkadot/app-settings authors & contributors
+// Copyright 2017-2022 @polkadot/app-settings authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { ChainInfo } from '../types';
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { extensionLogos } from '@polkadot/apps-config';
+import { emptyLogos, extensionLogos } from '@polkadot/apps-config';
 import { Button, Dropdown, Spinner, Table } from '@polkadot/react-components';
 import { useToggle } from '@polkadot/react-hooks';
 
@@ -21,11 +21,12 @@ interface Props {
 function Extensions ({ chainInfo, className }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { extensions } = useExtensions();
+
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isBusy, toggleBusy] = useToggle();
   const options = useMemo(
     () => (extensions || []).map(({ extension: { name, version } }, value) =>
-      iconOption(`${name} ${version}`, value, extensionLogos[name])),
+      iconOption(`${name} ${version}`, value, extensionLogos[name] || emptyLogos.empty)),
     [extensions]
   );
   const _updateMeta = useCallback(
@@ -50,7 +51,7 @@ function Extensions ({ chainInfo, className }: Props): React.ReactElement<Props>
   return (
     <Table
       className={className}
-      empty={t<string>('No Upgradable extensions')}
+      empty={t<string>('No upgradable extensions')}
       header={headerRef.current}
     >
 
@@ -68,7 +69,7 @@ function Extensions ({ chainInfo, className }: Props): React.ReactElement<Props>
               </td>
             </tr>
 
-            <tr className='isOdd'>
+            <tr className='hasOddRowColoring'>
               <td>
                 <Button.Group>
                   <Button

@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/react-components authors & contributors
+// Copyright 2017-2022 @polkadot/react-components authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { TabItem } from './types';
@@ -52,30 +52,32 @@ export default React.memo(styled(Tab)`
   display: flex;
   align-items: center;
   color: #8B8B8B;
-  padding: 0 1.5rem;
   height: 100%;
   font-size: 1rem;
   font-weight: 400;
 
+  .tabLinkText {
+    padding: 0.9rem 0.25rem;
+    margin: 0 1.25rem;
+  }
 
-    &:hover {
-      color: #8B8B8B;
+  &:hover {
+    color: #8B8B8B;
 
-      .tabLinkText::after{
-        background-color: #8B8B8B;
-      }
+    .tabLinkText::after{
+      background-color: #8B8B8B;
     }
+  }
 
-    &:hover .tabLinkText::after,
-    &.tabLinkActive .tabLinkText::after {
-      content: '';
-      position: absolute;
-      width: 3.14rem;
-      height: 2px;
-      bottom: -2px;
-      left: 50%;
-      transform: translateX(-50%);
-    }
+  &:hover .tabLinkText::after,
+  &.tabLinkActive .tabLinkText::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    bottom: -2px;
+    left: 0;
+  }
 
   &.tabLinkActive {
     color: var(--color-text) !important;

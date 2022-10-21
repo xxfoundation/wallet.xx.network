@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/app-accounts authors & contributors
+// Copyright 2017-2022 @polkadot/app-accounts authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { KeyringPair } from '@polkadot/keyring/types';
@@ -33,7 +33,7 @@ interface LockState {
   lockedError: string | null;
 }
 
-function deriveValidate (suri: string, pairType: KeypairType): string | null {
+function deriveValidate(suri: string, pairType: KeypairType): string | null {
   if (suri.includes('///')) {
     return 'Password paths are not supported on keys derived from others';
   }
@@ -54,7 +54,7 @@ function deriveValidate (suri: string, pairType: KeypairType): string | null {
   return null;
 }
 
-function createAccount (source: KeyringPair, suri: string, name: string, password: string, success: string, genesisHash?: string): ActionStatus {
+function createAccount(source: KeyringPair, suri: string, name: string, password: string, success: string, genesisHash?: string): ActionStatus {
   const commitAccount = () => {
     const derived = source.derive(suri);
 
@@ -66,7 +66,7 @@ function createAccount (source: KeyringPair, suri: string, name: string, passwor
   return tryCreateAccount(commitAccount, success);
 }
 
-function Derive ({ className = '', from, onClose }: Props): React.ReactElement {
+function Derive({ className = '', from, onClose }: Props): React.ReactElement {
   const { t } = useTranslation();
   const { api, isDevelopment } = useApi();
   const { queueAction } = useContext(StatusContext);
@@ -207,7 +207,7 @@ function Derive ({ className = '', from, onClose }: Props): React.ReactElement {
                   onCommit={_onCommit}
                   setName={setName}
                   setPassword={setPassword}
-                />;
+                />
               </AddressRow>
             )}
           </Modal.Content>

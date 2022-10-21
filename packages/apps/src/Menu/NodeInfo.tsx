@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/apps authors & contributors
+// Copyright 2017-2022 @polkadot/apps authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { BareProps as Props } from '@polkadot/react-components/types';
@@ -33,7 +33,7 @@ function NodeInfo ({ className = '' }: Props): React.ReactElement<Props> {
 
 export default React.memo(styled(NodeInfo)`
   background: transparent;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   line-height: 1.2;
   padding: 0 0 0 1rem;
   text-align: right;

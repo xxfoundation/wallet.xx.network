@@ -1,9 +1,11 @@
-// Copyright 2017-2021 @polkadot/react-components authors & contributors
+// Copyright 2017-2022 @polkadot/react-components authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { SubmittableExtrinsic } from '@polkadot/api/types';
 import type { DeriveAccountFlags, DeriveAccountRegistration } from '@polkadot/api-derive/types';
-import type { AccountId, Balance, BlockNumber, Call, Exposure, Hash, RewardDestination, SessionIndex, StakingLedger, ValidatorPrefs } from '@polkadot/types/interfaces';
+import type { DisplayedJudgement } from '@polkadot/react-components/types';
+import type { AccountId, Balance, BlockNumber, Call, Exposure, Hash, RewardDestination, SessionIndex, ValidatorPrefs } from '@polkadot/types/interfaces';
+import type { PalletStakingStakingLedger } from '@polkadot/types/lookup';
 import type { IExtrinsic } from '@polkadot/types/types';
 import type { KeyringJson$Meta } from '@polkadot/ui-keyring/types';
 
@@ -19,7 +21,7 @@ export interface CallOptions <T> {
   withParamsTransform?: boolean;
 }
 
-export type TxDef = [string, any[] | ((...params: any[]) => SubmittableExtrinsic<'promise'>)];
+export type TxDef = [string, unknown[] | ((...params: unknown[]) => SubmittableExtrinsic<'promise'>)];
 
 export type TxDefs = SubmittableExtrinsic<'promise'> | IExtrinsic | Call | TxDef | null;
 
@@ -86,6 +88,7 @@ export interface UseSudo {
 export interface AddressFlags extends DeriveAccountFlags {
   isDevelopment: boolean;
   isEditable: boolean;
+  isEthereum: boolean;
   isExternal: boolean;
   isFavorite: boolean;
   isHardware: boolean;
@@ -99,13 +102,9 @@ export interface AddressFlags extends DeriveAccountFlags {
 }
 
 export interface AddressIdentity extends DeriveAccountRegistration {
-  isGood: boolean;
-  isBad: boolean;
-  isKnownGood: boolean;
-  isReasonable: boolean;
-  isErroneous: boolean;
-  isLowQuality: boolean;
+  cmixId?: string;
   isExistent: boolean;
+  isKnownGood: boolean;
   waitCount: number;
 }
 
@@ -146,7 +145,19 @@ export interface StakerState {
   isStashValidating: boolean;
   nominating?: string[];
   sessionIds: string[];
-  stakingLedger?: StakingLedger;
+  stakingLedger?: PalletStakingStakingLedger;
   stashId: string;
   validatorPrefs?: ValidatorPrefs;
 }
+
+export interface Registrar {
+  address: string;
+  index: number;
+}
+
+export interface Judgement {
+  judgementName: DisplayedJudgement;
+  registrars: (Registrar | undefined)[];
+}
+
+export type UseJudgements = Judgement[]

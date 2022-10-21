@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/app-settings authors & contributors
+// Copyright 2017-2022 @polkadot/app-settings authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
@@ -9,6 +9,8 @@ interface Option {
 }
 
 export default function itemOption (label: string, value: string | number, img: unknown): Option {
+  console.log(label, value, img);
+
   return {
     text: (
       <div

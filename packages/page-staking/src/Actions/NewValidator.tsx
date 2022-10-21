@@ -1,4 +1,4 @@
-// Copyright 2017-2021 @polkadot/app-staking authors & contributors
+// Copyright 2017-2022 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { SortedTargets } from '../types';
@@ -29,6 +29,7 @@ function NewValidator ({ isInElection, targets }: Props): React.ReactElement<Pro
   const [{ bondOwnTx, bondTx, controllerId, controllerTx, stashId }, setBondInfo] = useState<BondInfo>({});
   const [{ sessionTx }, setSessionInfo] = useState<SessionInfo>({});
   const [{ validateTx }, setValidateInfo] = useState<ValidateInfo>({});
+  const [isCommissionValid, setIsCommissionValid] = useState<boolean>(false);
   const [step, setStep] = useState(1);
   const isDisabled = isInElection || !isFunction(api.tx.utility?.batch);
 
@@ -76,6 +77,7 @@ function NewValidator ({ isInElection, targets }: Props): React.ReactElement<Pro
           <Modal.Content>
             {step === 1 && (
               <BondPartial
+                isValidating={true}
                 minValidatorBond={targets.minValidatorBond}
                 onChange={setBondInfo}
               />
@@ -91,6 +93,7 @@ function NewValidator ({ isInElection, targets }: Props): React.ReactElement<Pro
                 <ValidatePartial
                   controllerId={controllerId}
                   onChange={setValidateInfo}
+                  onChangeCommission={setIsCommissionValid}
                   stashId={stashId}
                 />
               </>
@@ -111,7 +114,7 @@ function NewValidator ({ isInElection, targets }: Props): React.ReactElement<Pro
                 <TxButton
                   accountId={stashId}
                   icon='sign-in-alt'
-                  isDisabled={!bondTx || !sessionTx || !validateTx}
+                  isDisabled={!bondTx || !sessionTx || !validateTx || !isCommissionValid}
                   label={t<string>('Bond & Validate')}
                   onStart={_toggle}
                   params={[

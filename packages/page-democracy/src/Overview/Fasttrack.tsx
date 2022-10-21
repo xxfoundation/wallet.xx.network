@@ -1,15 +1,15 @@
-// Copyright 2017-2021 @polkadot/app-democracy authors & contributors
+// Copyright 2017-2022 @polkadot/app-democracy authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { SubmittableExtrinsic } from '@polkadot/api/types';
 import type { Hash, VoteThreshold } from '@polkadot/types/interfaces';
 
-import BN from 'bn.js';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { getFastTrackThreshold } from '@polkadot/apps-config';
 import { Button, Input, InputAddress, InputNumber, Modal, Toggle, TxButton } from '@polkadot/react-components';
 import { useApi, useCall, useCollectiveInstance, useToggle } from '@polkadot/react-hooks';
+import { BN } from '@polkadot/util';
 
 import { useTranslation } from '../translate';
 
@@ -155,7 +155,7 @@ function Fasttrack ({ imageHash, members, threshold }: Props): React.ReactElemen
       )}
       <Button
         icon='fast-forward'
-        isDisabled={!threshold.isSimplemajority}
+        isDisabled={!threshold.isSimpleMajority}
         label={t<string>('Fast track')}
         onClick={toggleFasttrack}
       />

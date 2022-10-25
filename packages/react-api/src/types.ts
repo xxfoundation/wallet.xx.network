@@ -5,8 +5,6 @@ import type { ApiPromise } from '@polkadot/api';
 import type { SubmittableExtrinsicFunction } from '@polkadot/api/promise/types';
 import type { LinkOption } from '@polkadot/apps-config/settings/types';
 import type { InjectedExtension } from '@polkadot/extension-inject/types';
-
-import { ApiPromise } from '@polkadot/api';
 import type { ProviderStats } from '@polkadot/rpc-provider/types';
 
 // helpers for HOC props

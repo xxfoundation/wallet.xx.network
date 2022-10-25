@@ -104,10 +104,6 @@ export function unsubscribe (tracker: TrackerRef): void {
   }
 }
 
-function isQuery (fn: TrackFn): fn is QueryableStorageEntry<'promise', []> {
-  return !isUndefined((fn as QueryableStorageEntry<'promise', []>).creator);
-}
-
 // subscribe, trying to play nice with the browser threads
 function subscribe <T> (api: ApiPromise, mountedRef: MountedRef, tracker: TrackerRef, fn: TrackFn | undefined, params: CallParams, setValue: (value: any) => void, { transform = transformIdentity, withParams, withParamsTransform }: CallOptions<T> = {}): void {
   const validParams = params.filter((p) => !isUndefined(p));

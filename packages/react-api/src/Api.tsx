@@ -166,14 +166,14 @@ async function loadOnReady (api: ApiPromise, store: KeyringStore | undefined, ty
   };
 }
 
-function notifyOfInjectionChanges (injectedAccounts: InjectedAccountExt[], filteredAccounts: InjectedAccountExt[] queueAction: QueueAction$Add) {
-  const notification = useCallback((message: string, result: ActionStatusBase['status']): void => {
+function notifyOfInjectionChanges (injectedAccounts: InjectedAccountExt[], filteredAccounts: InjectedAccountExt[], queueAction: QueueAction$Add) {
+  const notification = (message: string, result: ActionStatusBase['status']): void => {
     queueAction && queueAction({
       action: 'extension',
-      message: message,
+      message,
       status: result
     });
-  }, []);
+  };
 
   // Get arrays of addresses
   const keyringAddresses = keyring.getAccounts().filter(({ meta }) => meta.isInjected).map(({ address, meta }) => {
@@ -220,7 +220,7 @@ function notifyOfInjectionChanges (injectedAccounts: InjectedAccountExt[], filte
 }
 
 async function loadAccounts (injectedAccounts: InjectedAccountExt[], store: KeyringStore | undefined, injectionPreference: InjectionPreference, queueAction: QueueAction$Add): Promise<[boolean, boolean]> {
-  const { properties, systemChain, systemChainType, } = await retrieve(api);
+  const { properties, systemChain, systemChainType } = await retrieve(api);
   const ss58Format = settings.prefix === -1
     ? properties.ss58Format.unwrapOr(DEFAULT_SS58).toNumber()
     : settings.prefix;
@@ -233,7 +233,7 @@ async function loadAccounts (injectedAccounts: InjectedAccountExt[], store: Keyr
   const filteredAccounts = injectedAccounts.filter(({ meta }) => meta.genesisHash === genesisHash.toString());
 
   if (hasInjectedAccounts) {
-    notifyOfInjectionChanges(injectedAccounts, filteredAccounts);
+    notifyOfInjectionChanges(injectedAccounts, filteredAccounts, queueAction);
   }
 
   // finally load the keyring
@@ -298,7 +298,7 @@ function Api ({ apiUrl, children, isElectron, store }: Props): React.ReactElemen
       },
       setInjectionPreference
     }),
-    [state, apiEndpoint, apiError, apiRelay, apiUrl, extensions, isApiConnected, isApiInitialized, injectedAccounts, isElectron, setInjectionPreference, store]
+    [state, apiEndpoint, apiError, apiRelay, apiUrl, extensions, isApiConnected, isApiInitialized, isElectron, setInjectionPreference, injectedAccounts, store, queueAction]
   );
 
   async function subscribe(): Promise<void> {
@@ -332,7 +332,7 @@ function Api ({ apiUrl, children, isElectron, store }: Props): React.ReactElemen
         })
         .catch((error): void => setApiError((error as Error).message)); 
     }
-  }, [store, subscribed, injectionPreference, injectedAccounts, queueAction]);
+  }, [store, subscribed, injectionPreference, injectedAccounts, queueAction, state]);
 
   // initial initialization
   useEffect((): void => {

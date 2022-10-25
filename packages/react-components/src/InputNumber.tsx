@@ -29,6 +29,7 @@ interface Props {
   isSi?: boolean;
   isDecimal?: boolean;
   isWarning?: boolean;
+  isSigned?: boolean;
   isZeroable?: boolean;
   label?: React.ReactNode;
   labelExtra?: React.ReactNode;
@@ -63,13 +64,13 @@ function getGlobalMaxValue(bitLength?: number): BN {
   return BN_TWO.pow(new BN(bitLength || DEFAULT_BITLENGTH)).isub(BN_ONE);
 }
 
-function getRegex(isDecimal: boolean): RegExp {
+function getRegex (isDecimal: boolean, isSigned: boolean): RegExp {
   const decimal = '.';
 
   return new RegExp(
     isDecimal
-      ? `^(0|[1-9]\\d*)(\\${decimal}\\d*)?$`
-      : '^(0|[1-9]\\d*)$'
+      ? `^${isSigned ? '-?' : ''}(0|[1-9]\\d*)(\\${decimal}\\d*)?$`
+      : `^${isSigned ? '-?' : ''}(0|[1-9]\\d*)$`
   );
 }
 
@@ -94,10 +95,10 @@ function getSiPowers(si: SiDef | null, decimals?: number): [BN, number, number] 
   return [new BN(basePower + si.power), basePower, si.power];
 }
 
-function isValidNumber(bn: BN, bitLength: BitLength, isZeroable: boolean, minValue?: BN, maxValue?: BN): boolean {
+function isValidNumber (bn: BN, bitLength: BitLength, isSigned: boolean, isZeroable: boolean, minValue?: BN, maxValue?: BN): boolean {
   if (
     // cannot be negative
-    bn.lt(BN_ZERO) ||
+    (!isSigned && bn.lt(BN_ZERO)) ||
     // cannot be > than allowed max
     bn.gt(getGlobalMaxValue(bitLength)) ||
     // check if 0 and it should be a value
@@ -115,7 +116,7 @@ function isValidNumber(bn: BN, bitLength: BitLength, isZeroable: boolean, minVal
   return true;
 }
 
-function inputToBn(api: ApiPromise, input: string, si: SiDef | null, bitLength: BitLength, isZeroable: boolean, minValue?: BN, maxValue?: BN, decimals?: number): [BN, boolean] {
+function inputToBn (api: ApiPromise, input: string, si: SiDef | null, bitLength: BitLength, isSigned: boolean, isZeroable: boolean, minValue?: BN, maxValue?: BN, decimals?: number): [BN, boolean] {
   const [siPower, basePower, siUnitPower] = getSiPowers(si, decimals);
 
   // eslint-disable-next-line @typescript-eslint/prefer-regexp-exec
@@ -136,47 +137,75 @@ function inputToBn(api: ApiPromise, input: string, si: SiDef | null, bitLength: 
       .add(mod.mul(BN_TEN.pow(new BN(basePower + siUnitPower - modString.length))));
   } else {
     result = new BN(input.replace(/[^\d]/g, ''))
-      .mul(BN_TEN.pow(siPower));
+      .mul(BN_TEN.pow(siPower))
+      .muln(isSigned && input.startsWith('-') ? -1 : 1);
   }
 
   return [
     result,
-    isValidNumber(result, bitLength, isZeroable, minValue, maxValue)
+    isValidNumber(result, bitLength, isSigned, isZeroable, minValue, maxValue)
   ];
 }
 
-function getValuesFromString(api: ApiPromise, value: string, si: SiDef | null, bitLength: BitLength, isZeroable: boolean, minValue?: BN, maxValue?: BN, decimals?: number): [string, BN, boolean] {
-  const [valueBn, isValid] = inputToBn(api, value, si, bitLength, isZeroable, minValue, maxValue, decimals);
-
+function getValuesFromString (api: ApiPromise, value: string, si: SiDef | null, bitLength: BitLength, isSigned: boolean, isZeroable: boolean, minValue?: BN,  maxValue?: BN, decimals?: number): [string, BN, boolean] {
   return [
     value,
-    valueBn,
-    isValid
+    ...inputToBn(api, value, si, bitLength, isSigned, isZeroable, maxValue, decimals)
   ];
 }
 
-function getValuesFromBn(valueBn: BN, si: SiDef | null, isZeroable: boolean, _decimals?: number): [string, BN, boolean] {
+function getValuesFromBn (valueBn: BN, si: SiDef | null, isSigned: boolean, isZeroable: boolean, _decimals?: number): [string, BN, boolean] {
   const decimals = isUndefined(_decimals)
     ? formatBalance.getDefaults().decimals
     : _decimals;
-  const value = si
-    ? valueBn.div(BN_TEN.pow(new BN(decimals + si.power))).toString()
-    : valueBn.toString();
 
   return [
-    value,
+    si
+      ? valueBn.div(BN_TEN.pow(new BN(decimals + si.power))).toString()
+      : valueBn.toString(),
     valueBn,
-    isZeroable ? true : valueBn.gt(BN_ZERO)
+    isZeroable || isSigned
+      ? true
+      : valueBn.gt(BN_ZERO)
   ];
 }
 
-function getValues(api: ApiPromise, value: BN | string = BN_ZERO, si: SiDef | null, bitLength: BitLength, isZeroable: boolean, minValue?: BN, maxValue?: BN, decimals?: number): [string, BN, boolean] {
+function getValues (api: ApiPromise, value: BN | string = BN_ZERO, si: SiDef | null, bitLength: BitLength, isSigned: boolean, isZeroable: boolean, maxValue?: BN, decimals?: number): [string, BN, boolean] {
   return isBn(value)
-    ? getValuesFromBn(value, si, isZeroable, decimals)
-    : getValuesFromString(api, value, si, bitLength, isZeroable, minValue, maxValue, decimals);
+    ? getValuesFromBn(value, si, isSigned, isZeroable, decimals)
+    : getValuesFromString(api, value, si, bitLength, isSigned, isZeroable, maxValue, decimals);
 }
 
-function InputNumber({ autoFocus, bitLength = DEFAULT_BITLENGTH, children, className = '', defaultValue, help, isDecimal, isFull, isSi, isDisabled, isError = false, isWarning, isZeroable = true, label, labelExtra, maxLength, minValue, maxValue, onChange, onEnter, onEscape, placeholder, siDecimals, siDefault, siSymbol, value: propsValue, commission }: Props): React.ReactElement<Props> {
+function InputNumber ({
+  autoFocus,
+  bitLength = DEFAULT_BITLENGTH,
+  children,
+  className = '',
+  commission,
+  defaultValue,
+  help,
+  isDecimal,
+  isFull,
+  isSi,
+  isDisabled,
+  isError = false,
+  isWarning,
+  isSigned = false,
+  isZeroable = true,
+  label,
+  labelExtra,
+  maxLength,
+  minValue,
+  maxValue,
+  onChange,
+  onEnter,
+  onEscape,
+  placeholder,
+  siDecimals,
+  siDefault,
+  siSymbol,
+  value: propsValue
+}: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
   const [si, setSi] = useState<SiDef | null>(() =>
@@ -185,7 +214,7 @@ function InputNumber({ autoFocus, bitLength = DEFAULT_BITLENGTH, children, class
       : null
   );
   const [[value, valueBn, isValid], setValues] = useState<[string, BN, boolean]>(() =>
-    getValues(api, propsValue || minValue, si, bitLength, isZeroable, minValue, maxValue, siDecimals)
+    getValues(api, propsValue || defaultValue, si, bitLength, isSigned, isZeroable, maxValue, siDecimals)
   );
   const [isPreKeyDown, setIsPreKeyDown] = useState(false);
 
@@ -200,9 +229,9 @@ function InputNumber({ autoFocus, bitLength = DEFAULT_BITLENGTH, children, class
 
   const _onChangeWithSi = useCallback(
     (input: string, si: SiDef | null) => setValues(
-      getValuesFromString(api, input, si, bitLength, isZeroable, minValue, maxValue, siDecimals)
+      getValuesFromString(api, input, si, bitLength, isSigned, isZeroable, minValue, maxValue, siDecimals)
     ),
-    [api, bitLength, isZeroable, isDecimal, minValue, maxValue, siDecimals]
+    [api, bitLength, isSigned, isZeroable, maxValue, siDecimals]
   );
 
   const _onChange = useCallback(
@@ -226,12 +255,12 @@ function InputNumber({ autoFocus, bitLength = DEFAULT_BITLENGTH, children, class
         const { selectionEnd: j, selectionStart: i, value } = event.target as HTMLInputElement;
         const newValue = `${value.substring(0, i || 0)}${event.key}${value.substring(j || 0)}`;
 
-        if (!getRegex(isDecimal || !!si).test(newValue)) {
+        if (!getRegex(isDecimal || !!si, isSigned).test(newValue)) {
           event.preventDefault();
         }
       }
     },
-    [isDecimal, isPreKeyDown, si]
+    [isDecimal, isPreKeyDown, isSigned, si]
   );
 
   const _onKeyUp = useCallback(
@@ -247,11 +276,11 @@ function InputNumber({ autoFocus, bitLength = DEFAULT_BITLENGTH, children, class
     (event: React.ClipboardEvent<Element>): void => {
       const { value: newValue } = event.target as HTMLInputElement;
 
-      if (!getRegex(isDecimal || !!si).test(newValue)) {
+      if (!getRegex(isDecimal || !!si, isSigned).test(newValue)) {
         event.preventDefault();
       }
     },
-    [isDecimal, si]
+    [isDecimal, isSigned, si]
   );
 
   const _onSelectSiUnit = useCallback(
@@ -292,7 +321,11 @@ function InputNumber({ autoFocus, bitLength = DEFAULT_BITLENGTH, children, class
       onKeyDown={_onKeyDown}
       onKeyUp={_onKeyUp}
       onPaste={_onPaste}
-      placeholder={placeholder || t<string>('Positive number')}
+      placeholder={placeholder || (
+        isSigned
+          ? t<string>('Valid number')
+          : t<string>('Positive number')
+      )}
       type='text'
       value={value}
     >

@@ -3,7 +3,9 @@
 
 import type { TFunction } from 'i18next';
 import type { DeriveBalancesAccountData, DeriveBalancesAll, DeriveDemocracyLock, DeriveStakingAccount } from '@polkadot/api-derive/types';
-import type { BlockNumber, LockIdentifier, ValidatorPrefsTo145, Voting } from '@polkadot/types/interfaces';
+import type { Raw } from '@polkadot/types';
+import type { BlockNumber, ValidatorPrefsTo145, Voting } from '@polkadot/types/interfaces';
+import type { PalletBalancesReserveData } from '@polkadot/types/lookup';
 import type { BN } from '@polkadot/util';
 
 import React, { useRef } from 'react';
@@ -14,7 +16,7 @@ import { Expander, Icon, Tooltip } from '@polkadot/react-components';
 import CmixAddress from '@polkadot/react-components/CmixAddress';
 import { useBestNumber } from '@polkadot/react-hooks';
 import { BlockToTime, FormatBalance } from '@polkadot/react-query';
-import { BN_ZERO, formatBalance, formatNumber, hexToString, isObject } from '@polkadot/util';
+import { BN_ZERO, formatBalance, formatNumber, isObject } from '@polkadot/util';
 
 import CryptoType from './CryptoType';
 import DemocracyLocks from './DemocracyLocks';
@@ -87,13 +89,11 @@ function IconVoid (): React.ReactElement {
   return <span className='icon-void'>&nbsp;</span>;
 }
 
-function lookupLock (lookup: Record<string, string>, lockId: LockIdentifier): string {
-  const lockHex = lockId.toHex();
+function lookupLock (lookup: Record<string, string>, lockId: Raw): string {
+  const lockHex = lockId.toHuman() as string;
 
   try {
-    const lockName = hexToString(lockHex);
-
-    return lookup[lockName] || lockName;
+    return lookup[lockHex] || lockHex;
   } catch (error) {
     return lockHex;
   }
@@ -266,7 +266,7 @@ function createBalanceItems (formatIndex: number, lookup: Record<string, string>
         className='result'
         formatIndex={formatIndex}
         labelPost={<IconVoid />}
-        value={balancesAll.freeBalance.sub(balancesAll.frozenFee.gte(balancesAll.frozenMisc) ? balancesAll.frozenFee : balancesAll.frozenMisc)}
+        value={deriveBalances.availableBalance}
       />
     </React.Fragment>
   );
@@ -323,6 +323,9 @@ function createBalanceItems (formatIndex: number, lookup: Record<string, string>
     );
   }
 
+  const allReserves = (deriveBalances?.namedReserves || []).reduce<PalletBalancesReserveData[]>((t, r) => t.concat(...r), []);
+  const hasNamedReserves = !!allReserves && allReserves.length !== 0;
+
   balanceDisplay.locked && balancesAll && (isAllLocked || deriveBalances.lockedBalance?.gtn(0)) && allItems.push(
     <React.Fragment key={3}>
       <Label label={t<string>('locked')} />
@@ -330,10 +333,23 @@ function createBalanceItems (formatIndex: number, lookup: Record<string, string>
         className='result'
         formatIndex={formatIndex}
         labelPost={
-          <Icon
-            icon='info-circle'
-            tooltip={`${address}-locks-trigger`}
-          />
+          <>
+            <Icon
+              icon='info-circle'
+              tooltip={`${address}-locks-trigger`}
+            />
+            <Tooltip
+              text={deriveBalances.lockedBreakdown.map(({ amount, id, reasons }, index): React.ReactNode => (
+                <div key={index}>
+                  {amount?.isMax()
+                    ? t<string>('everything')
+                    : formatBalance(amount, { forceUnit: '-' })
+                  }{id && <div className='faded'>{lookupLock(lookup, id)}</div>}<div className='faded'>{reasons.toString()}</div>
+                </div>
+              ))}
+              trigger={`${address}-locks-trigger`}
+            />
+          </>
         }
         value={isAllLocked ? 'all' : deriveBalances.lockedBalance}
       >
@@ -357,7 +373,27 @@ function createBalanceItems (formatIndex: number, lookup: Record<string, string>
       <FormatBalance
         className='result'
         formatIndex={formatIndex}
-        labelPost={<IconVoid />}
+        labelPost={
+          hasNamedReserves
+            ? (
+              <>
+                <Icon
+                  icon='info-circle'
+                  tooltip={`${address}-named-reserves-trigger`}
+                />
+                <Tooltip
+                  text={allReserves.map(({ amount, id }, index): React.ReactNode => (
+                    <div key={index}>
+                      {formatBalance(amount, { forceUnit: '-' })
+                      }{id && <div className='faded'>{lookupLock(lookup, id)}</div>}
+                    </div>
+                  ))}
+                  trigger={`${address}-named-reserves-trigger`}
+                />
+              </>
+            )
+            : <IconVoid />
+        }
         value={balancesAll.reservedBalance}
       />
     </React.Fragment>

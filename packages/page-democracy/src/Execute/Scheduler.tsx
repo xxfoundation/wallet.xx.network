@@ -5,7 +5,7 @@
 
 import type { Option } from '@polkadot/types';
 import type { BlockNumber, Call, Scheduled } from '@polkadot/types/interfaces';
-// import type { FrameSupportScheduleMaybeHashed, PalletSchedulerScheduledV3 } from '@polkadot/types/lookup';
+import type { FrameSupportScheduleMaybeHashed, PalletSchedulerScheduledV3 } from '@polkadot/types/lookup';
 import type { ScheduledExt } from './types';
 
 import React, { useMemo, useRef } from 'react';
@@ -20,8 +20,8 @@ interface Props {
   className?: string;
 }
 
-const transformEntries = {
-  transform: (entries: [{ args: [BlockNumber] }, Option<Scheduled | any>[]][]): ScheduledExt[] => {
+const OPT_SCHED = {
+  transform: (entries: [{ args: [BlockNumber] }, Option<Scheduled | PalletSchedulerScheduledV3>[]][]): ScheduledExt[] => {
     return entries
       .filter(([, all]) => all.some((o) => o.isSome))
       .reduce((items: ScheduledExt[], [key, all]): ScheduledExt[] => {
@@ -29,21 +29,18 @@ const transformEntries = {
 
         return all
           .filter((o) => o.isSome)
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
           .map((o) => o.unwrap())
           .reduce((items: ScheduledExt[], { call: callOrEnum, maybeId, maybePeriodic, priority }, index) => {
             let call: Call | null = null;
 
-            if ((callOrEnum as unknown as Record<string, any>).inner) {
-              if ((callOrEnum as unknown as Record<string, any>).isValue) {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                call = (callOrEnum as unknown as Record<string, any>).asValue;
+            if ((callOrEnum as unknown as FrameSupportScheduleMaybeHashed).inner) {
+              if ((callOrEnum as unknown as FrameSupportScheduleMaybeHashed).isValue) {
+                call = (callOrEnum as unknown as FrameSupportScheduleMaybeHashed).asValue;
               }
             } else {
               call = callOrEnum as Call;
             }
 
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             items.push({ blockNumber, call, key: `${blockNumber.toString()}-${index}`, maybeId, maybePeriodic, priority });
 
             return items;
@@ -56,10 +53,13 @@ function Schedule ({ className = '' }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
   const bestNumber = useBestNumber();
-  const items = useCall<ScheduledExt[]>(api.query.scheduler.agenda.entries, undefined, transformEntries);
+  const items = useCall<ScheduledExt[]>(api.query.scheduler.agenda.entries, undefined, OPT_SCHED);
 
   const filtered = useMemo(
-    () => bestNumber && items && items.filter(({ blockNumber }) => blockNumber.gte(bestNumber)),
+    () => bestNumber && items &&
+      items
+        .filter(({ blockNumber }) => blockNumber.gte(bestNumber))
+        .sort((a, b) => a.blockNumber.cmp(b.blockNumber)),
     [bestNumber, items]
   );
 

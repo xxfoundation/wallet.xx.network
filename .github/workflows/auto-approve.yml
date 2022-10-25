@@ -1,0 +1,16 @@
+name: bot
+
+on:
+  pull_request:
+    types: [labeled]
+
+jobs:
+  approve:
+    if: "! startsWith(github.event.head_commit.message, '[CI Skip]') && (!github.event.pull_request || github.event.pull_request.head.repo.full_name == github.repository)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: jacogr/action-approve@9d6ce78d26f23ad29d009d034822cf773f2cb50e
+        with:
+          authors: jacogr
+          labels: -auto
+          token: ${{ secrets.GH_PAT_BOT }}

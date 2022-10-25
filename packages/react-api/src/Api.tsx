@@ -13,7 +13,7 @@ import type { ApiProps, ApiState } from './types';
 
 import { ScProvider } from '@substrate/connect';
 import custom from '@xxnetwork/custom-derives';
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import store from 'store';
 
 import { ApiPromise, WsProvider } from '@polkadot/api';
@@ -103,10 +103,11 @@ async function retrieve(api: ApiPromise): Promise<ChainData> {
   };
 }
 
-async function loadOnReady(api: ApiPromise, store: KeyringStore | undefined, types: Record<string, Record<string, string>>): Promise<ApiState> {
+async function loadOnReady (api: ApiPromise, store: KeyringStore | undefined, types: Record<string, Record<string, string>>): Promise<ApiState> {
   registry.register(types);
 
   const { properties, systemChain, systemChainType, systemName, systemVersion } = await retrieve(api);
+  const chainSS58 = properties.ss58Format.unwrapOr(DEFAULT_SS58).toNumber();
   const ss58Format = settings.prefix === -1
     ? properties.ss58Format.unwrapOr(DEFAULT_SS58).toNumber()
     : settings.prefix;
@@ -151,6 +152,7 @@ async function loadOnReady(api: ApiPromise, store: KeyringStore | undefined, typ
   return {
     apiDefaultTx,
     apiDefaultTxSudo,
+    chainSS58,
     canInject: false,
     hasInjectedAccounts: false,
     isApiReady: true,
@@ -164,35 +166,26 @@ async function loadOnReady(api: ApiPromise, store: KeyringStore | undefined, typ
   };
 }
 
-async function loadAccounts(injectedAccounts: InjectedAccountExt[], store: KeyringStore | undefined, injectionPreference: InjectionPreference, queueAction: QueueAction$Add): Promise<[boolean, boolean]> {
-  const { properties, systemChain, systemChainType, } = await retrieve(api);
-  const ss58Format = settings.prefix === -1
-    ? properties.ss58Format.unwrapOr(DEFAULT_SS58).toNumber()
-    : settings.prefix;
-  const isEthereum = ethereumChains.includes(api.runtimeVersion.specName.toString());
-  const isDevelopment = (systemChainType.isDevelopment || systemChainType.isLocal || isTestChain(systemChain));
-  const genesisHash = api.genesisHash;
-  const canInject = injectedAccounts.length > 0;
-  const hasInjectedAccounts = injectionPreference === InjectionPreference.Inject && canInject;
-  const filteredAccounts = injectedAccounts.filter(({ meta }) => meta.genesisHash === genesisHash.toString());
-
-  const notification = (message: string, result: ActionStatusBase['status']): void => {
+function notifyOfInjectionChanges (injectedAccounts: InjectedAccountExt[], filteredAccounts: InjectedAccountExt[] queueAction: QueueAction$Add) {
+  const notification = useCallback((message: string, result: ActionStatusBase['status']): void => {
     queueAction && queueAction({
       action: 'extension',
       message: message,
       status: result
     });
-  };
+  }, []);
 
   // Get arrays of addresses
   const keyringAddresses = keyring.getAccounts().filter(({ meta }) => meta.isInjected).map(({ address, meta }) => {
-    return { address: address, name: meta.name }
+    return { address, name: meta.name }
   });
+
   const filteredAddresses = filteredAccounts.map(({ address, meta }) => {
-    return { address: address, name: meta.name }
+    return { address, name: meta.name }
   });
+
   const injectedAddresses = injectedAccounts.map(({ address, meta }) => {
-    return { address: address, name: meta.name }
+    return { address, name: meta.name }
   });
 
   // Get addresses of accounts being removed
@@ -205,32 +198,48 @@ async function loadAccounts(injectedAccounts: InjectedAccountExt[], store: Keyri
   // Remove accounts that are in keyring but not in new filtered accounts
   removingAddresses.forEach(({ address }) => keyring.forgetAccount(address));
 
+  // Notify user of accounts being removed
+  if (removingAddresses.length) {
+    notification(`Removed ${removingAddresses.length} account${removingAddresses.length > 1 ? 's' : ''}: ${removingAddresses.map(({ name }) => name).join(', ')}`, 'success');
+  }
+
+  // Notify user of accounts being added
+  if (addingAddresses.length) {
+    notification(`Injected ${addingAddresses.length} account${addingAddresses.length > 1 ? 's' : ''}: ${addingAddresses.map(({ name }) => name).join(', ')}`, 'success');
+  }
+
+  // Notify user of accounts in extension that are on different network
+  if (wrongNetworkAddresses.length) {
+    notification(`${wrongNetworkAddresses.length} account${wrongNetworkAddresses.length > 1 ? 's' : ''}: ${wrongNetworkAddresses.map(({ name }) => name).join(', ')} can't be injected due to being on a different network. Change the network in the extension if you wish to inject any of these accounts`, 'eventWarn');
+  }
+
+  // Notify user if nothing was done
+  if (removingAddresses.length === 0 && addingAddresses.length === 0 && wrongNetworkAddresses.length === 0) {
+    notification('No accounts to be injected', 'eventWarn');
+  }
+}
+
+async function loadAccounts (injectedAccounts: InjectedAccountExt[], store: KeyringStore | undefined, injectionPreference: InjectionPreference, queueAction: QueueAction$Add): Promise<[boolean, boolean]> {
+  const { properties, systemChain, systemChainType, } = await retrieve(api);
+  const ss58Format = settings.prefix === -1
+    ? properties.ss58Format.unwrapOr(DEFAULT_SS58).toNumber()
+    : settings.prefix;
+  const isEthereum = ethereumChains.includes(api.runtimeVersion.specName.toString());
+  const isDevelopment = (systemChainType.isDevelopment || systemChainType.isLocal || isTestChain(systemChain));
+  const genesisHash = api.genesisHash;
+
+  const canInject = injectedAccounts.length > 0;
+  const hasInjectedAccounts = injectionPreference === InjectionPreference.Inject && canInject;
+  const filteredAccounts = injectedAccounts.filter(({ meta }) => meta.genesisHash === genesisHash.toString());
+
   if (hasInjectedAccounts) {
-    // Notify user of accounts being removed
-    if (removingAddresses.length) {
-      notification(`Removed ${removingAddresses.length} account${removingAddresses.length > 1 ? 's' : ''}: ${removingAddresses.map(({ name }) => name).join(', ')}`, 'success');
-    }
-
-    // Notify user of accounts being added
-    if (addingAddresses.length) {
-      notification(`Injected ${addingAddresses.length} account${addingAddresses.length > 1 ? 's' : ''}: ${addingAddresses.map(({ name }) => name).join(', ')}`, 'success');
-    }
-
-    // Notify user of accounts in extension that are on different network
-    if (wrongNetworkAddresses.length) {
-      notification(`${wrongNetworkAddresses.length} account${wrongNetworkAddresses.length > 1 ? 's' : ''}: ${wrongNetworkAddresses.map(({ name }) => name).join(', ')} can't be injected due to being on a different network. Change the network in the extension if you wish to inject any of these accounts`, 'eventWarn');
-    }
-
-    // Notify user if nothing was done
-    if (removingAddresses.length === 0 && addingAddresses.length === 0 && wrongNetworkAddresses.length === 0) {
-      notification('No accounts to be injected', 'eventWarn');
-    }
+    notifyOfInjectionChanges(injectedAccounts, filteredAccounts);
   }
 
   // finally load the keyring
   try {
     keyring.loadAll({
-      genesisHash: api.genesisHash,
+      genesisHash,
       isDevelopment,
       ss58Format,
       store,
@@ -244,7 +253,7 @@ async function loadAccounts(injectedAccounts: InjectedAccountExt[], store: Keyri
   return [canInject, hasInjectedAccounts];
 }
 
-function Api({ apiUrl, children, isElectron, store }: Props): React.ReactElement<Props> | null {
+function Api ({ apiUrl, children, isElectron, store }: Props): React.ReactElement<Props> | null {
   const { queuePayload, queueSetTxStatus } = useContext(StatusContext);
   const [state, setState] = useState<ApiState>({ hasInjectedAccounts: false, isApiReady: false } as unknown as ApiState);
   const [isApiConnected, setIsApiConnected] = useState(false);

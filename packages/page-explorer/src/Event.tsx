@@ -20,10 +20,15 @@ function Event({ className = '', value: { event } }: Props): React.ReactElement<
       summaryMeta={event.meta}
       data={event.data}
     >
-      <EventDisplay
-        className='details'
-        value={event}
-      />
+      {event.data.length
+        ? (
+          <EventDisplay
+            className='details'
+            value={event}
+          />
+        )
+        : null
+      }
     </Expander>
   );
 }

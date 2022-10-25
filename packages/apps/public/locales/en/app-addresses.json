@@ -22,7 +22,7 @@
   "new address": "new address",
   "no addresses saved yet, add any existing address": "no addresses saved yet, add any existing address",
   "send": "send",
-  "transactions": "transactions",
   "{{count}} contacts successfully exported": "{{count}} contacts successfully exported",
-  "{{count}} contacts successfully exported_plural": "{{count}} contacts successfully exported"
+  "{{count}} contacts successfully exported_plural": "{{count}} contacts successfully exported",
+  "transactions": "transactions"
 }

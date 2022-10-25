@@ -150,7 +150,7 @@ function filterSt(stqueue?: QueueStatus[]): QueueStatus[] {
   return (stqueue || []).filter(({ isCompleted }) => !isCompleted);
 }
 
-function filterTx(txqueue?: QueueTx[]): QueueTx[] {
+function filterTx (txqueue?: QueueTx[]): QueueTx[] {
   return (txqueue || []).filter(({ status }) => !['completed', 'incomplete'].includes(status));
 }
 
@@ -285,8 +285,8 @@ export default React.memo(styled(Status)`
       background: teal;
     }
 
-    &.eventWarn > .wraper > .container {
-      background: orange;
+    &.eventWarn > .wrapper > .container {
+      background: darkorange;
     }
 
     &.completed,

@@ -6,12 +6,13 @@ import type { UseWeight } from './types';
 
 import { useCallback, useMemo, useState } from 'react';
 
-import { createNamedHook, useApi, useBlockTime } from '@polkadot/react-hooks';
+import { createNamedHook, useApi, useBlockInterval } from '@polkadot/react-hooks';
+import { convertWeight } from '@polkadot/react-hooks/useWeight';
 import { BN_MILLION, BN_TEN, BN_ZERO } from '@polkadot/util';
 
 function useWeightImpl (): UseWeight {
   const { api } = useApi();
-  const [blockTime] = useBlockTime();
+  const blockTime = useBlockInterval();
   const [megaGas, _setMegaGas] = useState<BN>(
     (api.consts.system.blockWeights.maxBlock).div(BN_MILLION).div(BN_TEN)
   );

@@ -3,11 +3,11 @@
 
 import type { ValidateInfo } from './types';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Dropdown, InputAddress, InputNumber, Modal } from '@polkadot/react-components';
+import { Dropdown, InputAddress, InputNumber, MarkError, Modal } from '@polkadot/react-components';
 import { useApi } from '@polkadot/react-hooks';
-import { BN, BN_HUNDRED as MAX_COMM, isFunction } from '@polkadot/util';
+import { BN, BN_HUNDRED as MAX_COMM, BN_ONE, bnMax, isFunction } from '@polkadot/util';
 
 import { useTranslation } from '../../translate';
 
@@ -15,6 +15,7 @@ interface Props {
   className?: string;
   controllerId: string;
   onChangeCommission?: (isCommissionValid: boolean) => void;
+  minCommission?: BN;
   onChange: (info: ValidateInfo) => void;
   stashId: string;
   withSenders?: boolean;
@@ -31,6 +32,7 @@ function Validate ({ className = '', controllerId, onChange, onChangeCommission,
   const [commission, setCommission] = useState<BN>(MIN_COMM);
   const [maxLengthWithDecimals, setMaxLengthWithDecimals] = useState<number>(3);
   const [allowNoms, setAllowNoms] = useState(true);
+
 
   const blockedOptions = useRef([
     { text: t('Yes, allow nominations'), value: true },
@@ -68,6 +70,8 @@ function Validate ({ className = '', controllerId, onChange, onChangeCommission,
     [onChangeCommission]
   );
 
+  const commErr = commission.lt(MIN_COMM);
+
   return (
     <div className={className}>
       {withSenders && (
@@ -96,6 +100,9 @@ function Validate ({ className = '', controllerId, onChange, onChangeCommission,
           minValue={MIN_COMM.mul(DEFAULT_LENGTH)}
           onChange={_setCommission}
         />
+        {commErr && (
+          <MarkError content={t<string>('The commission is below the on-chain minimum of {{p}}%', { replace: { p: (MIN_COMM.mul(MAX_COMM).div(COMM_MUL).toNumber() / 100).toFixed(2) } })} />
+        )}
       </Modal.Columns>
       {isFunction(api.tx.staking.kick) && (
         <Modal.Columns hint={t<string>('The validator can block any new nominations. By default it is set to allow all nominations.')}>

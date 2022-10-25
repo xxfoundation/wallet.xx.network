@@ -12,7 +12,7 @@ import styled from 'styled-components';
 import { AddressRow, Button, InputFile, MarkError, MarkWarning, Modal, Password } from '@polkadot/react-components';
 import { useApi } from '@polkadot/react-hooks';
 import { keyring } from '@polkadot/ui-keyring';
-import { u8aToString } from '@polkadot/util';
+import { assert, nextTick, u8aToString } from '@polkadot/util';
 
 import { useTranslation } from '../translate';
 

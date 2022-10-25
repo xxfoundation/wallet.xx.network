@@ -9,7 +9,7 @@ import type { KeypairType } from '@polkadot/util-crypto/types';
 
 import { WithTranslation } from 'react-i18next';
 
-export { AppProps as ComponentProps } from '@polkadot/react-components/types';
+export type { AppProps as ComponentProps } from '@polkadot/react-components/types';
 
 export interface BareProps {
   className?: string;

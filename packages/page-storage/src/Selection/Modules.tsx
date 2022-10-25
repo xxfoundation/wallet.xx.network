@@ -123,7 +123,7 @@ function Modules ({ className = '', onAdd }: Props): React.ReactElement<Props> {
     defaultValues: undefined,
     isHeadKey: true,
     isIterable: false,
-    key: api.query.timestamp?.now,
+    key: api.query.timestamp?.now || api.query.system.events,
     params: []
   }));
   const [{ isValid, values }, setValues] = useState<ValState>(() => ({ isValid: true, values: [] }));

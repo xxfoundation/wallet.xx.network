@@ -15,7 +15,7 @@ import { formatNumber } from '@polkadot/util';
 
 import MaxBadge from '../MaxBadge';
 import { NodeLocationContext } from '../NodeLocationContext/context';
-import Favorite from '../Overview/Address/Favorite';
+import Favorite from '../Validators/Address/Favorite';
 import { useTranslation } from '../translate';
 import HorizontalBarChart from './HorizontalBarChart';
 import CommissionHover from './CommissionHover';
@@ -36,7 +36,28 @@ function queryAddress(address: string): void {
   window.location.hash = `/staking/query/${address}`;
 }
 
-function Validator({ allSlashes, canSelect, filterName, info, isNominated, isSelected, nominatedBy = [], toggleFavorite, toggleSelected }: Props): React.ReactElement<Props> | null {
+function Validator ({ allSlashes, canSelect, filterName, info, isNominated, isSelected, nominatedBy = [], toggleFavorite, toggleSelected }: Props): React.ReactElement<Props> | null {
+  const {
+    accountId,
+    bondOther,
+    bondOwn,
+    bondTotalWithTM,
+    predictedStake,
+    predictedElected,
+    cmixId,
+    isCommissionReducing,
+    pastAvgCommission,
+    commissionPer,
+    isBlocking,
+    isElected,
+    isFavorite,
+    key,
+    nominatingAccounts,
+    numNominators,
+    rankOverall,
+    stakedReturnCmp,
+    teamMultiplier
+  } = info;
   const { t } = useTranslation();
   const { api } = useApi();
 
@@ -56,29 +77,27 @@ function Validator({ allSlashes, canSelect, filterName, info, isNominated, isSel
 
   const isVisible = useMemo(
     () => accountInfo
-      ? checkVisibility(api, info.key, accountInfo, filterName)
+      ? checkVisibility(api, key, accountInfo, filterName)
       : true,
-    [accountInfo, api, filterName, info]
+    [accountInfo, api, filterName, key]
   );
 
   const slashes = useMemo(
     () => (allSlashes || [])
-      .map(([era, all]) => ({ era, slashes: all.filter(({ validator }) => validator.eq(info.accountId)) }))
+      .map(([era, all]) => ({ era, slashes: all.filter(({ validator }) => validator.eq(accountId)) }))
       .filter(({ slashes }) => slashes.length),
-    [allSlashes, info]
+    [allSlashes, info.accountId]
   );
 
   const _onQueryStats = useCallback(
-    () => queryAddress(info.key),
-    [info.key]
+    () => queryAddress(key),
+    [key]
   );
 
   const _toggleSelected = useCallback(
-    () => toggleSelected(info.key),
-    [info.key, toggleSelected]
+    () => toggleSelected(key),
+    [key, toggleSelected]
   );
-
-  const { accountId, bondOther, bondOwn, bondTotalWithTM, predictedStake, predictedElected, cmixId, isCommissionReducing, pastAvgCommission, commissionPer, isBlocking, isElected, isFavorite, key, nominatingAccounts, numNominators, rankOverall, stakedReturnCmp, teamMultiplier } = info;
 
   const barchartItems = useMemo(() => [{
     label: t<string>('Team Multipler'),
@@ -140,7 +159,7 @@ function Validator({ allSlashes, canSelect, filterName, info, isNominated, isSel
           />
         )}
       </td>
-      <td className='number'>{formatNumber(rankOverall)}</td>
+      <td className='number'>{rankOverall !== 0 && formatNumber(rankOverall)}</td>
       <td className='address all'>
         <AddressSmall value={accountId} />
       </td>

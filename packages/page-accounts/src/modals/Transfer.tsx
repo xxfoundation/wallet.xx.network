@@ -12,7 +12,7 @@ import { checkAddress } from '@polkadot/phishing';
 import { InputAddress, InputBalance, MarkError, MarkWarning, Modal, Toggle, TxButton } from '@polkadot/react-components';
 import { useApi, useCall } from '@polkadot/react-hooks';
 import { Available } from '@polkadot/react-query';
-import { BN_HUNDRED, BN_ZERO, isFunction } from '@polkadot/util';
+import { BN_HUNDRED, BN_ZERO, isFunction, nextTick } from '@polkadot/util';
 
 import { useTranslation } from '../translate';
 
@@ -76,9 +76,9 @@ function Transfer ({ className = '', onClose, recipientId: propRecipientId, send
             })
             .catch(console.error);
         } catch (error) {
-          console.error((error as Error).message);
+          console.error(error);
         }
-      }, 0);
+      });
     } else {
       setMaxTransfer([null, false]);
     }

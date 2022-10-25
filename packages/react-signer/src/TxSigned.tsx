@@ -19,7 +19,7 @@ import { web3FromSource } from '@polkadot/extension-dapp';
 import { Button, ErrorBoundary, Modal, Output, StatusContext, Toggle } from '@polkadot/react-components';
 import { useApi, useLedger, useToggle } from '@polkadot/react-hooks';
 import { keyring } from '@polkadot/ui-keyring';
-import { assert, BN_ZERO } from '@polkadot/util';
+import { assert, BN_ZERO, nextTick } from '@polkadot/util';
 import { addressEq } from '@polkadot/util-crypto';
 
 import Address from './Address';
@@ -135,11 +135,13 @@ async function wrapTx (api: ApiPromise, currentItem: QueueTx, { isMultiCall, mul
     tx = isMultiCall
       ? api.tx[multiModule].asMulti.meta.args.length === 6
         // We are doing toHex here since we have a Vec<u8> input
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         ? api.tx[multiModule].asMulti(threshold, others, timepoint, tx.method.toHex(), false, weight)
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         : api.tx[multiModule].asMulti(threshold, others, timepoint, tx.method)
       : api.tx[multiModule].approveAsMulti.meta.args.length === 5
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         ? api.tx[multiModule].approveAsMulti(threshold, others, timepoint, tx.method.hash, weight)
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
@@ -305,7 +307,7 @@ function TxSigned ({ className, currentItem, requestAddress }: Props): React.Rea
     (): void => {
       setBusy(true);
 
-      setTimeout((): void => {
+      nextTick((): void => {
         const errorHandler = (error: Error): void => {
           console.error(error);
 
@@ -328,7 +330,7 @@ function TxSigned ({ className, currentItem, requestAddress }: Props): React.Rea
           .catch((error): void => {
             errorHandler(error as Error);
           });
-      }, 0);
+      });
     },
     [_onSend, _onSendPayload, _onSign, _unlock, currentItem, isSubmit, queueSetTxStatus, senderInfo]
   );

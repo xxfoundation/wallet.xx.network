@@ -2,8 +2,7 @@
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "baseUrl": "./packages",
-    "composite": false,
-    "allowJs": true
+    "composite": false
   },
   "include": [
     "packages/**/src/**/*"

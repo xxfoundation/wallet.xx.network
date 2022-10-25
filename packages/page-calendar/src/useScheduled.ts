@@ -3,13 +3,13 @@
 
 import type { DeriveCollectiveProposal, DeriveDispatch, DeriveReferendumExt, DeriveSessionProgress } from '@polkadot/api-derive/types';
 import type { Option } from '@polkadot/types';
-import type { BlockNumber, EraIndex, Scheduled, UnappliedSlash } from '@polkadot/types/interfaces';
+import type { BlockNumber, EraIndex, LeasePeriodOf, Scheduled, UnappliedSlash } from '@polkadot/types/interfaces';
 import type { BN } from '@polkadot/util';
 import type { EntryInfo, EntryInfoTyped, EntryType } from './types';
 
 import { useEffect, useState } from 'react';
 
-import { createNamedHook, useApi, useBestNumber, useBlockTime, useCall } from '@polkadot/react-hooks';
+import { createNamedHook, useApi, useBestNumber, useBlockInterval, useCall } from '@polkadot/react-hooks';
 import { BN_ONE, BN_ZERO } from '@polkadot/util';
 
 interface DateExt {
@@ -21,30 +21,31 @@ type SlashEntry = [{ args: [EraIndex] }, UnappliedSlash[]];
 
 type ScheduleEntry = [{ args: [BlockNumber] }, Option<Scheduled>[]];
 
-function newDate (blocks: BN, blockTime: number): DateExt {
-  const date = new Date(Date.now() + blocks.muln(blockTime).toNumber());
+function newDate (blocks: BN, blockTime: BN): DateExt {
+  const date = new Date(Date.now() + blocks.mul(blockTime).toNumber());
 
   return { date, dateTime: date.getTime() };
 }
 
-function createConstDurations (bestNumber: BlockNumber, blockTime: number, items: [EntryType, BlockNumber?, BN?][]): [EntryType, EntryInfo[]][] {
-  return items.map(([type, duration, additional = BN_ZERO]): [EntryType, EntryInfo[]] => {
+function createConstDurations (bestNumber: BlockNumber, blockTime: BN, items: [EntryType, BlockNumber?, BN?, BN?][]): [EntryType, EntryInfo[]][] {
+  return items.map(([type, duration, additional = BN_ZERO, offset = BN_ZERO]): [EntryType, EntryInfo[]] => {
     if (!duration) {
       return [type, []];
     }
 
-    const blocks = duration.sub(bestNumber.mod(duration));
+    const startNumber = bestNumber.sub(offset);
+    const blocks = duration.sub(startNumber.mod(duration));
 
     return [type, [{
       ...newDate(blocks, blockTime),
-      blockNumber: bestNumber.add(blocks),
+      blockNumber: startNumber.add(blocks),
       blocks,
-      info: bestNumber.div(duration).iadd(additional)
+      info: startNumber.div(duration).iadd(additional)
     }]];
   });
 }
 
-function createCouncilMotions (bestNumber: BlockNumber, blockTime: number, motions: DeriveCollectiveProposal[]): [EntryType, EntryInfo[]][] {
+function createCouncilMotions (bestNumber: BlockNumber, blockTime: BN, motions: DeriveCollectiveProposal[]): [EntryType, EntryInfo[]][] {
   return [['councilMotion', motions
     .map(({ hash, votes }): EntryInfo | null => {
       if (!votes) {
@@ -65,7 +66,7 @@ function createCouncilMotions (bestNumber: BlockNumber, blockTime: number, motio
   ]];
 }
 
-function createDispatches (bestNumber: BlockNumber, blockTime: number, dispatches: DeriveDispatch[]): [EntryType, EntryInfo[]][] {
+function createDispatches (bestNumber: BlockNumber, blockTime: BN, dispatches: DeriveDispatch[]): [EntryType, EntryInfo[]][] {
   return dispatches.map(({ at, index }): [EntryType, EntryInfo[]] => {
     const blocks = at.sub(bestNumber);
 
@@ -78,7 +79,7 @@ function createDispatches (bestNumber: BlockNumber, blockTime: number, dispatche
   });
 }
 
-function createReferendums (bestNumber: BlockNumber, blockTime: number, referendums: DeriveReferendumExt[]): [EntryType, EntryInfo[]][] {
+function createReferendums (bestNumber: BlockNumber, blockTime: BN, referendums: DeriveReferendumExt[]): [EntryType, EntryInfo[]][] {
   return referendums.reduce((result: [EntryType, EntryInfo[]][], { index, status }): [EntryType, EntryInfo[]][] => {
     const enactBlocks = status.end.add(status.delay).isub(bestNumber);
     const voteBlocks = status.end.sub(bestNumber).isub(BN_ONE);
@@ -101,7 +102,7 @@ function createReferendums (bestNumber: BlockNumber, blockTime: number, referend
   }, []);
 }
 
-function createStakingInfo (bestNumber: BlockNumber, blockTime: number, sessionInfo: DeriveSessionProgress, unapplied: SlashEntry[], slashDeferDuration?: BlockNumber): [EntryType, EntryInfo[]][] {
+function createStakingInfo (bestNumber: BlockNumber, blockTime: BN, sessionInfo: DeriveSessionProgress, unapplied: SlashEntry[], slashDeferDuration?: BlockNumber): [EntryType, EntryInfo[]][] {
   const blocksEra = sessionInfo.eraLength.sub(sessionInfo.eraProgress);
   const blocksSes = sessionInfo.sessionLength.sub(sessionInfo.sessionProgress);
   const slashDuration = slashDeferDuration?.mul(sessionInfo.eraLength);
@@ -139,7 +140,7 @@ function createStakingInfo (bestNumber: BlockNumber, blockTime: number, sessionI
   ];
 }
 
-function createScheduled (bestNumber: BlockNumber, blockTime: number, scheduled: ScheduleEntry[]): [EntryType, EntryInfo[]][] {
+function createScheduled (bestNumber: BlockNumber, blockTime: BN, scheduled: ScheduleEntry[]): [EntryType, EntryInfo[]][] {
   return [['scheduler', scheduled
     .filter(([, vecSchedOpt]) => vecSchedOpt.some((schedOpt) => schedOpt.isSome))
     .reduce((items: EntryInfo[], [key, vecSchedOpt]): EntryInfo[] => {
@@ -168,6 +169,19 @@ function createScheduled (bestNumber: BlockNumber, blockTime: number, scheduled:
     }, [])]];
 }
 
+function createAuctionInfo (bestNumber: BlockNumber, blockTime: BN, rangeMax: BN, [leasePeriod, endBlock]: [LeasePeriodOf, BlockNumber]): [EntryType, EntryInfo[]][] {
+  const blocks = endBlock.sub(bestNumber);
+
+  return [
+    ['parachainAuction', [{
+      ...newDate(blocks, blockTime),
+      blockNumber: endBlock,
+      blocks,
+      info: `${leasePeriod.toString()} - ${leasePeriod.add(rangeMax).toString()}`
+    }]]
+  ];
+}
+
 function addFiltered (state: EntryInfoTyped[], types: [EntryType, EntryInfo[]][]): EntryInfoTyped[] {
   return types.reduce((state: EntryInfoTyped[], [typeFilter, items]): EntryInfoTyped[] => {
     return state
@@ -183,7 +197,7 @@ function addFiltered (state: EntryInfoTyped[], types: [EntryType, EntryInfo[]][]
 // TODO council votes, tips closing
 function useScheduledImpl (): EntryInfo[] {
   const { api } = useApi();
-  const [blockTime] = useBlockTime();
+  const blockTime = useBlockInterval();
   const bestNumber = useBestNumber();
   const councilMotions = useCall<DeriveCollectiveProposal[]>(api.derive.council?.proposals);
   const dispatches = useCall<DeriveDispatch[]>(api.derive.democracy?.dispatchQueue);

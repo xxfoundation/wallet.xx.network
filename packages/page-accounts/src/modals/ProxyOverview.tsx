@@ -5,6 +5,7 @@ import type { ApiPromise } from '@polkadot/api';
 import type { SubmittableExtrinsic } from '@polkadot/api/types';
 import type { AccountId } from '@polkadot/types/interfaces';
 import type { PalletProxyProxyDefinition, XxnetworkRuntimeProxyType } from '@polkadot/types/lookup';
+import type { BatchOptions } from '@polkadot/react-hooks/types';
 import type { BN } from '@polkadot/util';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -16,7 +17,7 @@ import { BN_ZERO } from '@polkadot/util';
 
 import { useTranslation } from '../translate';
 
-type PrevProxy = [AccountId, XxnetworkRuntimeProxyType];
+type PrevProxy = [AccountId | null, XxnetworkRuntimeProxyType];
 
 interface Props {
   className?: string;
@@ -42,8 +43,7 @@ interface PrevProxyProps extends ValueProps {
   onRemove: (accountId: AccountId, type: XxnetworkRuntimeProxyType, index: number) => void;
 }
 
-const optTxBatch = { isBatchAll: true };
-
+const BATCH_OPTS: BatchOptions = { type: 'all' };
 const EMPTY_EXISTING: [PalletProxyProxyDefinition[], BN] = [[], BN_ZERO];
 
 function createAddProxy (api: ApiPromise, account: AccountId, type: XxnetworkRuntimeProxyType, delay = 0): SubmittableExtrinsic<'promise'> {
@@ -66,7 +66,9 @@ function PrevProxy ({ index, onRemove, typeOpts, value: [accountId, type] }: Pre
   const { t } = useTranslation();
 
   const _onRemove = useCallback(
-    () => onRemove(accountId, type, index),
+    (): void => {
+      accountId && onRemove(accountId, type, index);
+    },
     [accountId, index, onRemove, type]
   );
 
@@ -121,12 +123,13 @@ function NewProxy ({ index, onChangeAccount, onChangeType, onRemove, proxiedAcco
     >
       <div className='input-column'>
         <InputAddress
+          isError={!accountId}
           label={t<string>('proxy account')}
           onChange={_onChangeAccount}
           type='account'
           value={accountId}
         />
-        {accountId.eq(proxiedAccount) && (
+        {accountId && accountId.eq(proxiedAccount) && (
           <MarkError content={t<string>('You should not setup proxies to act as a self-proxy.')} />
         )}
         <Dropdown
@@ -170,7 +173,7 @@ function ProxyOverview ({ className, onClose, previousProxy: [existing] = EMPTY_
   const [txs, setTxs] = useState<SubmittableExtrinsic<'promise'>[] | null>(null);
   const [previous, setPrevious] = useState<PrevProxy[]>(() => existing.map(({ delegate, proxyType }) => [delegate, proxyType]));
   const [added, setAdded] = useState<PrevProxy[]>([]);
-  const extrinsics = useTxBatch(txs, optTxBatch);
+  const extrinsics = useTxBatch(txs, BATCH_OPTS);
 
   const reservedAmount = useMemo(
     () => api.consts.proxy.proxyDepositFactor
@@ -183,7 +186,9 @@ function ProxyOverview ({ className, onClose, previousProxy: [existing] = EMPTY_
 
   useEffect((): void => {
     setBatchAdded(
-      added.map(([newAccount, newType]) => createAddProxy(api, newAccount, newType))
+      added
+        .filter((f): f is [AccountId, XxnetworkRuntimeProxyType] => !!f[0])
+        .map(([newAccount, newType]) => createAddProxy(api, newAccount, newType))
     );
   }, [api, added]);
 
@@ -222,7 +227,9 @@ function ProxyOverview ({ className, onClose, previousProxy: [existing] = EMPTY_
     (index: number, address: string | null) => setAdded((prevState) => {
       const newState = [...prevState];
 
-      newState[index][0] = api.createType('AccountId', address);
+      newState[index][0] = address
+        ? api.createType('AccountId', address)
+        : null;
 
       return newState;
     }),
@@ -241,7 +248,7 @@ function ProxyOverview ({ className, onClose, previousProxy: [existing] = EMPTY_
     [api]
   );
 
-  const isSameAdd = added.some(([accountId]) => accountId.eq(proxiedAccount));
+  const isSameAdd = added.some(([accountId]) => accountId && accountId.eq(proxiedAccount));
 
   return (
     <Modal

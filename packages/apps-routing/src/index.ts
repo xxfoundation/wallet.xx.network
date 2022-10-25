@@ -6,21 +6,29 @@ import type { Routes } from './types';
 
 import accounts from './accounts';
 import addresses from './addresses';
+import alliance from './alliance';
 import assets from './assets';
 import betanet from './betanet';
 import bounties from './bounties';
 import calendar from './calendar';
 import claims from './claims';
+import collator from './collator';
 import contracts from './contracts';
 import council from './council';
 import democracy from './democracy';
 import explorer from './explorer';
 import extrinsics from './extrinsics';
+import fellowship from './fellowship';
 import files from './files';
 import js from './js';
 import membership from './membership';
+import nfts from './nfts';
 import poll from './poll';
+import preimages from './preimages';
+import ranked from './ranked';
+import referenda from './referenda';
 import rpc from './rpc';
+import runtime from './runtime';
 import settings from './settings';
 import signing from './signing';
 import staking from './staking';
@@ -29,6 +37,8 @@ import sudo from './sudo';
 import techcomm from './techcomm';
 import transfer from './transfer';
 import treasury from './treasury';
+import utilities from './utilities';
+import whitelist from './whitelist';
 
 export default function create (t: TFunction): Routes {
   return [
@@ -40,22 +50,32 @@ export default function create (t: TFunction): Routes {
     transfer(t),
     betanet(t),
     staking(t),
+    collator(t),
     democracy(t),
+    referenda(t),
     council(t),
     treasury(t),
     bounties(t),
     techcomm(t),
     membership(t),
+    alliance(t),
+    fellowship(t),
+    ranked(t),
+    preimages(t),
+    whitelist(t),
     assets(t),
+    nfts(t),
     calendar(t),
     contracts(t),
     storage(t),
     extrinsics(t),
     rpc(t),
+    runtime(t),
     signing(t),
     sudo(t),
     files(t),
     js(t),
+    utilities(t),
     settings(t)
   ];
 }

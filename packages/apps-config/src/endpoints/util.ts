@@ -1,12 +1,14 @@
 // Copyright 2017-2022 @polkadot/apps-config authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { TFunction } from 'i18next';
+import type { TFunction } from '../types';
 import type { EndpointOption, LinkOption } from './types';
 
 interface SortOption {
   isUnreachable?: boolean;
 }
+
+let dummyId = 0;
 
 function sortNoop (): number {
   return 0;
@@ -31,6 +33,9 @@ function expandLinked (input: LinkOption[]): LinkOption[] {
         expandLinked(entry.linked).map((child): LinkOption => {
           child.genesisHashRelay = entry.genesisHash;
           child.isChild = true;
+          child.textRelay = input.length
+            ? input[0].text
+            : undefined;
           child.valueRelay = valueRelay;
 
           return child;
@@ -41,20 +46,25 @@ function expandLinked (input: LinkOption[]): LinkOption[] {
 }
 
 function expandEndpoint (t: TFunction, { dnslink, genesisHash, homepage, info, isChild, isDisabled, isUnreachable, linked, paraId, providers, teleport, text }: EndpointOption, firstOnly: boolean, withSort: boolean): LinkOption[] {
+  const hasProviders = Object.keys(providers).length !== 0;
   const base = {
     genesisHash,
     homepage,
     info,
     isChild,
     isDisabled,
-    isUnreachable,
+    isUnreachable: isUnreachable || !hasProviders,
     paraId,
     teleport,
     text
   };
 
   const result = Object
-    .entries(providers)
+    .entries(
+      hasProviders
+        ? providers
+        : { Placeholder: `wss://${++dummyId}` }
+    )
     .filter((_, index) => !firstOnly || index === 0)
     .map(([host, value], index): LinkOption => ({
       ...base,
@@ -65,7 +75,14 @@ function expandEndpoint (t: TFunction, { dnslink, genesisHash, homepage, info, i
         ? t('lightclient.experimental', 'light client (experimental)', { ns: 'apps-config' })
         : t('rpc.hosted.via', 'via {{host}}', { ns: 'apps-config', replace: { host } }),
       value
-    }));
+    }))
+    .sort((a, b) =>
+      a.isLightClient
+        ? 1
+        : b.isLightClient
+          ? -1
+          : 0
+    );
 
   if (linked) {
     const last = result[result.length - 1];
@@ -90,4 +107,11 @@ export function expandEndpoints (t: TFunction, input: EndpointOption[], firstOnl
     .sort(withSort ? sortLinks : sortNoop)
     .reduce((all: LinkOption[], e) =>
       all.concat(expandEndpoint(t, e, firstOnly, withSort)), []);
+}
+
+export function getTeleports (input: EndpointOption[]): number[] {
+  return input
+    .filter(({ teleport }) => !!teleport && teleport[0] === -1)
+    .map(({ paraId }) => paraId)
+    .filter((id): id is number => !!id);
 }

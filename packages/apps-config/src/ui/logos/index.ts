@@ -75,6 +75,7 @@ import chainVirto from './chains/virto.png';
 import chainWatr from './chains/watr.png';
 import chainEggnet from './chains/webb.png';
 import chainWestendColl from './chains/westend-collectives.png';
+import xxnetwork from './chains/xxnetwork.svg';
 import extensionPolkadotJs from './extensions/polkadot-js.svg';
 import extensionXxnetwork from './extensions/xxnetwork-circled.svg';
 import externalCommonwealth from './external/commonwealth.png';

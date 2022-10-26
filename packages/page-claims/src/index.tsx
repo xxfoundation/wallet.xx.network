@@ -236,7 +236,9 @@ function ClaimsApp ({ basePath }: Props): React.ReactElement<Props> {
           <Columar.Column>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 0.5em' }}>
               <h1>
-                <Trans>Claim your <em>{TokenUnit.abbr}</em> tokens</Trans>
+                <Trans>
+                  Claim your <em>{TokenUnit.abbr}</em> tokens
+                </Trans>
               </h1>
               <div style={{ margin: 'auto 0 0', textAlign: 'end' }}>
                 <a

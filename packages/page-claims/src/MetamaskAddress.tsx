@@ -2,7 +2,7 @@
 /* eslint-disable header/header */
 
 import { useWeb3 } from '@chainsafe/web3-context';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { Input, Spinner } from '@polkadot/react-components';
 
@@ -14,13 +14,11 @@ interface Props {
 
 const MetamaskAddress: React.FC<Props> = ({ OnChangeEthAddress }) => {
   const { t } = useTranslation();
-  const {
-    address,
+  const { address,
     checkIsReady,
     isReady,
     onboard,
-    wallet
-  } = useWeb3();
+    wallet } = useWeb3();
 
   const [walletConnecting, setWalletConnecting] = useState(false);
 
@@ -31,12 +29,10 @@ const MetamaskAddress: React.FC<Props> = ({ OnChangeEthAddress }) => {
     setWalletConnecting(false);
   }, [setWalletConnecting, wallet, onboard, checkIsReady]);
 
-
   useEffect(() => {
     handleConnect();
-    address && OnChangeEthAddress(address)
-  }, [handleConnect])
-
+    address && OnChangeEthAddress(address);
+  }, [handleConnect]);
 
   if (walletConnecting || !isReady) {
     const message = t<string>('Connecting Metamask');
@@ -52,8 +48,8 @@ const MetamaskAddress: React.FC<Props> = ({ OnChangeEthAddress }) => {
     <>
       <Input
         className='full'
-        isDisabled={true}
         help={t<string>('This ethereum address should be the one you used during the pre-sale')}
+        isDisabled={true}
         label={t<string>('The ethereum address from your Metamask')}
         value={address}
       />

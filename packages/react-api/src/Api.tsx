@@ -4,21 +4,19 @@
 import '@xxnetwork/custom-types/interfaces/augment';
 import '@xxnetwork/custom-derives/types/augment';
 
-import type { SupportedChains } from '@substrate/connect';
 import type { InjectedExtension } from '@polkadot/extension-inject/types';
 import type { ActionStatusBase, QueueAction$Add } from '@polkadot/react-components/Status/types';
 import type { ChainProperties, ChainType } from '@polkadot/types/interfaces';
 import type { KeyringStore } from '@polkadot/ui-keyring/types';
 import type { ApiProps, ApiState } from './types';
 
-import { ScProvider } from '@substrate/connect';
 import custom from '@xxnetwork/custom-derives';
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import store from 'store';
 
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { deriveMapCache, setDeriveCache } from '@polkadot/api-derive/util';
-import { ethereumChains, typesBundle, typesChain } from '@polkadot/apps-config';
+import { ethereumChains, typesBundle } from '@polkadot/apps-config';
 import { web3AccountsSubscribe, web3Enable } from '@polkadot/extension-dapp';
 import { TokenUnit } from '@polkadot/react-components/InputNumber';
 import { StatusContext } from '@polkadot/react-components/Status';
@@ -152,8 +150,8 @@ async function loadOnReady (api: ApiPromise, store: KeyringStore | undefined, ty
   return {
     apiDefaultTx,
     apiDefaultTxSudo,
-    chainSS58,
     canInject: false,
+    chainSS58,
     hasInjectedAccounts: false,
     isApiReady: true,
     isDevelopment: isEthereum ? false : isDevelopment,
@@ -336,18 +334,12 @@ function Api ({ apiUrl, children, isElectron, store }: Props): React.ReactElemen
 
   // initial initialization
   useEffect((): void => {
-    let provider;
-
-    if (apiUrl.startsWith('light://')) {
-      provider = new ScProvider(apiUrl.replace('light://substrate-connect/', '') as SupportedChains);
-    } else {
-      provider = new WsProvider(apiUrl);
-    }
+    const provider = new WsProvider(apiUrl);
 
     const signer = new ApiSigner(registry, queuePayload, queueSetTxStatus);
     const types = getDevTypes();
 
-    api = new ApiPromise({ derives: custom, provider, registry, signer, types, typesBundle, typesChain });
+    api = new ApiPromise({ derives: custom, provider, registry, signer, types, typesBundle });
 
     api.on('connected', () => setIsApiConnected(true));
     api.on('disconnected', () => setIsApiConnected(false));

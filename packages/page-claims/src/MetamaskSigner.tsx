@@ -1,13 +1,13 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable header/header */
 
-import { useWeb3 } from '@chainsafe/web3-context';
+// import { useWeb3 } from '@chainsafe/web3-context';
 import React, { useCallback, useEffect, useState } from 'react';
+import styled from 'styled-components';
 
 import { Button, Spinner } from '@polkadot/react-components';
 
 import { useTranslation } from './translate';
-import styled from 'styled-components';
 
 const Payload = styled.pre`
   cursor: copy;
@@ -26,50 +26,50 @@ type Props = {
   onSignatureComplete: ({ address, signature }: { address: string, signature: string }) => void,
 }
 
-const MetamaskSigner: React.FC<Props> = ({ payload, onSignatureComplete }) => {
+const MetamaskSigner: React.FC<Props> = ({ onSignatureComplete, payload }) => {
   const { t } = useTranslation();
-  const {
-    address,
-    checkIsReady,
-    isReady,
-    onboard,
-    signMessage,
-    wallet
-  } = useWeb3();
+  // const {
+  //   address,
+  //   checkIsReady,
+  //   isReady,
+  //   onboard,
+  //   signMessage,
+  //   wallet
+  // } = useWeb3();
 
   const [walletConnecting, setWalletConnecting] = useState(false);
   const [isSigning, setIsSigning] = useState(false);
   const [isSigned, setIsSigned] = useState(false);
 
-  const handleConnect = useCallback(async () => {
-    setWalletConnecting(true);
-    !wallet && (await onboard?.walletSelect());
-    wallet && (await checkIsReady());
-    setWalletConnecting(false);
-  }, [setWalletConnecting, wallet, onboard, checkIsReady]);
+  // const handleConnect = useCallback(async () => {
+  //   setWalletConnecting(true);
+  //   !wallet && (await onboard?.walletSelect());
+  //   wallet && (await checkIsReady());
+  //   setWalletConnecting(false);
+  // }, [setWalletConnecting, wallet, onboard, checkIsReady]);
 
-  const handleConfirm = useCallback(() => {
-    if (!address) {
-      return;
-    }
+  // const handleConfirm = useCallback(() => {
+  //   if (!address) {
+  //     return;
+  //   }
 
-    setIsSigning(true);
-    signMessage(payload).then((signature) => {
-      onSignatureComplete({ address, signature });
-    }).catch((e) => {
-      console.error(e);
-    }).finally(() => {
-      setIsSigning(false);
-      setIsSigned(true);
-    });
-  }, [signMessage, payload, address]);
+  //   setIsSigning(true);
+  //   signMessage(payload).then((signature) => {
+  //     onSignatureComplete({ address, signature });
+  //   }).catch((e) => {
+  //     console.error(e);
+  //   }).finally(() => {
+  //     setIsSigning(false);
+  //     setIsSigned(true);
+  //   });
+  // }, [signMessage, payload, address]);
 
-  useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    handleConnect();
-  }, [handleConnect]);
+  // useEffect(() => {
+  //   // eslint-disable-next-line @typescript-eslint/no-floating-promises
+  //   handleConnect();
+  // }, [handleConnect]);
 
-  if (isSigning || walletConnecting || !isReady) {
+  if (isSigning || walletConnecting /* || !isReady */) {
     const message = isSigning
       ? t<string>('Waiting on Metamask signature')
       : t<string>('Connecting Metamask');
@@ -94,7 +94,8 @@ const MetamaskSigner: React.FC<Props> = ({ payload, onSignatureComplete }) => {
           icon='sign-in-alt'
           isDisabled={isSigned}
           label={t<string>('Confirm Payload')}
-          onClick={handleConfirm}
+          // eslint-disable-next-line react/jsx-no-bind, @typescript-eslint/no-empty-function
+          onClick={() => { }}
         />
       </Button.Group>
     </>

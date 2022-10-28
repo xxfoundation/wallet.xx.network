@@ -3,7 +3,7 @@
     // this is specific with augmented overrides
     "paths": {
       // this is the package name we use (in the interface imports, --package for generators)
-      "sample-polkadotjs-typegen/*": ["src/*"],
+      "@xxnetwork/custom-types/*": ["src/*"],
       "@polkadot/api/augment": ["src/interfaces/augment-api.ts"],
       "@polkadot/types/augment": ["src/interfaces/augment-types.ts"]
     },

@@ -13,7 +13,7 @@
     version: '10.1.2'
   });
 
-  function evaluateThis(fn) {
+  function evaluateThis (fn) {
     return fn('return this');
   }
   const xglobal = typeof globalThis !== 'undefined' ? globalThis : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : typeof window !== 'undefined' ? window : evaluateThis(Function);
@@ -25,7 +25,7 @@
     version: '10.1.2'
   });
 
-  function getRandomValues(arr) {
+  function getRandomValues (arr) {
     return xglobal.crypto.getRandomValues(arr);
   }
 
@@ -181,7 +181,7 @@
     }
   }
 
-  function createWasmFn(root, wasmBytes, asmFn) {
+  function createWasmFn (root, wasmBytes, asmFn) {
     return async wbg => {
       const result = {
         error: null,
@@ -452,7 +452,7 @@
     if ((d[0] & 15) != 8 || d[0] >>> 4 > 7 || (d[0] << 8 | d[1]) % 31) throw 'invalid zlib data';
     if (d[1] & 32) throw 'invalid zlib data: preset dictionaries not supported';
   };
-  function unzlibSync(data, out) {
+  function unzlibSync (data, out) {
     return inflt((zlv(data), data.subarray(2, -4)), out);
   }
 
@@ -487,7 +487,7 @@
   const createWasm = createWasmFn('crypto', wasmBytes, null);
 
   const bridge = new Bridge(createWasm);
-  async function initBridge(createWasm) {
+  async function initBridge (createWasm) {
     return bridge.init(createWasm);
   }
 
@@ -498,7 +498,7 @@
     version: '6.3.1'
   };
 
-  function withWasm(fn) {
+  function withWasm (fn) {
     return (...params) => {
       if (!bridge.wasm) {
         throw new Error('The WASM interface has not been initialized. Ensure that you wait for the initialization Promise with waitReady() from @polkadot/wasm-crypto (or cryptoWaitReady() from @polkadot/util-crypto) before attempting to use WASM-only interfaces.');
@@ -638,10 +638,10 @@
     wasm.ext_twox(8, ...bridge.allocU8a(data), rounds);
     return bridge.resultU8a();
   });
-  function isReady() {
+  function isReady () {
     return !!bridge.wasm;
   }
-  async function waitReady() {
+  async function waitReady () {
     try {
       const wasm = await initBridge();
       return !!wasm;

@@ -21,7 +21,7 @@ interface SignatureParts {
 }
 
 // converts an Ethereum address to a checksum representation
-export function addrToChecksum(_address: string): string {
+export function addrToChecksum (_address: string): string {
   const address = _address.toLowerCase();
   const hash = keccakAsHex(address.substr(2)).substr(2);
   let result = '0x';
@@ -30,19 +30,19 @@ export function addrToChecksum(_address: string): string {
     result = `${result}${parseInt(hash[n], 16) > 7
       ? address[n + 2].toUpperCase()
       : address[n + 2]
-      }`;
+    }`;
   }
 
   return result;
 }
 
 // convert a give public key to an Ethereum address (the last 20 bytes of an _exapnded_ key keccack)
-export function publicToAddr(publicKey: Uint8Array): string {
+export function publicToAddr (publicKey: Uint8Array): string {
   return addrToChecksum(`0x${keccakAsHex(publicKey).slice(-40)}`);
 }
 
 // hash a message for use in signature recovery, adding the standard Ethereum header
-export function hashMessage(message: string): Buffer {
+export function hashMessage (message: string): Buffer {
   const expanded = stringToU8a(`\x19Ethereum Signed Message:\n${message.length.toString()}${message}`);
   const hashed = keccakAsU8a(expanded);
 
@@ -50,7 +50,7 @@ export function hashMessage(message: string): Buffer {
 }
 
 // split is 65-byte signature into the r, s (combined) and recovery number (derived from v)
-export function sigToParts(_signature: string): SignatureParts {
+export function sigToParts (_signature: string): SignatureParts {
   const signature = hexToU8a(_signature);
 
   assert(signature.length === 65, `Invalid signature length, expected 65 found ${signature.length}`);
@@ -72,7 +72,7 @@ export function sigToParts(_signature: string): SignatureParts {
 }
 
 // recover an address from a given message and a recover/signature combination
-export function recoverAddress(message: string, { recovery, signature }: SignatureParts): string {
+export function recoverAddress (message: string, { recovery, signature }: SignatureParts): string {
   const msgHash = hashMessage(message);
   const senderPubKey = secp256k1.recover(msgHash, signature, recovery);
 
@@ -82,7 +82,7 @@ export function recoverAddress(message: string, { recovery, signature }: Signatu
 }
 
 // recover an address from a signature JSON (as supplied by e.g. MyCrypto)
-export function recoverFromJSON(signatureJson: string | null): RecoveredSignature {
+export function recoverFromJSON (signatureJson: string | null): RecoveredSignature {
   try {
     const { msg, sig } = JSON.parse(signatureJson || '{}') as Record<string, string>;
 
@@ -113,18 +113,19 @@ export interface Statement {
   url: string;
 }
 
-function getXxnetwork(kind?: StatementKind | null): Statement | undefined {
+function getXxnetwork (kind?: StatementKind | null): Statement | undefined {
   if (!kind) {
     return undefined;
   }
 
   if (!kind.isRegular) {
-    assert(true, "Claims Statement kind is SAFT and it should not be.")
-    return undefined
+    assert(true, 'Claims Statement kind is SAFT and it should not be.');
+
+    return undefined;
   }
 
-  const url = 'https://docs.xx.network/xxNetworkDistributionContractV2.pdf'
-  const hash = '0x3895c0d2a25a727b8eded6dcca37b2cb11bdfc94ae999da369d7bdc9eeca603c'
+  const url = 'https://docs.xx.network/xxNetworkDistributionContractV2.pdf';
+  const hash = '0x3895c0d2a25a727b8eded6dcca37b2cb11bdfc94ae999da369d7bdc9eeca603c';
 
   return {
     sentence: `I hereby agree to the terms of the statement whose SHA-256 hash is ${hash}. (This may be found at the URL: ${url})`,
@@ -132,7 +133,7 @@ function getXxnetwork(kind?: StatementKind | null): Statement | undefined {
   };
 }
 
-export function getStatement(network: string, kind?: StatementKind | null): Statement | undefined {
+export function getStatement (network: string, kind?: StatementKind | null): Statement | undefined {
   switch (network) {
     case 'xx network':
     case 'phoenixx testnet':

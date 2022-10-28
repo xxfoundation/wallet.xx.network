@@ -7,4 +7,4 @@
  * Generally should not be used unless you want explicit control over which
  * interfaces are initialized.
  */
-export declare function initWasm(): Promise<void>;
+export declare function initWasm $): Promise<void>;

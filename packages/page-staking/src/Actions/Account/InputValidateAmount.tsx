@@ -24,7 +24,7 @@ interface Props {
   value?: BN | null;
 }
 
-function formatExistential(value: BN): string {
+function formatExistential (value: BN): string {
   let fmt = (
     value
       .mul(BN_THOUSAND)
@@ -45,7 +45,7 @@ function formatExistential(value: BN): string {
   return fmt;
 }
 
-function ValidateAmount({ currentAmount, isNominating, minNominated, minNominatorBond, minValidatorBond, onError, stashId, value }: Props): React.ReactElement<Props> | null {
+function ValidateAmount ({ currentAmount, isNominating, minNominated, minNominatorBond, minValidatorBond, onError, stashId, value }: Props): React.ReactElement<Props> | null {
   const { t } = useTranslation();
   const { api } = useApi();
   const stashBalance = useCall<DeriveBalancesAll>(api.derive.balances?.all, [stashId]);
@@ -93,7 +93,7 @@ function ValidateAmount({ currentAmount, isNominating, minNominated, minNominato
         return { error, warning };
       });
     }
-  }, [api, currentAmount, isNominating, minNominated, minNominatorBond, minValidatorBond, onError, stashBalance, t, value, setResult]);
+  }, [api, currentAmount, isNominating, minNominated, minNominatorBond, minValidatorBond, onError, stashBalance, t, value]);
 
   if (error) {
     return <MarkError content={error} />;

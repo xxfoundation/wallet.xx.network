@@ -33,7 +33,6 @@ function Validate ({ className = '', controllerId, onChange, onChangeCommission,
   const [maxLengthWithDecimals, setMaxLengthWithDecimals] = useState<number>(3);
   const [allowNoms, setAllowNoms] = useState(true);
 
-
   const blockedOptions = useRef([
     { text: t('Yes, allow nominations'), value: true },
     { text: t('No, block all nominations'), value: false }
@@ -44,7 +43,7 @@ function Validate ({ className = '', controllerId, onChange, onChangeCommission,
       onChange({
         validateTx: api.tx.staking.validate({
           blocked: !allowNoms,
-          commission: commission
+          commission
         })
       });
     } catch {

@@ -37,14 +37,16 @@ const useTeamMultipliers = () => {
   const custodyAccountControllers = useCall<Option<AccountId>[]>(custodyAccountIds && api.query.staking.bonded.multi, [custodyAccountIds]);
   const controllerIds = mapOptionals(custodyAccountControllers);
   const custodyAccountLedgerOptionals = useCall<Option<StakingLedger>[]>(controllerIds && api.query.staking.ledger.multi, [controllerIds]);
-  const ledgers = mapOptionals(custodyAccountLedgerOptionals);
+  const ledgers = useMemo(
+    () => mapOptionals(custodyAccountLedgerOptionals),
+    [custodyAccountLedgerOptionals]
+  );
 
   const extracted = useMemo(
     () => custodyAccounts && ledgers
       ? extractTeamNominationsInfo(custodyAccounts, ledgers)
       : undefined,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [custodyAccounts?.join(''), JSON.stringify(ledgers)]
+    [custodyAccounts, ledgers]
   );
 
   return extracted;

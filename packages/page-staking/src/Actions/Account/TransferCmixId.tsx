@@ -18,7 +18,7 @@ interface Props {
   stashes: string[];
 }
 
-function TransferCmixId({ onClose, stashId, cmixId, ledger, stashes }: Props): React.ReactElement<Props> {
+function TransferCmixId ({ onClose, stashId, cmixId, ledger, stashes }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
   const [dest, setDest] = useState<AccountId | null>(null);

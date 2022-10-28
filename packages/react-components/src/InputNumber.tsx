@@ -60,7 +60,7 @@ export class TokenUnit {
   }
 }
 
-function getGlobalMaxValue(bitLength?: number): BN {
+function getGlobalMaxValue (bitLength?: number): BN {
   return BN_TWO.pow(new BN(bitLength || DEFAULT_BITLENGTH)).isub(BN_ONE);
 }
 
@@ -74,7 +74,7 @@ function getRegex (isDecimal: boolean, isSigned: boolean): RegExp {
   );
 }
 
-function getSiOptions(symbol: string, decimals?: number): { text: string; value: string }[] {
+function getSiOptions (symbol: string, decimals?: number): { text: string; value: string }[] {
   return formatBalance.getOptions(decimals).map(({ power, text, value }): { text: string; value: string } => ({
     text: power === 0
       ? symbol
@@ -83,7 +83,7 @@ function getSiOptions(symbol: string, decimals?: number): { text: string; value:
   }));
 }
 
-function getSiPowers(si: SiDef | null, decimals?: number): [BN, number, number] {
+function getSiPowers (si: SiDef | null, decimals?: number): [BN, number, number] {
   if (!si) {
     return [BN_ZERO, 0, 0];
   }

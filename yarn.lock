@@ -3476,7 +3476,6 @@ __metadata:
     query-string: ^7.1.1
     stream-browserify: ^3.0.0
     stream-http: ^3.2.0
-    webpack-dev-server: ^4.11.1
   languageName: unknown
   linkType: soft
 
@@ -4163,7 +4162,7 @@ __metadata:
 
 "@polkadot/wasm-crypto@file:./sleeve/wasm-crypto::locator=polkadot-apps%40workspace%3A.":
   version: 6.3.1
-  resolution: "@polkadot/wasm-crypto@file:./sleeve/wasm-crypto#./sleeve/wasm-crypto::hash=15e142&locator=polkadot-apps%40workspace%3A."
+  resolution: "@polkadot/wasm-crypto@file:./sleeve/wasm-crypto#./sleeve/wasm-crypto::hash=0a1f8a&locator=polkadot-apps%40workspace%3A."
   dependencies:
     "@babel/runtime": ^7.18.9
     "@polkadot/wasm-bridge": 6.3.1
@@ -4174,7 +4173,7 @@ __metadata:
   peerDependencies:
     "@polkadot/util": "*"
     "@polkadot/x-randomvalues": "*"
-  checksum: e5fd07d244965e135ebe22a7cfadd3337fa05c98f9f5c806323ed4aadd642968104584c14c37c455aa50812a0815b834ba998e8ebb6ab42736870dd298e25fd2
+  checksum: d68429b95dc890802440bd18628065018757ef9e2053ee970a326d68464789353a71d5e5fefd2424603c866dd91f1367aa208b46e2c9ee17fd239c28023389ec
   languageName: node
   linkType: hard
 
@@ -5031,6 +5030,13 @@ __metadata:
   dependencies:
     "@types/node": "*"
   checksum: e009a2bfb50e90ca9b7c6e8f648f8464067271fd99116f881073fa6fa76dc8d0133181dd65e6614d5fb1220d671d67b0124aef7d97dc02d7e342ab143a47779d
+  languageName: node
+  linkType: hard
+
+"@types/lodash@npm:^4.14.186":
+  version: 4.14.186
+  resolution: "@types/lodash@npm:4.14.186"
+  checksum: ee0c1368a8100bb6efb88335107473a41928fc307ff1ef4ff1278868ccddba9c04c68c36d1ffe3a0392ef4a956e1955f7de3203ec09df4f1655dd1b88485c549
   languageName: node
   linkType: hard
 
@@ -16890,6 +16896,7 @@ __metadata:
     "@types/chart.js": ^2.9.37
     "@types/file-saver": ^2.0.5
     "@types/jest": ^29.0.3
+    "@types/lodash": ^4.14.186
     "@types/react-beautiful-dnd": ^13.1.2
     "@types/react-copy-to-clipboard": ^5.0.4
     "@types/react-dom": ^18.0.6

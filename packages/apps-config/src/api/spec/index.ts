@@ -76,7 +76,6 @@ import mathchain from './mathchain';
 import moonbeam from './moonbeam';
 import mybank from './mybank';
 import neatcoin from './neatcoin';
-import neumann from './neumann';
 import nftmart from './nftmart';
 import nodle from './nodle';
 import oak from './oak';

@@ -1,6 +1,5 @@
 /* eslint-disable header/header */
 
-// import type { AccountData } from '@polkadot/types/interfaces';
 import type { FrameSystemAccountInfo } from '@polkadot/types/lookup';
 import type { BN } from '@polkadot/util';
 

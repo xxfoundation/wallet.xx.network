@@ -38,7 +38,7 @@ const OPT_STASH = {
       : null
 };
 
-function ValidateController({ accountId, controllerId, defaultController, onError }: Props): React.ReactElement<Props> | null {
+function ValidateController ({ accountId, controllerId, defaultController, onError }: Props): React.ReactElement<Props> | null {
   const { t } = useTranslation();
   const { api } = useApi();
   const bondedId = useCall<string | null>(controllerId ? api.query.staking.bonded : null, [controllerId], OPT_BOND);
@@ -63,9 +63,6 @@ function ValidateController({ accountId, controllerId, defaultController, onErro
         isFatal = true;
         newError = t('The controller does not have sufficient funds available to cover transaction fees. Ensure that a funded controller is used.');
       }
-      //  else if (controllerId === accountId) {
-      //   newError = t('Distinct stash and controller accounts are recommended to ensure fund security. You will be allowed to make the transaction, but take care to not tie up all funds, only use a portion of the available funds during this period.');
-      // }
 
       onError(newError, isFatal);
       setError((state) => state.error !== newError ? { error: newError, isFatal } : state);

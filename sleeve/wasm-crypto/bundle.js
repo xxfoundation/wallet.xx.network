@@ -20,7 +20,7 @@ export { bridge }; // Removes the first parameter (expected as WasmCryptoInstanc
  *
  *   (a: number, b: string) => Uint8Array
  */
-function withWasm(fn) {
+function withWasm $fn) {
   return (...params) => {
     if (!bridge.wasm) {
       throw new Error('The WASM interface has not been initialized. Ensure that you wait for the initialization Promise with waitReady() from @polkadot/wasm-crypto (or cryptoWaitReady() from @polkadot/util-crypto) before attempting to use WASM-only interfaces.');
@@ -162,10 +162,10 @@ export const twox = withWasm((wasm, data, rounds) => {
   wasm.ext_twox(8, ...bridge.allocU8a(data), rounds);
   return bridge.resultU8a();
 });
-export function isReady() {
+export function isReady $) {
   return !!bridge.wasm;
 }
-export async function waitReady() {
+export async function waitReady $) {
   try {
     const wasm = await initBridge();
     return !!wasm;

@@ -69,7 +69,7 @@ export { api };
 
 type DevTypes = Record<string, Record<string, string>>;
 
-function getDevTypes(): DevTypes {
+function getDevTypes (): DevTypes {
   const types = decodeUrlTypes() || store.get('types', {}) as Record<string, Record<string, string>>;
   const names = Object.keys(types);
 
@@ -78,7 +78,7 @@ function getDevTypes(): DevTypes {
   return types;
 }
 
-async function retrieve(api: ApiPromise): Promise<ChainData> {
+async function retrieve (api: ApiPromise): Promise<ChainData> {
   const [systemChain, systemChainType, systemName, systemVersion] = await Promise.all([
     api.rpc.system.chain(),
     api.rpc.system.chainType
@@ -174,16 +174,18 @@ function notifyOfInjectionChanges (injectedAccounts: InjectedAccountExt[], filte
   };
 
   // Get arrays of addresses
-  const keyringAddresses = keyring.getAccounts().filter(({ meta }) => meta.isInjected).map(({ address, meta }) => {
-    return { address, name: meta.name }
-  });
+  const keyringAddresses = keyring.getAccounts()
+    .filter(({ meta }) => meta.isInjected)
+    .map(({ address, meta }) => {
+      return { address, name: meta.name };
+    });
 
   const filteredAddresses = filteredAccounts.map(({ address, meta }) => {
-    return { address, name: meta.name }
+    return { address, name: meta.name };
   });
 
   const injectedAddresses = injectedAccounts.map(({ address, meta }) => {
-    return { address, name: meta.name }
+    return { address, name: meta.name };
   });
 
   // Get addresses of accounts being removed
@@ -252,7 +254,7 @@ async function loadAccounts (injectedAccounts: InjectedAccountExt[], store: Keyr
 }
 
 function Api ({ apiUrl, children, isElectron, store }: Props): React.ReactElement<Props> | null {
-  const { queuePayload, queueSetTxStatus } = useContext(StatusContext);
+  const { queueAction, queuePayload, queueSetTxStatus } = useContext(StatusContext);
   const [state, setState] = useState<ApiState>({ hasInjectedAccounts: false, isApiReady: false } as unknown as ApiState);
   const [isApiConnected, setIsApiConnected] = useState(false);
   const [isApiInitialized, setIsApiInitialized] = useState(false);
@@ -269,7 +271,6 @@ function Api ({ apiUrl, children, isElectron, store }: Props): React.ReactElemen
     [apiEndpoint]
   );
   const apiRelay = useApiUrl(relayUrls);
-  const { queueAction } = useContext(StatusContext);
 
   const value = useMemo<ApiProps>(
     () => objectSpread({}, state, {
@@ -289,8 +290,8 @@ function Api ({ apiUrl, children, isElectron, store }: Props): React.ReactElemen
             setState({
               ...state,
               canInject,
-              hasInjectedAccounts,
-            })
+              hasInjectedAccounts
+            });
           })
           .catch((error): void => setApiError((error as Error).message)); 
       },
@@ -299,7 +300,7 @@ function Api ({ apiUrl, children, isElectron, store }: Props): React.ReactElemen
     [state, apiEndpoint, apiError, apiRelay, apiUrl, extensions, isApiConnected, isApiInitialized, isElectron, setInjectionPreference, injectedAccounts, store, queueAction]
   );
 
-  async function subscribe(): Promise<void> {
+  async function subscribe (): Promise<void> {
     await web3AccountsSubscribe((accounts) => {
       setInjectedAccounts(accounts.map(({ address, meta }, whenCreated): InjectedAccountExt => ({
         address,
@@ -313,7 +314,9 @@ function Api ({ apiUrl, children, isElectron, store }: Props): React.ReactElemen
 
   useEffect(() => {
     if (!subscribed && state.isApiReady && extensions !== undefined) {
-      subscribe().catch((err) => { console.error(err); });
+      subscribe().catch((err) => {
+        console.error(err);
+      });
       setSubscribed(true);
     }
   }, [subscribed, state, extensions]);
@@ -325,8 +328,8 @@ function Api ({ apiUrl, children, isElectron, store }: Props): React.ReactElemen
           setState({
             ...state,
             canInject,
-            hasInjectedAccounts,
-          })
+            hasInjectedAccounts
+          });
         })
         .catch((error): void => setApiError((error as Error).message)); 
     }
@@ -339,7 +342,14 @@ function Api ({ apiUrl, children, isElectron, store }: Props): React.ReactElemen
     const signer = new ApiSigner(registry, queuePayload, queueSetTxStatus);
     const types = getDevTypes();
 
-    api = new ApiPromise({ derives: custom, provider, registry, signer, types, typesBundle });
+    api = new ApiPromise({
+      derives: custom,
+      provider,
+      registry,
+      signer,
+      types,
+      typesBundle
+    });
 
     api.on('connected', () => setIsApiConnected(true));
     api.on('disconnected', () => setIsApiConnected(false));

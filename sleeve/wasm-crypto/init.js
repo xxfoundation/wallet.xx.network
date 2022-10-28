@@ -16,6 +16,6 @@ export const bridge = new Bridge(createWasm);
  * Creates a new bridge interface with the (optional) initialization function
  */
 
-export async function initBridge(createWasm) {
+export async function initBridge $createWasm) {
   return bridge.init(createWasm);
 }

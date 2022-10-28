@@ -1,8 +1,6 @@
 // Copyright 2017-2022 @polkadot/app-democracy authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// TODO fix the types for this file
-
 import type { Option } from '@polkadot/types';
 import type { BlockNumber, Call, Scheduled } from '@polkadot/types/interfaces';
 import type { FrameSupportScheduleMaybeHashed, PalletSchedulerScheduledV3 } from '@polkadot/types/lookup';

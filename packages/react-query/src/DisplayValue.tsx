@@ -11,7 +11,7 @@ interface Props {
   value?: string;
 }
 
-function DisplayValue({ children, className = '', label, value }: Props): React.ReactElement<Props> | null {
+function DisplayValue ({ children, className = '', label, value }: Props): React.ReactElement<Props> | null {
 
   if (!value) {
     return null;

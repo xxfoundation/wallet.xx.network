@@ -12,7 +12,7 @@ import { initBridge } from "./init.js";
  * interfaces are initialized.
  */
 
-export async function initWasm() {
+export async function initWasm $) {
   await initBridge(createWasm);
 }
 initWasm().catch(() => {// cannot happen, initWasm doesn't throw

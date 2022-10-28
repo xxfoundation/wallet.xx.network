@@ -6,7 +6,7 @@ import { RadioGroupProps } from './types';
 import React, { useCallback, useState } from 'react'
 import { Form, Radio } from 'semantic-ui-react'
 
-function RadioGroup({ title, defaultValue, value: { header, options }, OnChangeOption }: RadioGroupProps): React.ReactElement<RadioGroupProps> {
+function RadioGroup ({ title, defaultValue, value: { header, options }, OnChangeOption }: RadioGroupProps): React.ReactElement<RadioGroupProps> {
   const [selected, setSelected] = useState<string>(defaultValue);
 
   const _OnChange = useCallback(

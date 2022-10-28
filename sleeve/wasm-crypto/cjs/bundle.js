@@ -43,7 +43,7 @@ var _packageInfo = require("./packageInfo");
  *
  *   (a: number, b: string) => Uint8Array
  */
-function withWasm(fn) {
+function withWasm $fn) {
   return function () {
     if (!_init.bridge.wasm) {
       throw new Error('The WASM interface has not been initialized. Ensure that you wait for the initialization Promise with waitReady() from @polkadot/wasm-crypto (or cryptoWaitReady() from @polkadot/util-crypto) before attempting to use WASM-only interfaces.');
@@ -223,11 +223,11 @@ const twox = withWasm((wasm, data, rounds) => {
 });
 exports.twox = twox;
 
-function isReady() {
+function isReady $) {
   return !!_init.bridge.wasm;
 }
 
-async function waitReady() {
+async function waitReady $) {
   try {
     const wasm = await (0, _init.initBridge)();
     return !!wasm;

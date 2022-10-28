@@ -19,13 +19,13 @@ import ElectionBanner from '../ElectionBanner';
 import Filtering from '../Filtering';
 import Legend from '../Legend';
 import { useTranslation } from '../translate';
+import useElectionPrediction from '../useElectionPrediction';
 import useIdentities from '../useIdentities';
 import Nominate from './Nominate';
 import StashFilters from './StashFilters';
 import Summary from './Summary';
 import useOwnNominators from './useOwnNominators';
 import Validator from './Validator';
-import useElectionPrediction from '../useElectionPrediction';
 
 interface Props {
   className?: string;
@@ -201,7 +201,7 @@ const DEFAULT_NAME = { isQueryFiltered: false, nameFilter: '' };
 
 const DEFAULT_SORT: SortState = { sortBy: 'rankNumNominators', sortFromMax: true };
 
-function Targets ({ className = '', isInElection, nominatedBy, ownStashes, targets: { electedAvgStaked, inflation: { stakedReturn }, lastEra, custodyRewardsActive, electedLowStaked, medianComm, minNominated, minNominatorBond, nominators, totalIssuance, totalStaked, validatorIds, validators }, toggleFavorite, toggleNominatedBy }: Props): React.ReactElement<Props> {
+function Targets ({ className = '', isInElection, nominatedBy, ownStashes, targets: { custodyRewardsActive, electedAvgStaked, electedLowStaked, inflation: { stakedReturn }, lastEra, medianComm, minNominated, minNominatorBond, nominators, totalIssuance, totalStaked, validatorIds, validators }, toggleFavorite, toggleNominatedBy }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
   const allSlashes = useAvailableSlashes();
@@ -227,9 +227,9 @@ function Targets ({ className = '', isInElection, nominatedBy, ownStashes, targe
     rankBondOther: t<string>('other stake'),
     rankBondOwn: t<string>('own stake'),
     rankBondTotal: t<string>('total stake'),
-    rankPredictedStake: t<string>('predicted stake'),
     rankComm: t<string>('commission'),
     rankOverall: t<string>('return'),
+    rankPredictedStake: t<string>('predicted stake'),
     rankTeamMultiplier: t<string>('team multiplier')
   });
 
@@ -247,8 +247,7 @@ function Targets ({ className = '', isInElection, nominatedBy, ownStashes, targe
   const filtered = useMemo(
     () => allIdentity && validators && nominatedBy &&
       applyFilter(validators, medianComm, allIdentity, flags, nominatedBy, stashFilters),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [allIdentity, flags, medianComm, nominatedBy, validators, stashFilters?.join('')]
+    [allIdentity, flags, medianComm, nominatedBy, validators, stashFilters]
   );
 
   // We are using an effect here to get this async. Sorting will have a double-render, however it allows
@@ -282,9 +281,10 @@ function Targets ({ className = '', isInElection, nominatedBy, ownStashes, targe
     if (electionPrediction && validators) {
       validators.forEach((value) => {
         const key = value.accountId.toString();
-        value.predictedStake = (key in electionPrediction && electionPrediction[key][1]) || BN_ZERO;
-        value.predictedElected = (key in electionPrediction && electionPrediction[key][0]) || false;
-      })
+
+        value.predictedStake = (electionPrediction[key]?.[1]) || BN_ZERO;
+        value.predictedElected = (electionPrediction[key]?.[0]) || false;
+      });
     }
   }, [electionPrediction, validators]);
 
@@ -335,13 +335,13 @@ function Targets ({ className = '', isInElection, nominatedBy, ownStashes, targe
   ], [_sort, labelsRef, sortBy, sorted, sortFromMax, t]);
 
   const tooltipNominators = useMemo(() => <div>
-    {t<string>('Left Column is the number of active nominators.')}<br/>
-    {t<string>('Right Column is the number of nominators for the next era.')}<br/>
+    {t<string>('Left Column is the number of active nominators.')}<br />
+    {t<string>('Right Column is the number of nominators for the next era.')}<br />
   </div>, [t]);
 
   const tooltipPredictedStake = useMemo(() => <div>
-    {t<string>('Predicted stake is computed using the Phragmen algorithm.')}<br/>
-    {t<string>('Validators that will be elected are shown in green.')}<br/>
+    {t<string>('Predicted stake is computed using the Phragmen algorithm.')}<br />
+    {t<string>('Validators that will be elected are shown in green.')}<br />
     {t<string>('From 7PM to 11PM UTC (election period), predictions are based on the on-chain snapshot of Staking state.')}
   </div>, [t]);
 
@@ -421,8 +421,8 @@ function Targets ({ className = '', isInElection, nominatedBy, ownStashes, targe
       <Summary
         avgStaked={electedAvgStaked}
         custodyRewardsActive={custodyRewardsActive}
-        lowStaked={electedLowStaked}
         lastEra={lastEra}
+        lowStaked={electedLowStaked}
         minNominated={minNominated}
         minNominatorBond={minNominatorBond}
         numNominators={nominators?.length}

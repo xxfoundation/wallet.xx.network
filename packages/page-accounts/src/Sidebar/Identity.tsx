@@ -24,19 +24,23 @@ interface Props {
 
 const SUBS_DISPLAY_THRESHOLD = 4;
 
-function decodeDiscord(other: Array<[string, string]>): string | undefined {
-  let discord: string = '';
+function decodeDiscord (other: Array<[string, string]>): string | undefined {
+  let discord = '';
   const found = other.some(([key, value]) => {
     if (key === 'discord') {
       discord = value;
-      return true
+
+      return true;
     }
-    return false
+
+    return false;
   });
+
   if (found) {
-    return discord
+    return discord;
   }
-  return undefined
+
+  return undefined;
 }
 
 function Identity ({ address, className, identity }: Props): React.ReactElement<Props> | null {

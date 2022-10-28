@@ -19,7 +19,7 @@ export function balanceToNumber (amount: BN | ToBN = BN_ZERO, divisor: BN): numb
   return value.mul(BN_THOUSAND).div(divisor).toNumber() / 1000;
 }
 
-export function calculateAverage(totals: BN[]): BN {
+export function calculateAverage (totals: BN[]): BN {
   const count = totals.length;
   const sum = totals.reduce((a, b) => a.add(b), BN_ZERO);
   return count > 0 ? sum.idivn(count) : BN_ZERO;

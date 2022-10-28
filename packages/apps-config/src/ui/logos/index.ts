@@ -863,7 +863,7 @@ export const namedLogos: Record<string, unknown> = {
   rococoKonomi: nodeKonomi,
   rococoKylin: nodeKylin,
   rococoLaminar: nodeLaminar,
-  rococoLitentry: nodeLitmus,
+  rococoLitentry: nodeLitentry,
   rococoLoomNetwork: nodeLoomNetwork,
   rococoMangata: chainMangata,
   rococoManta: nodeManta,

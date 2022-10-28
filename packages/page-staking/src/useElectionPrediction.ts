@@ -1,13 +1,16 @@
 /* eslint-disable header/header */
-import { useMemo } from 'react';
 import type { StakerState } from '@polkadot/react-hooks/types';
+import type { Option, StorageKey, u32 } from '@polkadot/types';
+
+import { uniq } from 'lodash';
+import { useMemo } from 'react';
+
 import { createNamedHook, useApi, useCall } from '@polkadot/react-hooks';
-import { BN } from '@polkadot/util';
-import type { Option, u32, StorageKey } from '@polkadot/types';
 import { AccountId32 } from '@polkadot/types/interfaces';
 import { PalletElectionProviderMultiPhaseRoundSnapshot, PalletStakingNominations, PalletStakingSlashingSlashingSpans, PalletStakingStakingLedger, PalletStakingValidatorPrefs } from '@polkadot/types/lookup';
+import { BN } from '@polkadot/util';
+
 import { seqPhragmen, Voter } from './phragmen';
-import _ from 'lodash';
 
 export type ElectionPrediction = Record<string, [boolean, BN]>;
 
@@ -19,56 +22,70 @@ interface ChainData {
   lastNonZeroSlashes: Record<string, number>;
 }
 
-function buildVotersListFromSnapshot(snapshot: PalletElectionProviderMultiPhaseRoundSnapshot): Voter[] {
+function buildVotersListFromSnapshot (snapshot: PalletElectionProviderMultiPhaseRoundSnapshot): Voter[] {
   // Build voters lists
   const voters: Voter[] = [];
   const validators = snapshot.targets.map((value) => value.toString());
+
   snapshot.voters.forEach((value) => {
     // Remove duplicates and non validators from targets
-    const targets = _.uniq(value[2].map((target) => target.toString()).filter((target) => validators.includes(target)));
+    const targets = uniq(
+      value[2]
+        .map((target) => target.toString())
+        .filter((target) => validators.includes(target))
+    );
+
     if (targets.length > 0) {
       voters.push({
         nominatorId: value[0].toString(),
         stake: value[1].toString(),
-        targets: targets,
+        targets
       });
     }
   });
-  return voters
+
+  return voters;
 }
 
-function buildVotersListFromChain(chainData: ChainData, ownNominators: StakerState[]): Voter[] {
+function buildVotersListFromChain (chainData: ChainData, ownNominators: StakerState[]): Voter[] {
   // Build map with our own targets
   const ourTargets: Record<string, string[]> = {};
-  ownNominators.forEach(({ stashId, nominating = []}) => {
+
+  ownNominators.forEach(({ stashId, nominating = [] }) => {
     if (nominating.length > 0) {
-      ourTargets[stashId] = nominating
+      ourTargets[stashId] = nominating;
     }
   });
   // Build voters lists
   const voters: Voter[] = [];
+
   // Add nominators
   Object.keys(chainData.nominators).forEach((nomId) => {
     // Get targets
     const noms = chainData.nominators[nomId];
     let targets = noms.targets.map((target) => target.toString());
     const submittedIn = noms.submittedIn.toNumber();
+
     // Replace targets if one of our own nominators
     if (nomId in ourTargets) {
-      targets = ourTargets[nomId]
+      targets = ourTargets[nomId];
     }
+
     // Remove duplicates, non validators and slashed validators needing renomination from targets
-    let filteredTargets = _.uniq(targets.filter((target) => {
+    const filteredTargets = uniq(targets.filter((target) => {
       // If not a validator return right away
       if (!(target in chainData.validators)) {
-        return false
+        return false;
       }
+
       // Get last slashed era for this target
       const slashEra = chainData.lastNonZeroSlashes[target] || 0;
+
       // Check if nominations were submitted after the slash
       return submittedIn >= slashEra;
     }));
     const ledger = chainData.ledgers[chainData.controllers[nomId]];
+
     if (targets.length > 0) {
       voters.push({
         nominatorId: nomId,
@@ -80,17 +97,18 @@ function buildVotersListFromChain(chainData: ChainData, ownNominators: StakerSta
   // Add validators self vote
   Object.keys(chainData.validators).forEach((valId) => {
     const ledger = chainData.ledgers[chainData.controllers[valId]];
+
     voters.push({
       nominatorId: valId,
       stake: ledger.active.toString(),
-      targets: [valId],
+      targets: [valId]
     });
   });
 
-  return voters
+  return voters;
 }
 
-function useElectionPredictionImpl(ownNominators: StakerState[] | undefined): ElectionPrediction | undefined {
+function useElectionPredictionImpl (ownNominators: StakerState[] | undefined): ElectionPrediction | undefined {
   const { api } = useApi();
   const count = useCall<u32>(api.query.staking.validatorCount);
   // If the election is ongoing, use the snapshot of Staking state
@@ -109,11 +127,12 @@ function useElectionPredictionImpl(ownNominators: StakerState[] | undefined): El
       // ChainData
       const data: ChainData = {
         controllers: {},
-        ledgers: {},
-        validators: {},
-        nominators: {},
         lastNonZeroSlashes: {},
+        ledgers: {},
+        nominators: {},
+        validators: {}
       };
+
       // Convert all controllers
       bonded?.forEach(([{ args }, controller]) => {
         data.controllers[args[0].toString()] = controller.toString();
@@ -134,6 +153,7 @@ function useElectionPredictionImpl(ownNominators: StakerState[] | undefined): El
       slashes?.forEach(([{ args }, slashSpans]) => {
         data.lastNonZeroSlashes[args[0].toString()] = slashSpans.unwrap().lastNonzeroSlash.toNumber();
       });
+
       if (Object.keys(data.controllers).length > 0 && Object.keys(data.ledgers).length > 0 &&
           Object.keys(data.validators).length > 0 && ownNominators) {
         if (snapshot === undefined || snapshot?.isNone) {
@@ -144,20 +164,24 @@ function useElectionPredictionImpl(ownNominators: StakerState[] | undefined): El
       } else {
         voters = [];
       }
+
       if (voters.length > 0 && count) {
         const [, elected] = seqPhragmen(voters, count.toNumber());
         const electedStakes: ElectionPrediction = {};
-        elected.forEach(({ validatorId, elected, backedStake}) => {
+
+        elected.forEach(({ backedStake, elected, validatorId }) => {
           electedStakes[validatorId] = [elected, new BN(backedStake.toFixed(0))];
         });
-        return electedStakes
+
+        return electedStakes;
       }
-      return undefined
+
+      return undefined;
     },
-    [count, snapshot, bonded, ledger, validators, nominators, ownNominators]
+    [bonded, ledger, validators, nominators, slashes, ownNominators, count, snapshot]
   );
 
-  return electedStakes
+  return electedStakes;
 }
 
 export default createNamedHook('useElectionPrediction', useElectionPredictionImpl);

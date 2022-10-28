@@ -32,7 +32,7 @@ interface Props {
   toggleSelected: (accountId: string) => void;
 }
 
-function queryAddress(address: string): void {
+function queryAddress (address: string): void {
   window.location.hash = `/staking/query/${address}`;
 }
 

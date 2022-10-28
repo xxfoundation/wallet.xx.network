@@ -12,7 +12,7 @@ interface Props {
   balance?: BN | null;
 }
 
-function BalanceCustomized({ children, className = '', label, balance }: Props): React.ReactElement<Props> {
+function BalanceCustomized ({ children, className = '', label, balance }: Props): React.ReactElement<Props> {
   return (
     <FormatBalance
       className={className}

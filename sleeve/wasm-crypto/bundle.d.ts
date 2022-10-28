@@ -34,5 +34,5 @@ export declare const scrypt: (password: Uint8Array, salt: Uint8Array, log2n: num
 export declare const sha256: (data: Uint8Array) => Uint8Array;
 export declare const sha512: (data: Uint8Array) => Uint8Array;
 export declare const twox: (data: Uint8Array, rounds: number) => Uint8Array;
-export declare function isReady(): boolean;
-export declare function waitReady(): Promise<boolean>;
+export declare function isReady $): boolean;
+export declare function waitReady $): Promise<boolean>;

@@ -15,7 +15,7 @@ interface Props {
   controllerId: string;
 }
 
-function SetCmixId({ onClose, stashId, controllerId }: Props): React.ReactElement<Props> {
+function SetCmixId ({ onClose, stashId, controllerId }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
   const [cmixId, setCmixId] = useState<string | null>(null);

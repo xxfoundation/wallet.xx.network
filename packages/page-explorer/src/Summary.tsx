@@ -36,14 +36,12 @@ function Summary ({ eventCount }: Props): React.ReactElement {
           </>
         )}
         {api.query.balances && (
-          <>
-            <CardSummary
-              className='media--800'
-              label={t<string>('total issuance')}
-            >
-              <TotalIssuance />
-            </CardSummary>
-          </>
+          <CardSummary
+            className='media--800'
+            label={t<string>('total issuance')}
+          >
+            <TotalIssuance />
+          </CardSummary>
         )}
       </section>
       <section className='media--1200'>

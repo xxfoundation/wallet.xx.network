@@ -9,7 +9,6 @@ import React from 'react';
 
 import { AddressSmall } from '@polkadot/react-components';
 import { FormatBalance } from '@polkadot/react-query';
-import { PalletAssetsAssetBalance } from '@polkadot/types/lookup';
 
 import { useTranslation } from '../translate';
 import Transfer from './Transfer';

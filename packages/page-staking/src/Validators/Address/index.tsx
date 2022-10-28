@@ -54,7 +54,7 @@ interface StakingState {
   pastAvgCommission: number;
 }
 
-function expandInfo ({ exposure, commission, pastAvgCommission, teamMultiplier, validatorPrefs }: ValidatorInfo, minCommission?: BN): StakingState {
+function expandInfo ({ commission, exposure, pastAvgCommission, teamMultiplier, validatorPrefs }: ValidatorInfo, minCommission?: BN): StakingState {
   let nominators: NominatorValue[] = [];
   let stakeTotal: BN | undefined;
   let stakeOther: BN | undefined;
@@ -76,11 +76,11 @@ function expandInfo ({ exposure, commission, pastAvgCommission, teamMultiplier, 
     commission: commission?.toHuman(),
     isChilled: commission && minCommission && commission.isZero() && commission.lt(minCommission),
     nominators,
+    pastAvgCommission,
     stakeOther,
     stakeOwn,
     stakeTotal,
-    teamMultiplier: multiplier,
-    pastAvgCommission,
+    teamMultiplier: multiplier
   };
 }
 
@@ -108,14 +108,15 @@ function Address ({ address, className = '', filterName, hasQueries, isElected, 
       : null;
   }, [locationContext, validatorInfo]);
 
-  const { commission, isChilled, nominators, stakeOther, stakeOwn, teamMultiplier, pastAvgCommission } = useMemo(
+  const { commission, isChilled, nominators, pastAvgCommission, stakeOther, stakeOwn, teamMultiplier } = useMemo(
     () => validatorInfo
       ? expandInfo(validatorInfo)
       : { nominators: [], pastAvgCommission: 0.0 },
     [validatorInfo]
   );
 
-  const commUse = isMain ? commission : validatorInfo?.commissionPer.toFixed(2) + '%';
+  const fixedCommission = validatorInfo?.commissionPer.toFixed(2);
+  const commUse = isMain ? commission : `${fixedCommission ?? ''}%`;
 
   const isVisible = useMemo(
     () => accountInfo ? checkVisibility(api, address, accountInfo, filterName, withIdentity) : true,
@@ -190,11 +191,17 @@ function Address ({ address, className = '', filterName, hasQueries, isElected, 
           </td>
         </>
       )}
-      <td className='number' style={{color: !isMain && validatorInfo?.isCommissionReducing ? 'red' : 'black'}}>
+      <td
+        className='number'
+        style={{ color: !isMain && validatorInfo?.isCommissionReducing ? 'red' : 'black' }}
+      >
         {commUse}
       </td>
       {!isMain && (
-        <td className='number' style={{color: validatorInfo?.isCommissionReducing ? 'red' : 'black'}}>
+        <td
+          className='number'
+          style={{ color: validatorInfo?.isCommissionReducing ? 'red' : 'black' }}
+        >
           {pastAvgCommission.toFixed(2)}%
         </td>
       )}

@@ -28,6 +28,6 @@ const bridge = new _wasmBridge.Bridge(_wasmCryptoInit.createWasm);
 
 exports.bridge = bridge;
 
-async function initBridge $createWasm) {
+async function initBridge(createWasm) {
   return bridge.init(createWasm);
 }

@@ -21,7 +21,7 @@ var _init = require("./init");
  * Generally should not be used unless you want explicit control over which
  * interfaces are initialized.
  */
-async function initWasm $) {
+async function initWasm() {
   await (0, _init.initBridge)(_wasm.createWasm);
 }
 

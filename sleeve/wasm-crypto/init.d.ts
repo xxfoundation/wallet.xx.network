@@ -13,4 +13,4 @@ export declare const bridge: Bridge<WasmCryptoInstance>;
  * @description
  * Creates a new bridge interface with the (optional) initialization function
  */
-export declare function initBridge $createWasm?: InitFn<WasmCryptoInstance>): Promise<WasmCryptoInstance | null>;
+export declare function initBridge(createWasm?: InitFn<WasmCryptoInstance>): Promise<WasmCryptoInstance | null>;

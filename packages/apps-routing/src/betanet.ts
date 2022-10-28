@@ -8,9 +8,7 @@ import Modal from '@polkadot/app-accounts/modals/Betanet';
 // import { useAccounts, useApi, useCall } from '@polkadot/react-hooks';
 // import { StorageKey } from '@polkadot/types';
 
-
 export default function create (t: TFunction): Route {
-
   // TODO: find a way to add this hidden restriction without bypasing the react hooks problem
   // Check if wallets are in the betanet list
   // const { api } = useApi();

@@ -6,6 +6,7 @@ import '@xxnetwork/custom-derives/types/augment';
 
 import type { InjectedExtension } from '@polkadot/extension-inject/types';
 import type { ActionStatusBase, QueueAction$Add } from '@polkadot/react-components/Status/types';
+import type { ProviderStats } from '@polkadot/rpc-provider/types';
 import type { ChainProperties, ChainType } from '@polkadot/types/interfaces';
 import type { KeyringStore } from '@polkadot/ui-keyring/types';
 import type { ApiProps, ApiState } from './types';
@@ -76,6 +77,44 @@ function getDevTypes (): DevTypes {
   names.length && console.log('Injected types:', names.join(', '));
 
   return types;
+}
+
+function getStats (...apis: ApiPromise[]): [ProviderStats, number] {
+  const stats = apis.reduce<ProviderStats>((r, api) => {
+    if (api) {
+      const stats = api.stats;
+
+      if (stats) {
+        r.active.requests += stats.active.requests;
+        r.active.subscriptions += stats.active.subscriptions;
+        r.total.bytesRecv += stats.total.bytesRecv;
+        r.total.bytesSent += stats.total.bytesSent;
+        r.total.cached += stats.total.cached;
+        r.total.errors += stats.total.errors;
+        r.total.requests += stats.total.requests;
+        r.total.subscriptions += stats.total.subscriptions;
+        r.total.timeout += stats.total.timeout;
+      }
+    }
+
+    return r;
+  }, {
+    active: {
+      requests: 0,
+      subscriptions: 0
+    },
+    total: {
+      bytesRecv: 0,
+      bytesSent: 0,
+      cached: 0,
+      errors: 0,
+      requests: 0,
+      subscriptions: 0,
+      timeout: 0
+    }
+  });
+
+  return [stats, Date.now()];
 }
 
 async function retrieve (api: ApiPromise): Promise<ChainData> {
@@ -280,6 +319,7 @@ function Api ({ apiUrl, children, isElectron, store }: Props): React.ReactElemen
       apiRelay,
       apiUrl,
       extensions,
+      getStats,
       isApiConnected,
       isApiInitialized,
       isElectron,

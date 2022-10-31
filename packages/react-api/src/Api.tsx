@@ -333,11 +333,25 @@ function Api ({ apiUrl, children, isElectron, store }: Props): React.ReactElemen
               hasInjectedAccounts
             });
           })
-          .catch((error): void => setApiError((error as Error).message)); 
+          .catch((error): void => setApiError((error as Error).message));
       },
       setInjectionPreference
     }),
-    [state, apiEndpoint, apiError, apiRelay, apiUrl, extensions, isApiConnected, isApiInitialized, isElectron, setInjectionPreference, injectedAccounts, store, queueAction]
+    [
+      state,
+      apiEndpoint,
+      apiError,
+      apiRelay,
+      apiUrl,
+      extensions,
+      isApiConnected,
+      isApiInitialized,
+      isElectron,
+      setInjectionPreference,
+      injectedAccounts,
+      store,
+      queueAction
+    ]
   );
 
   async function subscribe (): Promise<void> {
@@ -371,7 +385,7 @@ function Api ({ apiUrl, children, isElectron, store }: Props): React.ReactElemen
             hasInjectedAccounts
           });
         })
-        .catch((error): void => setApiError((error as Error).message)); 
+        .catch((error): void => setApiError((error as Error).message));
     }
   }, [store, subscribed, injectionPreference, injectedAccounts, queueAction, state]);
 

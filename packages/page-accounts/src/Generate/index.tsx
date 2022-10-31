@@ -28,7 +28,7 @@ const HighlightedValue = ({ value }: {value: string}): JSX.Element => (
   </article>
 );
 
-export const Element = ({ body, className = '', header, value, noIndex }: ElementProps): JSX.Element => (
+export const Element = ({ body, className = '', header, noIndex, value }: ElementProps): JSX.Element => (
   <article
     className={className}
     style={{ margin: '1em 0' }}
@@ -39,12 +39,11 @@ export const Element = ({ body, className = '', header, value, noIndex }: Elemen
       {value &&
     value.split(' ').map((elem, index) => {
       return (
-        <>
-          <HighlightedValue
-            key={index}
-            value={noIndex ? elem : `${index + 1}) `.concat(elem)}
-          />
-        </>);
+        <HighlightedValue
+          key={index}
+          value={noIndex ? elem : `${index + 1}) `.concat(elem)}
+        />
+      );
     }
     )}</div>
   </article>

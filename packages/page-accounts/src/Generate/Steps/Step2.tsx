@@ -90,8 +90,12 @@ const MnemonicGrid = ({ indexes, mnemonic, onValid }: MnemonicGridProps): React.
 function Step2 ({ className = '', mnemonics, onFinish }: Props): React.ReactElement {
   const { t } = useTranslation();
   const [step, nextStep] = useStepper();
-  const standard = mnemonics[0].split(' ').map((elem) => elem);
-  const quantum = mnemonics[1].split(' ').map((elem) => elem);
+
+  const standard = useMemo(() => mnemonics[0].split(' ').map((elem) => elem), [mnemonics]);
+  const standardIndexes = useMemo(() => getRandomSet(Array.from(Array(standard.length).keys()), 5), [standard.length]);
+
+  const quantum = useMemo(() => mnemonics[1].split(' ').map((elem) => elem), [mnemonics]);
+  const quantumIndexes = useMemo(() => getRandomSet(Array.from(Array(quantum.length).keys()), 5), [quantum.length]);
 
   return (
     <div
@@ -103,7 +107,7 @@ function Step2 ({ className = '', mnemonics, onFinish }: Props): React.ReactElem
       <div style={{ margin: '1.5em 0' }}>
         <p className='quantum'><b>QUANTUM</b> mnemonic</p>
         <MnemonicGrid
-          indexes={getRandomSet(Array.from(Array(quantum.length).keys()), 5)}
+          indexes={quantumIndexes}
           mnemonic={quantum}
           onValid={nextStep}
         />
@@ -113,7 +117,7 @@ function Step2 ({ className = '', mnemonics, onFinish }: Props): React.ReactElem
       <div style={{ margin: '1.5em 0' }}>
         <p className='standard'><b>STANDARD</b> mnemonic</p>
         <MnemonicGrid
-          indexes={getRandomSet(Array.from(Array(standard.length).keys()), 5)}
+          indexes={standardIndexes}
           mnemonic={standard}
           onValid={nextStep}
         />

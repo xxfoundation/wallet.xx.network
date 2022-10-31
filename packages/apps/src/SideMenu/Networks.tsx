@@ -3,8 +3,6 @@
 import type { LinkOption } from '@polkadot/apps-config/settings/types';
 import type { Group } from './types';
 
-// ok, this seems to be an eslint bug, this _is_ a package import
-/* eslint-disable-next-line node/no-deprecated-api */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import store from 'store';
 import styled from 'styled-components';
@@ -19,7 +17,6 @@ import useCustomEndpoints from './useCustomEndpoints';
 
 interface Props {
   className: string;
-  onClose: () => void;
 }
 
 interface UrlState {
@@ -100,7 +97,7 @@ function loadAffinities (groups: Group[]): Record<string, string> {
     }), {});
 }
 
-function Endpoints ({ className = '', onClose }: Props): React.ReactElement<Props> {
+function Endpoints ({ className = '' }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const linkOptions = createWsEndpoints(t);
   const endpointGroups = useMemo(() => combineEndpoints(linkOptions), [linkOptions]);
@@ -128,11 +125,8 @@ function Endpoints ({ className = '', onClose }: Props): React.ReactElement<Prop
       settings.set({ ...(settings.get()), apiUrl });
 
       window.location.assign(`${window.location.origin}${window.location.pathname}?rpc=${encodeURIComponent(apiUrl)}${window.location.hash}`);
-      // window.location.reload();
-
-      onClose();
     },
-    [apiUrl, onClose]
+    [apiUrl]
   );
 
   useEffect(() => {

@@ -29,7 +29,7 @@ function needsApiCheck (api: ApiPromise): boolean {
 
   try {
     // we need to be able to bond
-    api.tx.staking.bond(TEST_ADDR, BN_ONE, { Account: TEST_ADDR });
+    api.tx.staking.bond(TEST_ADDR, BN_ONE, null);
   } catch {
     console.warn('Unable to create staking bond transaction, disabling staking route');
 

@@ -42,11 +42,9 @@ interface Props {
   allSlashes?: [BN, PalletStakingUnappliedSlash[]][];
   className?: string;
   isDisabled?: boolean;
-  isSelectable: boolean;
   info: StakerState;
   minCommission?: BN;
   next?: string[];
-  onSelect: (stashId: string, controllerId: string, isSelected: boolean) => void;
   stashId: string;
   targets: SortedTargets;
   validators?: string[];
@@ -83,7 +81,7 @@ function useControllerCalls (api: ApiPromise, controllerId: string | null) {
   return stakingLedger?.unwrapOr(undefined);
 }
 
-function Account ({ allSlashes, className = '', info: { controllerId, destination, hexSessionIdNext, hexSessionIdQueue, isLoading, isOwnController, isOwnStash, isStashNominating, isStashValidating, nominating, sessionIds, stakingLedger, stashId }, isDisabled, isSelectable, onSelect, targets, minCommission }: Props): React.ReactElement<Props> {
+function Account ({ allSlashes, className = '', info: { controllerId, destination, hexSessionIdNext, hexSessionIdQueue, isLoading, isOwnController, isOwnStash, isStashNominating, isStashValidating, nominating, sessionIds, stakingLedger, stashId }, isDisabled, targets, minCommission }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
   const { queueExtrinsic } = useContext(StatusContext);
@@ -92,7 +90,6 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
   const [isKickOpen, toggleKick] = useToggle();
   const [isNominateOpen, toggleNominate] = useToggle();
   const [isRebondOpen, toggleRebond] = useToggle();
-  const [isRewardDestinationOpen, toggleRewardDestination] = useToggle();
   const [isSetControllerOpen, toggleSetController] = useToggle();
   const [isSetSessionOpen, toggleSetSession] = useToggle();
   const [isUnbondOpen, toggleUnbond] = useToggle();
@@ -114,13 +111,6 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
   const bondedAddresses = bonded?.filter(([key]) => key.args.length).map(([key]) => key.args[0].toString()) || [];
 
   const validToTransferCmixId = cmixId && activeValidators && stashId && !activeValidators.some((element) => element === stashId) && !stakingValAddresses?.some((elem) => elem === stashId) && transferWindow;
-
-  const _onSelect = useCallback(
-    (isSelected: boolean) => controllerId && onSelect(stashId, controllerId, isSelected),
-    [controllerId, stashId, onSelect]
-  );
-
-  const [isSelected, , setSelected] = useToggle(false, _onSelect);
 
   const slashes = useMemo(
     () => extractSlashes(stashId, allSlashes),
@@ -364,11 +354,6 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
                     label={t<string>('Change controller account')}
                     onClick={toggleSetController}
                   />
-                  <Menu.Item
-                    isDisabled={!isOwnController}
-                    label={t<string>('Change reward destination')}
-                    onClick={toggleRewardDestination}
-                  />
                   {isStashValidating && (
                     <>
                       <Menu.Item
@@ -427,14 +412,6 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
               }
             />
           </>
-        )}
-      </td>
-      <td className='hidden'>
-        {isSelectable && controllerId && (
-          <Checkbox
-            onChange={setSelected}
-            value={isSelected}
-          />
         )}
       </td>
     </tr>

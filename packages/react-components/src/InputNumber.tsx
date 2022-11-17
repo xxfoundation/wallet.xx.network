@@ -35,7 +35,6 @@ interface Props {
   labelExtra?: React.ReactNode;
   maxLength?: number;
   maxValue?: BN;
-  minValue?: BN;
   onChange?: (value?: BN) => void;
   onEnter?: () => void;
   onEscape?: () => void;
@@ -55,7 +54,7 @@ const DEFAULT_BITLENGTH = BitLengthOption.NORMAL_NUMBERS as BitLength;
 export class TokenUnit {
   public static abbr = 'Unit';
 
-  public static setAbbr(abbr: string = TokenUnit.abbr): void {
+  public static setAbbr (abbr: string = TokenUnit.abbr): void {
     TokenUnit.abbr = abbr;
   }
 }
@@ -95,7 +94,7 @@ function getSiPowers (si: SiDef | null, decimals?: number): [BN, number, number]
   return [new BN(basePower + si.power), basePower, si.power];
 }
 
-function isValidNumber (bn: BN, bitLength: BitLength, isSigned: boolean, isZeroable: boolean, minValue?: BN, maxValue?: BN): boolean {
+function isValidNumber (bn: BN, bitLength: BitLength, isSigned: boolean, isZeroable: boolean, maxValue?: BN): boolean {
   if (
     // cannot be negative
     (!isSigned && bn.lt(BN_ZERO)) ||
@@ -103,8 +102,6 @@ function isValidNumber (bn: BN, bitLength: BitLength, isSigned: boolean, isZeroa
     bn.gt(getGlobalMaxValue(bitLength)) ||
     // check if 0 and it should be a value
     (!isZeroable && bn.isZero()) ||
-    // cannot be < min (if specified)
-    (minValue && minValue.gtn(0) && bn.lt(minValue)) ||
     // check that the bitlengths fit
     (bn.bitLength() > (bitLength || DEFAULT_BITLENGTH)) ||
     // cannot be > max (if specified)
@@ -116,7 +113,7 @@ function isValidNumber (bn: BN, bitLength: BitLength, isSigned: boolean, isZeroa
   return true;
 }
 
-function inputToBn (api: ApiPromise, input: string, si: SiDef | null, bitLength: BitLength, isSigned: boolean, isZeroable: boolean, minValue?: BN, maxValue?: BN, decimals?: number): [BN, boolean] {
+function inputToBn (api: ApiPromise, input: string, si: SiDef | null, bitLength: BitLength, isSigned: boolean, isZeroable: boolean, maxValue?: BN, decimals?: number): [BN, boolean] {
   const [siPower, basePower, siUnitPower] = getSiPowers(si, decimals);
 
   // eslint-disable-next-line @typescript-eslint/prefer-regexp-exec
@@ -143,11 +140,11 @@ function inputToBn (api: ApiPromise, input: string, si: SiDef | null, bitLength:
 
   return [
     result,
-    isValidNumber(result, bitLength, isSigned, isZeroable, minValue, maxValue)
+    isValidNumber(result, bitLength, isSigned, isZeroable, maxValue)
   ];
 }
 
-function getValuesFromString (api: ApiPromise, value: string, si: SiDef | null, bitLength: BitLength, isSigned: boolean, isZeroable: boolean, minValue?: BN,  maxValue?: BN, decimals?: number): [string, BN, boolean] {
+function getValuesFromString (api: ApiPromise, value: string, si: SiDef | null, bitLength: BitLength, isSigned: boolean, isZeroable: boolean, maxValue?: BN, decimals?: number): [string, BN, boolean] {
   return [
     value,
     ...inputToBn(api, value, si, bitLength, isSigned, isZeroable, maxValue, decimals)
@@ -195,7 +192,6 @@ function InputNumber ({
   label,
   labelExtra,
   maxLength,
-  minValue,
   maxValue,
   onChange,
   onEnter,
@@ -229,7 +225,7 @@ function InputNumber ({
 
   const _onChangeWithSi = useCallback(
     (input: string, si: SiDef | null) => setValues(
-      getValuesFromString(api, input, si, bitLength, isSigned, isZeroable, minValue, maxValue, siDecimals)
+      getValuesFromString(api, input, si, bitLength, isSigned, isZeroable, maxValue, siDecimals)
     ),
     [api, bitLength, isSigned, isZeroable, maxValue, siDecimals]
   );
@@ -355,7 +351,7 @@ export default React.memo(styled(InputNumber)`
   &.isDisabled {
     .ui--SiDropdown {
       background: transparent;
-      border-color: rgba(34, 36, 38, .15) !important;
+      border-color: var(--border-input) !important;
       border-style: dashed;
       color: #666 !important;
       cursor: default !important;
@@ -370,5 +366,4 @@ export default React.memo(styled(InputNumber)`
     bottom: 1.1rem;
     right: 6.5rem;
   }
-
 `);

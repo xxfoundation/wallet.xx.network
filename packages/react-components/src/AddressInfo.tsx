@@ -293,7 +293,7 @@ function createBalanceItems (formatIndex: number, lookup: Record<string, string>
               <>
                 <div>
                   {formatBalance(deriveBalances.vestedClaimable, { forceUnit: '-' })}
-                  <div className='faded'>{t('available to be unlocked')}</div>
+                  <div className='faded'>{t<string>('available to be unlocked')}</div>
                 </div>
                 {allVesting.map(({ endBlock, locked, perBlock, vested }, index) => (
                   <div
@@ -302,15 +302,17 @@ function createBalanceItems (formatIndex: number, lookup: Record<string, string>
                   >
                     <div>
                       {formatBalance(vested, { forceUnit: '-' })}
-                      <div className='faded'>{t('of {{locked}} vested', { replace: { locked: formatBalance(locked, { forceUnit: '-' }) } })}</div>
+                      <div className='faded'>{t<string>('of {{locked}} vested', { replace: { locked: formatBalance(locked, { forceUnit: '-' }) } })}</div>
                     </div>
                     <div>
                       <BlockToTime value={endBlock.sub(bestNumber)} />
-                      <div className='faded'>{t('until block')} {formatNumber(endBlock)}</div>
+                      <div className='faded'>
+                        {t<string>('until block')} {formatNumber(endBlock)}
+                      </div>
                     </div>
                     <div>
                       {formatBalance(perBlock)}
-                      <div className='faded'>{t('per block')}</div>
+                      <div className='faded'>{t<string>('per block')}</div>
                     </div>
                   </div>
                 ))}

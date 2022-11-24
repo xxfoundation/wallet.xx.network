@@ -36,6 +36,7 @@
   "apps-config.json",
   "apps-routing.json",
   "apps.json",
+  "react-api.json",
   "react-components.json",
   "react-params.json",
   "react-query.json",

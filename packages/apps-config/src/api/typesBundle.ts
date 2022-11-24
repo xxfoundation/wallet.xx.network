@@ -45377,17 +45377,32 @@ export const typesBundle = {
             "CollectionItem": {
               "description": "Vec<u8>"
             },
+            "BeefyKey": "[u8; 33]",
+            "Keys": "SessionKeys2",
+            "SessionKeys1": "(AccountId)",
+            "SessionKeys2": "(AccountId, AccountId)",
+            "SessionKeys3": "(AccountId, AccountId, AccountId)",
+            "SessionKeys4": "(AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys5": "(AccountId, AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys6": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys6B": "(AccountId, AccountId, AccountId, AccountId, AccountId, BeefyKey)",
+            "SessionKeys7": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys7B": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, BeefyKey)",
+            "SessionKeys8": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys8B": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, BeefyKey)",
+            "SessionKeys9": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys9B": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, BeefyKey)",
+            "SessionKeys10": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys10B": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, BeefyKey)",
             "FullIdentification": "Exposure",
             "IdentificationTuple": "(ValidatorId, FullIdentification)",
             "MembershipProof": {
               "session": "SessionIndex",
-              "trieNodes": "Vec<Vec<u8>>",
+              "trieNodes": "Vec<Bytes>",
               "validatorCount": "ValidatorCount"
             },
             "SessionIndex": "u32",
-            "ValidatorCount": "u32",
-            "SessionKeys2": "(AccountId, AccountId)",
-            "Keys": "SessionKeys2"
+            "ValidatorCount": "u32"
           }
         },
         {
@@ -45489,17 +45504,32 @@ export const typesBundle = {
               "fileSize": "u32",
               "hash": "Hash"
             },
+            "BeefyKey": "[u8; 33]",
+            "Keys": "SessionKeys2",
+            "SessionKeys1": "(AccountId)",
+            "SessionKeys2": "(AccountId, AccountId)",
+            "SessionKeys3": "(AccountId, AccountId, AccountId)",
+            "SessionKeys4": "(AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys5": "(AccountId, AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys6": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys6B": "(AccountId, AccountId, AccountId, AccountId, AccountId, BeefyKey)",
+            "SessionKeys7": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys7B": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, BeefyKey)",
+            "SessionKeys8": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys8B": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, BeefyKey)",
+            "SessionKeys9": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys9B": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, BeefyKey)",
+            "SessionKeys10": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys10B": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, BeefyKey)",
             "FullIdentification": "Exposure",
             "IdentificationTuple": "(ValidatorId, FullIdentification)",
             "MembershipProof": {
               "session": "SessionIndex",
-              "trieNodes": "Vec<Vec<u8>>",
+              "trieNodes": "Vec<Bytes>",
               "validatorCount": "ValidatorCount"
             },
             "SessionIndex": "u32",
-            "ValidatorCount": "u32",
-            "SessionKeys2": "(AccountId, AccountId)",
-            "Keys": "SessionKeys2"
+            "ValidatorCount": "u32"
           }
         },
         {
@@ -45608,17 +45638,32 @@ export const typesBundle = {
               "token_type": "Vec<u8>",
               "token_id": "Vec<u8>"
             },
+            "BeefyKey": "[u8; 33]",
+            "Keys": "SessionKeys2",
+            "SessionKeys1": "(AccountId)",
+            "SessionKeys2": "(AccountId, AccountId)",
+            "SessionKeys3": "(AccountId, AccountId, AccountId)",
+            "SessionKeys4": "(AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys5": "(AccountId, AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys6": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys6B": "(AccountId, AccountId, AccountId, AccountId, AccountId, BeefyKey)",
+            "SessionKeys7": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys7B": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, BeefyKey)",
+            "SessionKeys8": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys8B": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, BeefyKey)",
+            "SessionKeys9": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys9B": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, BeefyKey)",
+            "SessionKeys10": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys10B": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, BeefyKey)",
             "FullIdentification": "Exposure",
             "IdentificationTuple": "(ValidatorId, FullIdentification)",
             "MembershipProof": {
               "session": "SessionIndex",
-              "trieNodes": "Vec<Vec<u8>>",
+              "trieNodes": "Vec<Bytes>",
               "validatorCount": "ValidatorCount"
             },
             "SessionIndex": "u32",
-            "ValidatorCount": "u32",
-            "SessionKeys2": "(AccountId, AccountId)",
-            "Keys": "SessionKeys2"
+            "ValidatorCount": "u32"
           }
         },
         {
@@ -45627,12 +45672,9 @@ export const typesBundle = {
             null
           ],
           "types": {
-            "Address": "MultiAddress",
-            "LookupSource": "MultiAddress",
             "OpaquePeerId": "Vec<u8>",
             "AccountInfo": "AccountInfoWithDualRefCount",
             "TAssetBalance": "u128",
-            "AssetId": "u64",
             "AssetDetails": {
               "owner": "AccountId",
               "issuer": "AccountId",
@@ -45746,17 +45788,32 @@ export const typesBundle = {
               "tcLoc": "LocId",
               "details": "Vec<u8>"
             },
+            "BeefyKey": "[u8; 33]",
+            "Keys": "SessionKeys2",
+            "SessionKeys1": "(AccountId)",
+            "SessionKeys2": "(AccountId, AccountId)",
+            "SessionKeys3": "(AccountId, AccountId, AccountId)",
+            "SessionKeys4": "(AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys5": "(AccountId, AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys6": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys6B": "(AccountId, AccountId, AccountId, AccountId, AccountId, BeefyKey)",
+            "SessionKeys7": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys7B": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, BeefyKey)",
+            "SessionKeys8": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys8B": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, BeefyKey)",
+            "SessionKeys9": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys9B": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, BeefyKey)",
+            "SessionKeys10": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId)",
+            "SessionKeys10B": "(AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, AccountId, BeefyKey)",
             "FullIdentification": "Exposure",
             "IdentificationTuple": "(ValidatorId, FullIdentification)",
             "MembershipProof": {
               "session": "SessionIndex",
-              "trieNodes": "Vec<Vec<u8>>",
+              "trieNodes": "Vec<Bytes>",
               "validatorCount": "ValidatorCount"
             },
             "SessionIndex": "u32",
-            "ValidatorCount": "u32",
-            "SessionKeys2": "(AccountId, AccountId)",
-            "Keys": "SessionKeys2"
+            "ValidatorCount": "u32"
           }
         }
       ]

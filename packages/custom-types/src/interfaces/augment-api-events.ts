@@ -1,14 +1,20 @@
 // Auto-generated via `yarn polkadot-types-from-chain`, do not edit
 /* eslint-disable */
 
-import type { ApiTypes } from '@polkadot/api-base/types';
+// import type lookup before we augment - in some environments
+// this is required to allow for ambient/previous definitions
+import '@polkadot/api-base/types/events';
+
+import type { ApiTypes, AugmentedEvent } from '@polkadot/api-base/types';
 import type { Bytes, Null, Option, Result, U256, U8aFixed, Vec, bool, u128, u16, u32, u64, u8 } from '@polkadot/types-codec';
 import type { ITuple } from '@polkadot/types-codec/types';
 import type { AccountId32, H256 } from '@polkadot/types/interfaces/runtime';
 import type { ClaimsEthereumAddress, FrameSupportTokensMiscBalanceStatus, FrameSupportWeightsDispatchInfo, PalletDemocracyVoteThreshold, PalletElectionProviderMultiPhaseElectionCompute, PalletImOnlineSr25519AppSr25519Public, PalletMultisigTimepoint, PalletStakingExposure, SpFinalityGrandpaAppPublic, SpRuntimeDispatchError, XxBetanetRewardsRewardOption, XxnetworkRuntimeProxyType } from '@polkadot/types/lookup';
 
+export type __AugmentedEvent<ApiType extends ApiTypes> = AugmentedEvent<ApiType>;
+
 declare module '@polkadot/api-base/types/events' {
-  export interface AugmentedEvents<ApiType extends ApiTypes> {
+  interface AugmentedEvents<ApiType extends ApiTypes> {
     assets: {
       /**
        * An approval for account `delegate` was cancelled by `owner`.
@@ -744,23 +750,23 @@ declare module '@polkadot/api-base/types/events' {
       /**
        * A new tip suggestion has been opened.
        **/
-      NewTip: AugmentedEvent<ApiType, [H256]>;
+      NewTip: AugmentedEvent<ApiType, [tipHash: H256], { tipHash: H256 }>;
       /**
        * A tip suggestion has been closed.
        **/
-      TipClosed: AugmentedEvent<ApiType, [H256, AccountId32, u128]>;
+      TipClosed: AugmentedEvent<ApiType, [tipHash: H256, who: AccountId32, payout: u128], { tipHash: H256, who: AccountId32, payout: u128 }>;
       /**
        * A tip suggestion has reached threshold and is closing.
        **/
-      TipClosing: AugmentedEvent<ApiType, [H256]>;
+      TipClosing: AugmentedEvent<ApiType, [tipHash: H256], { tipHash: H256 }>;
       /**
        * A tip suggestion has been retracted.
        **/
-      TipRetracted: AugmentedEvent<ApiType, [H256]>;
+      TipRetracted: AugmentedEvent<ApiType, [tipHash: H256], { tipHash: H256 }>;
       /**
        * A tip suggestion has been slashed.
        **/
-      TipSlashed: AugmentedEvent<ApiType, [H256, AccountId32, u128]>;
+      TipSlashed: AugmentedEvent<ApiType, [tipHash: H256, finder: AccountId32, deposit: u128], { tipHash: H256, finder: AccountId32, deposit: u128 }>;
     };
     treasury: {
       /**

@@ -120,10 +120,14 @@ async function wrapTx (api: ApiPromise, currentItem: QueueTx, { isMultiCall, mul
 
   if (multiRoot) {
     const multiModule = api.tx.multisig ? 'multisig' : 'utility';
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const [info, { weight }] = await Promise.all([
-      api.query[multiModule].multisigs<Option<Multisig>>(multiRoot, tx.method.hash),
-      tx.paymentInfo(multiRoot)
+      api.query[multiModule].multisigs(multiRoot, tx.method.hash),
+      tx.paymentInfo(multiRoot) as Promise<{ weight: any }>
     ]);
+
+    console.log('multisig max weight=', (weight as string).toString());
+
     const { threshold, who } = extractExternal(multiRoot);
     const others = who.filter((w) => w !== signAddress);
     let timepoint: Timepoint | null = null;
@@ -133,17 +137,13 @@ async function wrapTx (api: ApiPromise, currentItem: QueueTx, { isMultiCall, mul
     }
 
     tx = isMultiCall
-      ? api.tx[multiModule].asMulti.meta.args.length === 5
+      ? api.tx[multiModule].asMulti.meta.args.length === 6
         // We are doing toHex here since we have a Vec<u8> input
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        ? api.tx[multiModule].asMulti(threshold, others, timepoint, tx.method.toHex(), weight)
-        : api.tx[multiModule].asMulti.meta.args.length === 6
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          ? api.tx[multiModule].asMulti(threshold, others, timepoint, tx.method.toHex(), false, weight)
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          : api.tx[multiModule].asMulti(threshold, others, timepoint, tx.method)
+        ? api.tx[multiModule].asMulti(threshold, others, timepoint, tx.method.toHex(), false, weight)
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        : api.tx[multiModule].asMulti(threshold, others, timepoint, tx.method)
       : api.tx[multiModule].approveAsMulti.meta.args.length === 5
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         ? api.tx[multiModule].approveAsMulti(threshold, others, timepoint, tx.method.hash, weight)

@@ -2,17 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Observable } from 'rxjs';
+import type { DeriveStakingQuery } from '@polkadot/api-derive/staking/types';
+import type { DeriveApi, DeriveEraPoints, DeriveEraPrefs, DeriveEraRewards, DeriveEraValPoints, DeriveEraValPrefs, DeriveStakerExposure, DeriveStakerReward, DeriveStakerRewardValidator } from '@polkadot/api-derive/types';
 import type { AccountId, EraIndex } from '@polkadot/types/interfaces';
 import type { PalletStakingStakingLedger } from '@polkadot/types/lookup';
 import type { BN } from '@polkadot/util';
-import type { DeriveApi, DeriveEraPoints, DeriveEraPrefs, DeriveEraRewards, DeriveEraValPoints, DeriveEraValPrefs, DeriveStakerExposure, DeriveStakerReward, DeriveStakerRewardValidator } from '@polkadot/api-derive/types';
-import type { DeriveStakingQuery } from '@polkadot/api-derive/staking/types';
 
 import { combineLatest, map, of, switchMap } from 'rxjs';
 
-import { BN_BILLION, BN_ZERO, objectSpread } from '@polkadot/util';
-
 import { firstMemo, memo } from '@polkadot/api-derive/util';
+import { BN_BILLION, BN_ZERO, objectSpread } from '@polkadot/util';
 
 type ErasResult = [DeriveEraPoints[], DeriveEraPrefs[], DeriveEraRewards[]];
 
@@ -96,6 +95,7 @@ function removeClaimed (validators: string[], queryValidators: DeriveStakingQuer
 
     if (index !== -1) {
       const valLedger = queryValidators[index].stakingLedger;
+
       // If a validator is no longer bonded, api.derive.staking.queryMulti returns an "emtpy" StakingLedger
       // object instead of undefined. The stash in this is set to 0x0000....., so we can filter those out
       if (validatorId !== valLedger.stash.toString() || valLedger?.claimedRewards.some((e) => reward.era.eq(e))) {

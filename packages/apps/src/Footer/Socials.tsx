@@ -3,15 +3,38 @@
 import React from 'react';
 import styled from 'styled-components';
 
+import discord from './logos/discord.svg';
+import discourse from './logos/discourse.svg';
+import email from './logos/email.svg';
+import forum from './logos/forum.svg';
+import github from './logos/github.svg';
+import instagram from './logos/instagram.svg';
+import linkedin from './logos/linkedin.svg';
+import medium from './logos/medium.svg';
+import telegram from './logos/telegram.svg';
+import twitter from './logos/twitter.svg';
+import youtube from './logos/youtube.svg';
+
+const images: Record<string, unknown> = {
+  discord,
+  discourse,
+  email,
+  forum,
+  github,
+  instagram,
+  linkedin,
+  medium,
+  telegram,
+  twitter,
+  youtube
+};
+
 const Stack = styled('div')({
   display: 'flex',
   '& *:not(:last-child)': {
     marginBottom: '1rem'
   }
 });
-
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-const images = require.context('./logos/', true);
 
 const SocialLink = styled('a')({
   '&:not(:first-child)': {
@@ -63,25 +86,28 @@ const Socials: React.FC<Props> = ({ socials, ...props }) => (
         .filter(([social]) => possibleSocials.includes(social))
         .filter(([, username]) => !!username)
         .map(
-          ([social, username]) =>
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-            images(`./${social}.svg`) &&
-            username &&
-            typeof username === 'string' && (
-              <SocialLink
-                href={urlMappers[social]?.(username)}
-                key={`${social}-${username}`}
-                rel='noopener'
-                target='_blank'
-              >
-                <SocialsLogo>
-                  <SocialsImage
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-                    src={images(`./${social}.svg`)}
-                  />
-                </SocialsLogo>
-              </SocialLink>
+          ([social, username]) => (
+            (
+              images[social] &&
+              username &&
+              typeof username === 'string'
             )
+              ? (
+                <SocialLink
+                  href={urlMappers[social]?.(username)}
+                  key={`${social}-${username}`}
+                  rel='noopener'
+                  target='_blank'
+                >
+                  <SocialsLogo>
+                    <SocialsImage
+                      src={images[social] as string}
+                    />
+                  </SocialsLogo>
+                </SocialLink>
+              )
+              : null
+          )
         )}
   </Stack>
 );

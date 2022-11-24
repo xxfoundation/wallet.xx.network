@@ -12,12 +12,12 @@ import React, { useCallback, useContext, useMemo, useState } from 'react';
 import { Icon, PaginationAdvanced, Table } from '@polkadot/react-components';
 import { useApi, useCall, useLoadingDelay, usePagination, useSavedFlags } from '@polkadot/react-hooks';
 import { BlockAuthorsContext } from '@polkadot/react-query';
+import { XxCmixCmixVariables } from '@polkadot/types/lookup';
 
 import Filtering from '../Filtering';
 import Legend from '../Legend';
 import { useTranslation } from '../translate';
 import Address from './Address';
-import { XxCmixCmixVariables } from '@polkadot/types/lookup';
 
 interface Props {
   className?: string;
@@ -60,9 +60,13 @@ function makeSorter (transformer: (e: AccountExtend) => number): (a: AccountExte
     const x = transformer(a);
     const y = transformer(b);
 
-    if (x > y) { return 1; }
+    if (x > y) {
+      return 1;
+    }
 
-    if (x < y) { return -1; }
+    if (x < y) {
+      return -1;
+    }
 
     return 0;
   };
@@ -161,7 +165,7 @@ function mapValidators (infos: ValidatorInfo[]): Record<string, ValidatorInfo> {
 
 const DEFAULT_PARAS = {};
 
-function CurrentList ({ className, favorites, hasQueries, isIntentions, isOwn, minCommission, nominatedBy, ownStashIds, paraValidators = DEFAULT_PARAS, recentlyOnline, stakingOverview, targets, toggleFavorite }: Props): React.ReactElement<Props> | null {
+function CurrentList ({ favorites, hasQueries, isIntentions, isOwn, nominatedBy, ownStashIds, paraValidators = DEFAULT_PARAS, recentlyOnline, stakingOverview, targets, toggleFavorite }: Props): React.ReactElement<Props> | null {
   const { t } = useTranslation();
   const { api } = useApi();
   const { byAuthor, eraPoints } = useContext(isIntentions ? EmptyAuthorsContext : BlockAuthorsContext);
@@ -189,7 +193,7 @@ function CurrentList ({ className, favorites, hasQueries, isIntentions, isOwn, m
     {t<string>('Per failed cMix realtime round: -{{points}} points', { points: points?.failure })}
   </div>, [t, points]);
 
-  const tooltipCommission= useMemo(() => <div>
+  const tooltipCommission = useMemo(() => <div>
     {t<string>('This is the average commission this validator charged when elected over the past 7 eras.')}<br/>
     {t<string>('Commission numbers are shown in red if the current commission is at least 20% smaller than the previously charged average.')}
   </div>, [t]);
@@ -308,7 +312,6 @@ function CurrentList ({ className, favorites, hasQueries, isIntentions, isOwn, m
               isElected={isElected}
               isFavorite={isFavorite}
               isMain={!isIntentions}
-              isPara={isIntentions ? false : paraValidators[address]}
               key={address}
               lastBlock={byAuthor[address]}
               nominatedBy={nominatedBy?.[address]}

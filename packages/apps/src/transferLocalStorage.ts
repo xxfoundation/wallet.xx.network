@@ -32,3 +32,5 @@ if (location.hostname === MIGRATING_TO && !localStorage.getItem('local-storage-m
 
   document.body.appendChild(iframe);
 }
+
+export {};

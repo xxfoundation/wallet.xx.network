@@ -1,6 +1,7 @@
 // Copyright 2017-2022 @polkadot/app-treasury authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
+import type { QueryableStorageEntry } from '@polkadot/api/types';
 import type { StorageKey } from '@polkadot/types';
 import type { Hash } from '@polkadot/types/interfaces';
 
@@ -19,7 +20,9 @@ function useTipHashesImpl (): string[] | undefined {
     api.events.tips?.TipRetracted
   ]);
 
-  return useMapKeys((api.query.tips || api.query.treasury)?.tips, OPT, trigger.blockHash);
+  const tips = api.query.tips.tips as unknown as QueryableStorageEntry<'promise'>;
+
+  return useMapKeys(tips, OPT, trigger.blockHash);
 }
 
 export default createNamedHook('useTipHashes', useTipHashesImpl);

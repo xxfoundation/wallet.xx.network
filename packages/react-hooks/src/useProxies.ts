@@ -17,7 +17,7 @@ const OPTS = {
       ? result as [PalletProxyProxyDefinition[], BN][]
       : (result as [[AccountId, XxnetworkRuntimeProxyType][], BN][]).map(([arr, bn]): [PalletProxyProxyDefinition[], BN] =>
         [arr.map(([delegate, proxyType]): PalletProxyProxyDefinition =>
-          api.createType('ProxyDefinition', {
+          api.createType('PalletProxyProxyDefinition', {
             delegate,
             proxyType
           })), bn]

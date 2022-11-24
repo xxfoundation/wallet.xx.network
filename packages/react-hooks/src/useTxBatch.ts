@@ -3,7 +3,6 @@
 
 import type { ApiPromise } from '@polkadot/api';
 import type { SubmittableExtrinsic } from '@polkadot/api/types';
-import type { Weight } from '@polkadot/types/interfaces';
 import type { BatchOptions, BatchType } from './types';
 
 import { useEffect, useMemo, useState } from 'react';
@@ -53,9 +52,7 @@ function useTxBatchImpl (txs?: SubmittableExtrinsic<'promise'>[] | null | false,
           const paymentInfo = await txs[0].paymentInfo(allAccounts[0]);
           const weight = convertWeight(paymentInfo.weight);
           const maxBlock = convertWeight(
-            api.consts.system.blockWeights
-              ? api.consts.system.blockWeights.maxBlock
-              : api.consts.system.maximumBlockWeight as Weight
+            api.consts.system.blockWeights.maxBlock
           );
 
           setBatchSize((prev) =>

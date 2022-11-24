@@ -5990,6 +5990,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/lodash.range@npm:^3.2.7":
+  version: 3.2.7
+  resolution: "@types/lodash.range@npm:3.2.7"
+  dependencies:
+    "@types/lodash": "*"
+  checksum: 036218164b3836b553ddb7c0890c50f63ad43d67d2ed318e0146b86f38f6c6d4d994c81d42bafd61b4395ce5b280c49e4d33997dba9325d46b82d7ff9f5b75ec
+  languageName: node
+  linkType: hard
+
+"@types/lodash@npm:*":
+  version: 4.14.190
+  resolution: "@types/lodash@npm:4.14.190"
+  checksum: 353a55a1222a57224ead8bd3379fabb2e3e3f6685f599c48b1b66f099d8e9e015e6c6352c6e2275954004c3bb510377804c63117233c6f187700b6ab78adfa02
+  languageName: node
+  linkType: hard
+
 "@types/lodash@npm:^4.14.186":
   version: 4.14.186
   resolution: "@types/lodash@npm:4.14.186"
@@ -20103,6 +20119,7 @@ __metadata:
     "@types/file-saver": ^2.0.5
     "@types/jest": ^29.2.2
     "@types/lodash": ^4.14.186
+    "@types/lodash.range": ^3.2.7
     "@types/react-beautiful-dnd": ^13.1.2
     "@types/react-copy-to-clipboard": ^5.0.4
     "@types/react-dom": ^18.0.8

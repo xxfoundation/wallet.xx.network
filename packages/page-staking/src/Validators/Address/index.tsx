@@ -54,7 +54,7 @@ interface StakingState {
   pastAvgCommission: number;
 }
 
-function expandInfo ({ commission, exposure, pastAvgCommission, teamMultiplier, validatorPrefs }: ValidatorInfo, minCommission?: BN): StakingState {
+function expandInfo ({ exposure, pastAvgCommission, teamMultiplier, validatorPrefs }: ValidatorInfo, minCommission?: BN): StakingState {
   let nominators: NominatorValue[] = [];
   let stakeTotal: BN | undefined;
   let stakeOther: BN | undefined;
@@ -71,6 +71,8 @@ function expandInfo ({ commission, exposure, pastAvgCommission, teamMultiplier, 
     stakeOther = stakeTotal.sub(stakeOwn);
     multiplier = exposure.custody ? exposure.custody.unwrap() : teamMultiplier;
   }
+
+  const commission = (validatorPrefs as ValidatorPrefs)?.commission?.unwrap();
 
   return {
     commission: commission?.toHuman(),

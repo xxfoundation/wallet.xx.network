@@ -57,6 +57,7 @@ const pageRangeWithEllipsis = (currentPage: number, maxPage: number) => {
 type Props = {
   currentPage: number;
   goTo: (page: number) => void;
+  enabled?: boolean;
   next?: () => void;
   previous?: () => void;
   maxPage: number;

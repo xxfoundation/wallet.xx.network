@@ -1,18 +1,18 @@
 // Copyright 2017-2022 @polkadot/app-alliance authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { PalletAllianceCid, PalletAllianceMemberRole } from '@polkadot/types/lookup';
+// import type { PalletAllianceCid, PalletAllianceMemberRole } from '@polkadot/types/lookup';
 import type { BN } from '@polkadot/util';
 
 export interface Cid {
-  cid: PalletAllianceCid;
+  cid: unknown;
   ipfs: string | null;
   key: string;
 }
 
 export interface Member {
   accountId: string;
-  role: PalletAllianceMemberRole['type'];
+  role: unknown;
 }
 
 export interface MemberInfo {

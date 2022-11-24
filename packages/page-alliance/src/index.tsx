@@ -10,13 +10,10 @@ import Motions from '@polkadot/app-tech-comm/Proposals';
 import { Tabs } from '@polkadot/react-components';
 import { useApi, useCall, useCollectiveMembers } from '@polkadot/react-hooks';
 
-import Announcements from './Announcements';
 import Members from './Members';
 import { useTranslation } from './translate';
 import Unscrupulous from './Unscrupulous';
-import useAnnoucements from './useAnnoucements';
 import useMembers from './useMembers';
-import useRule from './useRule';
 import useUnscrupulous from './useUnscrupulous';
 
 export { default as useCounter } from './useCounter';
@@ -34,9 +31,7 @@ function AllianceApp ({ basePath, className }: Props): React.ReactElement<Props>
   const { api } = useApi();
   const proposalHashes = useCall<Hash[]>(api.derive.alliance.proposalHashes);
   const { isMember: isVoter, members: voters, prime } = useCollectiveMembers('alliance');
-  const accouncements = useAnnoucements();
   const members = useMembers();
-  const rule = useRule();
   const unscrupulous = useUnscrupulous();
 
   const motionFilter = useCallback(
@@ -55,14 +50,10 @@ function AllianceApp ({ basePath, className }: Props): React.ReactElement<Props>
       text: t<string>('Motions ({{count}})', { replace: { count: (proposalHashes && proposalHashes.length) || 0 } })
     },
     {
-      name: 'announcements',
-      text: t<string>('Announcements ({{count}})', { replace: { count: (accouncements && accouncements.length) || 0 } })
-    },
-    {
       name: 'unscrupulous',
       text: t<string>('Unscrupulous')
     }
-  ], [accouncements, proposalHashes, t]);
+  ], [proposalHashes, t]);
 
   return (
     <main className={className}>
@@ -71,9 +62,6 @@ function AllianceApp ({ basePath, className }: Props): React.ReactElement<Props>
         items={items}
       />
       <Switch>
-        <Route path={`${basePath}/announcements`}>
-          <Announcements accouncements={accouncements} />
-        </Route>
         <Route path={`${basePath}/motions`}>
           <Motions
             defaultProposal={api.tx.alliance.addUnscrupulousItems}
@@ -94,7 +82,6 @@ function AllianceApp ({ basePath, className }: Props): React.ReactElement<Props>
             isVoter={isVoter}
             members={members}
             prime={prime}
-            rule={rule}
             unscrupulous={unscrupulous}
             voters={voters}
           />

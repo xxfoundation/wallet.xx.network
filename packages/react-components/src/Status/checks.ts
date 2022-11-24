@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { DispatchError, DispatchResult, Event, EventRecord } from '@polkadot/types/interfaces';
-import type { XcmV2TraitsOutcome } from '@polkadot/types/lookup';
 
 type EventCheck = (event: Event) => string | null;
 
@@ -38,10 +37,6 @@ function dispatchResultMulti ({ data: [,,,, result] }: Event): string | null {
 function xcmAttempted ({ data: [outcome] }: Event): string | null {
   if (!outcome) {
     return INCOMPLETE;
-  } else if ((outcome as XcmV2TraitsOutcome).isIncomplete) {
-    const [index, error] = (outcome as XcmV2TraitsOutcome).asIncomplete;
-
-    return `error: ${index.toString()}: ${error.type}`;
   }
 
   return null;

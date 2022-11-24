@@ -27,7 +27,7 @@ interface Props {
 
 interface CacheInstance {
   Component: React.ComponentType<any>;
-  render: RenderFn;
+  render: (value?: any) => React.ComponentType<any>;
   refresh: (swallowErrors: boolean) => React.ComponentType<any>;
 }
 

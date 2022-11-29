@@ -1,9 +1,14 @@
 // Copyright 2017-2022 @polkadot/app-nfts authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 import type { Option } from '@polkadot/types';
 import type { AccountId } from '@polkadot/types/interfaces';
-import type { PalletUniquesCollectionDetails, PalletUniquesCollectionMetadata } from '@polkadot/types/lookup';
 import type { BN } from '@polkadot/util';
 import type { CollectionInfo } from './types';
 
@@ -51,8 +56,8 @@ function isAccount (allAccounts: string[], accountId: AccountId): boolean {
   return allAccounts.some((a) => a === address);
 }
 
-function extractInfo (allAccounts: string[], id: BN, optDetails: Option<PalletUniquesCollectionDetails>, metadata: Option<PalletUniquesCollectionMetadata>): CollectionInfo {
-  const details = optDetails.unwrapOr(null);
+function extractInfo (allAccounts: string[], id: BN, optDetails: Option<any>, metadata: Option<any>): CollectionInfo {
+  const details: any = optDetails.unwrapOr(null);
 
   return {
     ...(details
@@ -84,8 +89,8 @@ const addIpfsData = (ipfsData: IpfsData) => (collectionInfo: CollectionInfo): Co
 function useCollectionInfosImpl (ids?: BN[]): CollectionInfo[] | undefined {
   const { api } = useApi();
   const { allAccounts } = useAccounts();
-  const metadata = useCall<[[BN[]], Option<PalletUniquesCollectionMetadata>[]]>(api.query.uniques.classMetadataOf.multi, [ids], QUERY_OPTS);
-  const details = useCall<[[BN[]], Option<PalletUniquesCollectionDetails>[]]>(api.query.uniques.class.multi, [ids], QUERY_OPTS);
+  const metadata = useCall<[[BN[]], Option<any>[]]>(api.query.uniques.classMetadataOf.multi, [ids], QUERY_OPTS);
+  const details = useCall<[[BN[]], Option<any>[]]>(api.query.uniques.class.multi, [ids], QUERY_OPTS);
   const [state, setState] = useState<CollectionInfo[] | undefined>();
 
   const ipfsHashes = useMemo(

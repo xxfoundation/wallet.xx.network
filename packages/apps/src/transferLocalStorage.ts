@@ -1,4 +1,5 @@
-/* eslint-disable header/header */
+// Copyright 2017-2022 @polkadot/apps authors & contributors
+// SPDX-License-Identifier: Apache-2.0
 
 const MIGRATING_FROM = 'explorer.xx.network';
 const MIGRATING_TO = 'wallet.xx.network';

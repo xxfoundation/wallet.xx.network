@@ -88,7 +88,7 @@ function Member ({ bestNumber, className, info: { accountId, role }, isPrime, is
         )}
       </td>
       <td className='number'>
-        {role}
+        <>{role}</>
       </td>
       <td className='button'>
         {hasActions && (

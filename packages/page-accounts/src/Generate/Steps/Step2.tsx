@@ -1,3 +1,6 @@
+// Copyright 2017-2022 @polkadot/app-accounts authors & contributors
+// SPDX-License-Identifier: Apache-2.0
+
 import React, { useMemo, useState } from 'react';
 import styled from 'styled-components';
 

@@ -1,6 +1,8 @@
 // Copyright 2017-2022 @polkadot/app-tech-comm authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 import type { CollectiveType } from '@polkadot/react-hooks/types';
 import type { Hash, Proposal, ProposalIndex } from '@polkadot/types/interfaces';
 
@@ -67,7 +69,7 @@ function Close ({ hasFailed, hash, idNumber, proposal, type }: Props): React.Rea
                     : [hash, idNumber, weight, encodedCallLength]
                   : [hash, idNumber]
               }
-              tx={api.tx[modLocation].closeOperational || api.tx[modLocation].close}
+              tx={api.tx[modLocation].close}
             />
           </Modal.Actions>
         </Modal>

@@ -16,16 +16,13 @@ import { BN, isFunction } from '@polkadot/util';
 import basicMd from './md/basic.md';
 import NodeLocationsProvider from './NodeLocationContext/Provider';
 import Actions from './Actions';
-import Bags from './Bags';
 import { STORE_FAVS_BASE } from './constants';
 import Payouts from './Payouts';
-import Pools from './Pools';
 import Query from './Query';
 import Slashes from './Slashes';
 import Targets from './Targets';
 import { useTranslation } from './translate';
 import useNominations from './useNominations';
-import useOwnPools from './useOwnPools';
 import useSortedTargets from './useSortedTargets';
 import Validators from './Validators';
 
@@ -56,7 +53,6 @@ function StakingApp ({ basePath, className = '' }: Props): React.ReactElement<Pr
   const nominatedBy = useNominations(loadNominations);
   const stakingOverview = useCall<DeriveStakingOverview>(api.derive.staking.overview);
   const targets = useSortedTargets(favorites);
-  const ownPools = useOwnPools();
   const ownStashes = useOwnStashInfos();
   const slashes = useAvailableSlashes();
   const pathRef = useRef(createPathRef(basePath));
@@ -142,18 +138,11 @@ function StakingApp ({ basePath, className = '' }: Props): React.ReactElement<Pr
           items={items}
         />
         <Switch>
-          <Route path={pathRef.current.bags}>
-            <Bags ownStashes={ownStashes} />
-          </Route>
           <Route path={pathRef.current.payout}>
             <Payouts
               historyDepth={targets.historyDepth}
-              ownPools={ownPools}
               ownValidators={ownValidators}
             />
-          </Route>
-          <Route path={pathRef.current.pools}>
-            <Pools ownPools={ownPools} />
           </Route>
           <Route path={pathRef.current.query}>
             <Query />
@@ -178,7 +167,6 @@ function StakingApp ({ basePath, className = '' }: Props): React.ReactElement<Pr
         <Actions
           className={pathname === `${basePath}/actions` ? '' : '--hidden'}
           minCommission={MIN_COMM}
-          ownPools={ownPools}
           ownStashes={ownStashes}
           targets={targets}
         />

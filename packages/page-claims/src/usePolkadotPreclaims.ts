@@ -34,7 +34,7 @@ function usePolkadotPreclaimsImpl (): string[] {
         result.concat([
           [api.query.claims.claims, ethAddr],
           [api.query.claims.vesting, ethAddr]
-        ]),
+        ] as unknown as [QueryableStorageEntry<'promise'>, EthereumAddress][]),
       []), (opts: Option<Codec>[]): void => {
         // filter the cases where either claims or vesting has a value
         mountedRef.current && setNeedsAttest(

@@ -1,4 +1,5 @@
-/* eslint-disable header/header */
+// Copyright 2017-2022 @polkadot/apps authors & contributors
+// SPDX-License-Identifier: Apache-2.0
 import React, { useCallback, useRef, useState } from 'react';
 
 import { useTranslation } from '@polkadot/app-storage/translate';

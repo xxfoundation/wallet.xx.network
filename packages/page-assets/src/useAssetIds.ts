@@ -1,6 +1,7 @@
 // Copyright 2017-2022 @polkadot/app-assets authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
+import type { QueryableStorageEntry } from '@polkadot/api/types';
 import type { Changes } from '@polkadot/react-hooks/useEventChanges';
 import type { StorageKey, u32 } from '@polkadot/types';
 import type { EventRecord } from '@polkadot/types/interfaces';
@@ -29,7 +30,7 @@ function filter (records: EventRecord[]): Changes<u32> {
 
 function useAssetIdsImpl (): u32[] | undefined {
   const { api } = useApi();
-  const startValue = useMapKeys(api.query.assets.asset, OPT_KEY);
+  const startValue = useMapKeys(api.query.assets.asset as unknown as QueryableStorageEntry<'promise'>, OPT_KEY);
 
   return useEventChanges([
     api.events.assets.Created,

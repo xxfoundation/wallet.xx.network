@@ -9,7 +9,7 @@ import type { Snippet } from '@polkadot/app-js/types';
 export const constsStakingParameters: Snippet = {
   value: 'constsStakingParameters',
   text: 'Get staking parameters',
-  label: { color: 'green', children: 'Consts', size: 'tiny' },
+  label: { color: 'green', children: () => 'Consts', size: 'tiny' },
   code: `// Get SRML staking parameters as consts
 // 'parameter_types' were added to substrate with spec_version: 101.
 // This example will throw an error if used with versions before that.

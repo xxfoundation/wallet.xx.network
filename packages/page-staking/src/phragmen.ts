@@ -1,4 +1,6 @@
-// @ts-check
+// Copyright 2017-2022 @polkadot/app-staking authors & contributors
+// SPDX-License-Identifier: Apache-2.0
+
 /* eslint no-param-reassign: */
 import BigNumber from 'bignumber.js';
 import { minBy } from 'lodash';

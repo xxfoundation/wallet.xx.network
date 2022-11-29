@@ -218,7 +218,7 @@ function Playground ({ basePath, className = '' }: Props): React.ReactElement<Pr
       // camelCase keys, that's why 'custom' is passed as a string here
       const snapshot: Snippet = {
         code,
-        label: CUSTOM_LABEL,
+        label: () => CUSTOM_LABEL,
         text: snippetName,
         type: 'custom',
         value: `custom-${Date.now()}`

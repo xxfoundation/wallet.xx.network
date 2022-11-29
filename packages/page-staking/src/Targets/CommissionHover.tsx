@@ -1,3 +1,6 @@
+// Copyright 2017-2022 @polkadot/app-preimages authors & contributors
+// SPDX-License-Identifier: Apache-2.0
+
 import React, { useCallback, useState } from 'react';
 import styled from 'styled-components';
 
@@ -58,7 +61,7 @@ type Props = {
   avgCommission: number;
 }
 
-const CommissionHover: React.FC<Props> = ({ isCommissionReducing, commission, avgCommission }) => {
+const CommissionHover: React.FC<Props> = ({ avgCommission, commission, isCommissionReducing }) => {
   const [hovered, setHovered] = useState<boolean>(false);
   const _setHovered = useCallback((val: boolean) => () => setHovered(val), [setHovered]);
 
@@ -70,8 +73,11 @@ const CommissionHover: React.FC<Props> = ({ isCommissionReducing, commission, av
       onMouseLeave={_setHovered(false)}
     >
       {commission.toFixed(2)}%
-      <Tooltip visible={hovered} color={isCommissionReducing ? 'red' : 'black'}>
-        <span style={{color: 'black'}}>Average commission of past 7 eras:</span> {avgCommission.toFixed(2)}%
+      <Tooltip
+        color={isCommissionReducing ? 'red' : 'black'}
+        visible={hovered}
+      >
+        <span style={{ color: 'black' }}>Average commission of past 7 eras:</span> {avgCommission.toFixed(2)}%
       </Tooltip>
     </Commission>
   );

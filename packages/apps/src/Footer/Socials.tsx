@@ -1,3 +1,5 @@
+// Copyright 2017-2022 @polkadot/apps authors & contributors
+// SPDX-License-Identifier: Apache-2.0
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable sort-keys */
 import React from 'react';

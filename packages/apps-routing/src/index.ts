@@ -18,15 +18,12 @@ import council from './council';
 import democracy from './democracy';
 import explorer from './explorer';
 import extrinsics from './extrinsics';
-import fellowship from './fellowship';
 import files from './files';
 import js from './js';
 import membership from './membership';
 import nfts from './nfts';
 import poll from './poll';
 import preimages from './preimages';
-import ranked from './ranked';
-import referenda from './referenda';
 import rpc from './rpc';
 import runtime from './runtime';
 import settings from './settings';
@@ -52,15 +49,12 @@ export default function create (t: TFunction): Routes {
     staking(t),
     collator(t),
     democracy(t),
-    referenda(t),
     council(t),
     treasury(t),
     bounties(t),
     techcomm(t),
     membership(t),
     alliance(t),
-    fellowship(t),
-    ranked(t),
     preimages(t),
     whitelist(t),
     assets(t),

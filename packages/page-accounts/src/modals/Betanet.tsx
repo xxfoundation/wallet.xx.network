@@ -178,7 +178,7 @@ function Betanet ({ accountId: propSenderId, className = '', onClose }: Props): 
               ? <>
                 <div style={{ display: 'flex' }}>
                   <Modal.RadioGroup
-                    OnChangeOption={setRewardOption}
+                    onChangeOption={setRewardOption}
                     defaultValue={currRewardOption}
                     title='Choose between the following Betanet Reward Options.'
                     value={value}

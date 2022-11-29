@@ -1,12 +1,10 @@
 // Copyright 2017-2022 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Compact } from '@polkadot/types';
-import type { Perbill } from '@polkadot/types/interfaces/runtime';
 import type { Inflation } from '@polkadot/react-hooks/types';
-import type { u32 } from '@polkadot/types';
+import type { Compact } from '@polkadot/types';
 import type { AccountId, Balance, BlockNumber, EraIndex, Exposure, Hash, SessionIndex, ValidatorPrefs, ValidatorPrefsTo196 } from '@polkadot/types/interfaces';
-import type { PalletNominationPoolsPoolMember } from '@polkadot/types/lookup';
+import type { Perbill } from '@polkadot/types/interfaces/runtime';
 import type { BN } from '@polkadot/util';
 
 export type Nominators = Record<string, string[]>;
@@ -123,13 +121,4 @@ export interface SortedTargets {
 export interface PoolAccounts {
   rewardId: string;
   stashId: string;
-}
-
-export interface OwnPoolBase {
-  members: Record<string, PalletNominationPoolsPoolMember>;
-  poolId: u32;
-}
-
-export interface OwnPool extends OwnPoolBase, PoolAccounts {
-  // nothing additional, only combined
 }

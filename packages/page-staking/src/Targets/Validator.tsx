@@ -15,10 +15,10 @@ import { formatNumber } from '@polkadot/util';
 
 import MaxBadge from '../MaxBadge';
 import { NodeLocationContext } from '../NodeLocationContext/context';
-import Favorite from '../Validators/Address/Favorite';
 import { useTranslation } from '../translate';
-import HorizontalBarChart from './HorizontalBarChart';
+import Favorite from '../Validators/Address/Favorite';
 import CommissionHover from './CommissionHover';
+import HorizontalBarChart from './HorizontalBarChart';
 
 interface Props {
   allSlashes?: [BN, UnappliedSlash[]][];
@@ -37,27 +37,25 @@ function queryAddress (address: string): void {
 }
 
 function Validator ({ allSlashes, canSelect, filterName, info, isNominated, isSelected, nominatedBy = [], toggleFavorite, toggleSelected }: Props): React.ReactElement<Props> | null {
-  const {
-    accountId,
+  const { accountId,
     bondOther,
     bondOwn,
     bondTotalWithTM,
-    predictedStake,
-    predictedElected,
     cmixId,
-    isCommissionReducing,
-    pastAvgCommission,
     commissionPer,
     isBlocking,
+    isCommissionReducing,
     isElected,
     isFavorite,
     key,
     nominatingAccounts,
     numNominators,
+    pastAvgCommission,
+    predictedElected,
+    predictedStake,
     rankOverall,
     stakedReturnCmp,
-    teamMultiplier
-  } = info;
+    teamMultiplier } = info;
   const { t } = useTranslation();
   const { api } = useApi();
 
@@ -86,7 +84,7 @@ function Validator ({ allSlashes, canSelect, filterName, info, isNominated, isSe
     () => (allSlashes || [])
       .map(([era, all]) => ({ era, slashes: all.filter(({ validator }) => validator.eq(accountId)) }))
       .filter(({ slashes }) => slashes.length),
-    [allSlashes, info.accountId]
+    [accountId, allSlashes]
   );
 
   const _onQueryStats = useCallback(
@@ -174,8 +172,15 @@ function Validator ({ allSlashes, canSelect, filterName, info, isNominated, isSe
       <td>
         {trimmedLocation}
       </td>
-      <td className='together' colSpan={1}>
-        <CommissionHover isCommissionReducing={isCommissionReducing} commission={commissionPer} avgCommission={pastAvgCommission}/>
+      <td
+        className='together'
+        colSpan={1}
+      >
+        <CommissionHover
+          avgCommission={pastAvgCommission}
+          commission={commissionPer}
+          isCommissionReducing={isCommissionReducing}
+        />
       </td>
       <td
         className='together'
@@ -184,7 +189,10 @@ function Validator ({ allSlashes, canSelect, filterName, info, isNominated, isSe
         <HorizontalBarChart items={barchartItems} />
       </td>
       <td className='number together'>{!bondTotalWithTM.isZero() && <FormatBalance value={bondTotalWithTM} />}</td>
-      <td className='number together' style={{color: predictedElected ? 'green' : 'red'}}>{predictedElected !== undefined ? <FormatBalance value={predictedStake}/> : <Spinner noLabel />}</td>
+      <td
+        className='number together'
+        style={{ color: predictedElected ? 'green' : 'red' }}
+      >{predictedElected !== undefined ? <FormatBalance value={predictedStake} /> : <Spinner noLabel />}</td>
       <td className='number together'>{predictedElected !== undefined ? <>{stakedReturnCmp.toFixed(2)}%</> : <Spinner noLabel />}</td>
       <td className='middle'>
         {!isBlocking && (canSelect || isSelected) && (

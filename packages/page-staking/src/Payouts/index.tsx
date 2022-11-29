@@ -4,7 +4,6 @@
 import type { TFunction } from 'i18next';
 import type { DeriveStakerReward } from '@polkadot/api-derive/types';
 import type { StakerState } from '@polkadot/react-hooks/types';
-import type { OwnPool } from '../types';
 import type { PayoutStash, PayoutValidator } from './types';
 
 import React, { useMemo, useRef, useState } from 'react';
@@ -25,7 +24,6 @@ interface Props {
   className?: string;
   historyDepth?: BN;
   isInElection?: boolean;
-  ownPools?: OwnPool[];
   ownValidators: StakerState[];
 }
 
@@ -159,7 +157,7 @@ function getOptions (blockTime: BN, eraLength: BN | undefined, historyDepth: BN 
   return eraSelection;
 }
 
-function Payouts ({ className = '', historyDepth, isInElection, ownPools, ownValidators }: Props): React.ReactElement<Props> {
+function Payouts ({ className = '', historyDepth, isInElection, ownValidators }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
   const [hasOwnValidators] = useState(() => ownValidators.length !== 0);
@@ -168,17 +166,12 @@ function Payouts ({ className = '', historyDepth, isInElection, ownPools, ownVal
   const eraLength = useCall<BN>(api.derive.session.eraLength);
   const blockTime = useBlockInterval();
 
-  const poolStashes = useMemo(
-    () => ownPools && ownPools.map(({ stashId }) => stashId),
-    [ownPools]
-  );
-
   const eraSelection = useMemo(
     () => getOptions(blockTime, eraLength, historyDepth, t),
     [blockTime, eraLength, historyDepth, t]
   );
 
-  const { allRewards, isLoadingRewards } = useOwnEraRewards(eraSelection[eraSelectionIndex].value, myStashesIndex ? undefined : ownValidators, poolStashes);
+  const { allRewards, isLoadingRewards } = useOwnEraRewards(eraSelection[eraSelectionIndex].value, myStashesIndex ? undefined : ownValidators);
 
   const { stashAvail, stashes, valAvail, validators } = useMemo(
     () => getAvailable(allRewards),

@@ -98,17 +98,11 @@ function Slashes ({ ownStashes = [], slashes }: Props): React.ReactElement<Props
   );
 
   const eraOpts = useMemo(
-    () => rows
-      .map(({ era }) =>
-        api.query.staking.earliestUnappliedSlash || !api.consts.staking.slashDeferDuration
-          ? era
-          : era.sub(api.consts.staking.slashDeferDuration)
-      )
-      .map((era) => ({
-        text: t<string>('era {{era}}', { replace: { era: formatNumber(era) } }),
-        value: era.toString()
-      })),
-    [api, rows, t]
+    () => rows.map(({ era }) => ({
+      text: t<string>('era {{era}}', { replace: { era: formatNumber(era) } }),
+      value: era.toString()
+    })),
+    [rows, t]
   );
 
   const councilId = useMemo(

@@ -1,5 +1,7 @@
+// Copyright 2017-2022 @polkadot/app-claims authors & contributors
+// SPDX-License-Identifier: Apache-2.0
 /* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable header/header */
+/* eslint-disable object-curly-newline */
 
 import { useWeb3 } from '@chainsafe/web3-context';
 import React, { useCallback, useEffect, useState } from 'react';

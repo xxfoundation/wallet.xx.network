@@ -1,6 +1,7 @@
 // Copyright 2017-2022 @polkadot/app-nfts authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
+import type { QueryableStorageEntry } from '@polkadot/api/types';
 import type { Changes } from '@polkadot/react-hooks/useEventChanges';
 import type { StorageKey, u32 } from '@polkadot/types';
 import type { EventRecord } from '@polkadot/types/interfaces';
@@ -31,7 +32,8 @@ function filter (records: EventRecord[]): Changes<u32> {
 
 function useCollectionIdsImpl (): u32[] | undefined {
   const { api } = useApi();
-  const startValue = useMapKeys(api.query.uniques.class, OPT_KEYS);
+  const query = api.query.uniques.class;
+  const startValue = useMapKeys(query as unknown as QueryableStorageEntry<'promise'>, OPT_KEYS);
 
   return useEventChanges([
     api.events.uniques.Created,

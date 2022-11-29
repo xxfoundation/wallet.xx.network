@@ -3,7 +3,7 @@
 
 import type { DeriveCollectiveProposal, DeriveDispatch, DeriveReferendumExt, DeriveSessionProgress } from '@polkadot/api-derive/types';
 import type { Option } from '@polkadot/types';
-import type { BlockNumber, EraIndex, LeasePeriodOf, Scheduled, UnappliedSlash } from '@polkadot/types/interfaces';
+import type { BlockNumber, EraIndex, Scheduled, UnappliedSlash } from '@polkadot/types/interfaces';
 import type { BN } from '@polkadot/util';
 import type { EntryInfo, EntryInfoTyped, EntryType } from './types';
 
@@ -167,19 +167,6 @@ function createScheduled (bestNumber: BlockNumber, blockTime: BN, scheduled: Sch
           return items;
         }, items);
     }, [])]];
-}
-
-function createAuctionInfo (bestNumber: BlockNumber, blockTime: BN, rangeMax: BN, [leasePeriod, endBlock]: [LeasePeriodOf, BlockNumber]): [EntryType, EntryInfo[]][] {
-  const blocks = endBlock.sub(bestNumber);
-
-  return [
-    ['parachainAuction', [{
-      ...newDate(blocks, blockTime),
-      blockNumber: endBlock,
-      blocks,
-      info: `${leasePeriod.toString()} - ${leasePeriod.add(rangeMax).toString()}`
-    }]]
-  ];
 }
 
 function addFiltered (state: EntryInfoTyped[], types: [EntryType, EntryInfo[]][]): EntryInfoTyped[] {

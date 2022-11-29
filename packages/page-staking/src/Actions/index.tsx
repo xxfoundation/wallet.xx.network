@@ -4,7 +4,7 @@
 import '@xxnetwork/custom-types/interfaces/augment';
 
 import type { StakerState } from '@polkadot/react-hooks/types';
-import type { OwnPool, SortedTargets } from '../types';
+import type { SortedTargets } from '../types';
 
 import React, { useMemo, useRef, useState } from 'react';
 
@@ -19,13 +19,11 @@ import Accounts from './Accounts';
 import NewNominator from './NewNominator';
 import NewStash from './NewStash';
 import NewValidator from './NewValidator';
-import Pools from './Pools';
 
 interface Props {
   className?: string;
   isInElection?: boolean;
   minCommission?: BN;
-  ownPools?: OwnPool[];
   ownStashes?: StakerState[];
   next?: string[];
   validators?: string[];
@@ -114,7 +112,7 @@ function formatTotal (stashTypeIndex: number, state: State): React.ReactNode {
   return value && <FormatBalance value={value} />;
 }
 
-function Actions ({ className = '', isInElection, minCommission, ownPools, ownStashes, targets }: Props): React.ReactElement<Props> {
+function Actions ({ className = '', isInElection, minCommission, ownStashes, targets }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
   const allSlashes = useAvailableSlashes();
@@ -184,24 +182,16 @@ function Actions ({ className = '', isInElection, minCommission, ownPools, ownSt
         )}
       </Button.Group>
       <ElectionBanner isInElection={isInElection} />
-      {accTypeIndex === 0
-        ? (
-          <Accounts
-            allSlashes={allSlashes}
-            footer={footer}
-            isInElection={isInElection}
-            list={filtered}
-            minCommission={minCommission}
-            targets={targets}
-          />
-        )
-        : (
-          <Pools
-            allSlashes={allSlashes}
-            list={ownPools}
-            targets={targets}
-          />
-        )
+      {accTypeIndex === 0 && (
+        <Accounts
+          allSlashes={allSlashes}
+          footer={footer}
+          isInElection={isInElection}
+          list={filtered}
+          minCommission={minCommission}
+          targets={targets}
+        />
+      )
       }
     </div>
   );

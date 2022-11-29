@@ -51,9 +51,7 @@ function Slashes ({ buttons, councilId, councilThreshold, slash }: Props): React
   const headerRef = useRef<([string?, string?, number?] | false)[]>([
     [t('era {{era}}/unapplied', {
       replace: {
-        era: api.query.staking.earliestUnappliedSlash || !api.consts.staking.slashDeferDuration
-          ? slash.era.toString()
-          : slash.era.sub(api.consts.staking.slashDeferDuration).toString()
+        era: slash.era.toString()
       }
     }), 'start', 3],
     [t('reporters'), 'address'],

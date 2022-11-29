@@ -1,7 +1,10 @@
 // Copyright 2017-2022 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
+/* eslint-disable object-curly-newline */
+
 import type { ApiPromise } from '@polkadot/api';
+import type { QueryableStorageMultiArg } from '@polkadot/api/types';
 import type { DeriveEraPrefs, DeriveSessionInfo, DeriveStakingElected, DeriveStakingQuery, DeriveStakingWaiting } from '@polkadot/api-derive/types';
 import type { Compact, Option, u32, u128 } from '@polkadot/types';
 import type { SortedTargets, TargetSortBy, ValidatorInfo } from './types';
@@ -140,7 +143,7 @@ function extractSingle (api: ApiPromise, allAccounts: string[], custodyRewardsAc
   const list = new Array<ValidatorInfo>(derive.info.length);
 
   for (let i = 0; i < derive.info.length; i++) {
-    const { accountId, cmixId, exposure = emptyExposure, stakingLedger, validatorPrefs } = derive.info[i];
+    const { accountId, cmixId, exposure, stakingLedger, validatorPrefs } = derive.info[i];
 
     // some overrides (e.g. Darwinia Crab) does not have the own/total field in Exposure
     let [bondOwn, bondTotal] = exposure.total
@@ -178,12 +181,14 @@ function extractSingle (api: ApiPromise, allAccounts: string[], custodyRewardsAc
 
     const validatorNominators = (exposure.others || []).map((indv) => indv.who.toString());
     const ownNominatingAccounts = validatorNominators.filter((id) => allAccounts.includes(id));
-    const currEraPrefs = erasPrefs && erasPrefs[erasPrefs.length-1];
+    const currEraPrefs = erasPrefs && erasPrefs[erasPrefs.length - 1];
     const commission = (!isWaitingDerive(derive) && currEraPrefs?.validators[key]) ? currEraPrefs?.validators[key].commission : validatorPrefs.commission;
     const commissionPer = validatorPrefs.commission.unwrap().toNumber() / 10_000_000;
     const pastCommissions: number[] = [];
+
     erasPrefs?.forEach((eraPrefs) => {
       const comm = eraPrefs.validators[key] && eraPrefs.validators[key].commission.unwrap().toNumber() / 10_000_000;
+
       if (comm) {
         pastCommissions.push(comm);
       }
@@ -203,16 +208,14 @@ function extractSingle (api: ApiPromise, allAccounts: string[], custodyRewardsAc
       bondShare: 0,
       bondTotal,
       bondTotalWithTM,
-      electedStake,
-      predictedStake: BN_ZERO,
       cmixId,
       commission,
       commissionPer,
-      pastAvgCommission,
-      isCommissionReducing,
+      electedStake,
       exposure,
       isActive: !skipRewards,
       isBlocking: !!(validatorPrefs.blocked && validatorPrefs.blocked.isTrue),
+      isCommissionReducing,
       isElected: !isWaitingDerive(derive) && derive.nextElected.some((e) => e.eq(accountId)),
       isFavorite: favorites.includes(key),
       isNominating: (exposure.others || []).reduce((isNominating, indv): boolean => {
@@ -234,13 +237,15 @@ function extractSingle (api: ApiPromise, allAccounts: string[], custodyRewardsAc
       numRecentPayouts: earliestEra
         ? stakingLedger.claimedRewards.filter((era) => era.gte(earliestEra)).length
         : 0,
+      pastAvgCommission,
+      predictedStake: BN_ZERO,
       rankBondOther: 0,
       rankBondOwn: 0,
       rankBondTotal: 0,
-      rankPredictedStake: 0,
       rankComm: 0,
       rankNumNominators: 0,
       rankOverall: 0,
+      rankPredictedStake: 0,
       rankReward: 0,
       rankTeamMultiplier: 0,
       skipRewards,
@@ -377,16 +382,28 @@ const transformEra = {
 function useSortedTargetsImpl (favorites: string[]): SortedTargets {
   const { api } = useApi();
   const { allAccounts } = useAccounts();
-  const { counterForNominators, counterForValidators, historyDepth, maxNominatorsCount, maxValidatorsCount, minNominatorBond, minValidatorBond, totalIssuance } = useCallMulti<MultiResult>([
-    api.query.staking.historyDepth,
-    api.query.staking.counterForNominators,
-    api.query.staking.counterForValidators,
-    api.query.staking.maxNominatorsCount,
-    api.query.staking.maxValidatorsCount,
-    api.query.staking.minNominatorBond,
-    api.query.staking.minValidatorBond,
-    api.query.balances?.totalIssuance
-], OPT_MULTI);
+  const {
+    counterForNominators,
+    counterForValidators,
+    historyDepth,
+    maxNominatorsCount,
+    maxValidatorsCount,
+    minNominatorBond,
+    minValidatorBond,
+    totalIssuance
+  } = useCallMulti<MultiResult>(
+    [
+      api.query.staking.historyDepth,
+      api.query.staking.counterForNominators,
+      api.query.staking.counterForValidators,
+      api.query.staking.maxNominatorsCount,
+      api.query.staking.maxValidatorsCount,
+      api.query.staking.minNominatorBond,
+      api.query.staking.minValidatorBond,
+      api.query.balances?.totalIssuance
+    ] as QueryableStorageMultiArg<'promise'>[],
+    OPT_MULTI
+  );
   const electedInfo = useCall<DeriveStakingElectedWithCustody>(api.derive.staking.electedInfo, [{ ...DEFAULT_FLAGS_ELECTED, withLedger: true }]);
   const waitingInfo = useCall<DeriveStakingWaitingWithCustody>(api.derive.staking.waitingInfo, [{ ...DEFAULT_FLAGS_WAITING, withLedger: true }]);
   const lastEraInfo = useCall<LastEra>(api.derive.session.info, undefined, transformEra);

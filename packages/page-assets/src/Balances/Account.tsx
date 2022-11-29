@@ -1,8 +1,7 @@
 // Copyright 2017-2022 @polkadot/app-assets authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { PalletAssetsAssetAccount } from '@polkadot/types/lookup';
-import type { bool } from '@polkadot/types-codec';
+import type { PalletAssetsAssetBalance } from '@polkadot/types/lookup';
 import type { BN } from '@polkadot/util';
 
 import React from 'react';
@@ -13,9 +12,7 @@ import { FormatBalance } from '@polkadot/react-query';
 import { useTranslation } from '../translate';
 import Transfer from './Transfer';
 
-interface Account extends PalletAssetsAssetAccount {
-  sufficient?: bool
-}
+type Account = PalletAssetsAssetBalance
 
 interface Props {
   account: Account;
@@ -26,7 +23,7 @@ interface Props {
   siFormat: [number, string];
 }
 
-function Account ({ account: { balance, isFrozen, reason, sufficient }, accountId, assetId, className, minBalance, siFormat }: Props): React.ReactElement<Props> {
+function Account ({ account: { balance, isFrozen, sufficient }, accountId, assetId, className, minBalance, siFormat }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
 
   return (
@@ -40,7 +37,7 @@ function Account ({ account: { balance, isFrozen, reason, sufficient }, accountI
       <td className='start'>
         {sufficient
           ? sufficient.isTrue ? t<string>('Yes') : t<string>('No')
-          : reason?.toString()}
+          : t('No reason provided')}
       </td>
       <td className='number all'>
         <FormatBalance

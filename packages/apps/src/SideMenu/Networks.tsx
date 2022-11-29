@@ -1,4 +1,5 @@
-/* eslint-disable header/header */
+// Copyright 2017-2022 @polkadot/apps authors & contributors
+// SPDX-License-Identifier: Apache-2.0
 
 import type { LinkOption } from '@polkadot/apps-config/settings/types';
 import type { Group } from './types';

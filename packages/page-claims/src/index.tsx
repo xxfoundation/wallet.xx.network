@@ -330,7 +330,7 @@ function ClaimsApp ({ basePath }: Props): React.ReactElement<Props> {
               (step >= Step.ValidateEthAddress && signMethod === Step.SignMetamask && !isOldClaimProcess) && (
                 <Card withBottomMargin>
                   <h3>{t<string>('3. Confirm ETH address from the sale.')}</h3>
-                  <MetamaskAddress OnChangeEthAddress={setEthereumAddress} />
+                  <MetamaskAddress onChangeEthAddress={setEthereumAddress} />
                   {(step === Step.ValidateEthAddress) && (
                     <Button.Group>
                       <Button

@@ -1,6 +1,7 @@
 // Copyright 2017-2022 @polkadot/app-democracy authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
+import type { QueryableStorageMultiArg } from '@polkadot/api/types';
 import type { BN } from '@polkadot/util';
 
 import React from 'react';
@@ -27,7 +28,7 @@ function Summary ({ referendumCount }: Props): React.ReactElement<Props> {
   const [publicPropCount, referendumTotal] = useCallMulti<[BN | undefined, BN | undefined]>([
     api.query.democracy.publicPropCount,
     api.query.democracy.referendumCount
-  ], optMulti);
+  ] as QueryableStorageMultiArg<'promise'>[], optMulti);
 
   return (
     <SummaryBox>

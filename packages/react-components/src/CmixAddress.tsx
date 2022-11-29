@@ -1,5 +1,8 @@
+// Copyright 2017-2022 @polkadot/apps authors & contributors
+// SPDX-License-Identifier: Apache-2.0
+
 /* eslint-disable multiline-ternary */
-/* eslint-disable header/header */
+
 import base64url from 'base64url';
 import React from 'react';
 import { useTranslation } from 'react-i18next';

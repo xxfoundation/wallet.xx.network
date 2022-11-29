@@ -49,15 +49,15 @@ function getProgressInfo (value?: BN, total?: BN): ProgressInfo | undefined {
     : undefined;
 }
 
-function Summary ({ avgStaked, lastEra, lowStaked, custodyRewardsActive, minNominated, minNominatorBond, stakedReturn, totalIssuance, totalStaked }: Props): React.ReactElement<Props> {
+function Summary ({ avgStaked, custodyRewardsActive, lastEra, lowStaked, minNominated, minNominatorBond, stakedReturn, totalIssuance, totalStaked }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
-  const lastReward = useCall<BN>(lastEra && api.query.staking.erasValidatorReward, [lastEra], transformReward);
+  const lastReward = useCall<BN>(lastEra && api.query.staking.erasValidatorReward, [lastEra], OPT_REWARD);
   const totalStakeableIssuance = useTotalStakeableIssuance();
 
   const helpReturns = t('Network overall staking return. This is calculated from the current staked ratio, current ideal interest and inflation parameters.');
-  const helpStaked = t('Team multipliers are not counted in total staked, but impact staking returns')
-  const helpLowest = t('Team multipliers are included in the lowest / avg staked numbers')
+  const helpStaked = t('Team multipliers are not counted in total staked, but impact staking returns');
+  const helpLowest = t('Team multipliers are included in the lowest / avg staked numbers');
 
   const progressStake = useMemo(
     () => getProgressInfo(totalStaked, totalIssuance),

@@ -1,10 +1,15 @@
 // Copyright 2017-2022 @polkadot/app-preimages authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 import type { ApiPromise } from '@polkadot/api';
 import type { Bytes, Option } from '@polkadot/types';
 import type { Call, Hash } from '@polkadot/types/interfaces';
-import type { FrameSupportPreimagesBounded, PalletPreimageRequestStatus } from '@polkadot/types/lookup';
 import type { BN } from '@polkadot/util';
 import type { HexString } from '@polkadot/util/types';
 import type { Preimage } from './types';
@@ -14,7 +19,7 @@ import { useMemo } from 'react';
 import { createNamedHook, useApi, useCall } from '@polkadot/react-hooks';
 import { BN_ZERO, isBn, isString } from '@polkadot/util';
 
-function createResult (api: ApiPromise, optStatus: Option<PalletPreimageRequestStatus>, optBytes: Option<Bytes>, [proposalHash, proposalLength]: [HexString, BN]): Preimage {
+function createResult (api: ApiPromise, optStatus: Option<any>, optBytes: Option<Bytes>, [proposalHash, proposalLength]: [HexString, BN]): Preimage {
   const status = optStatus.unwrapOr(null);
   const bytes = optBytes.unwrapOr(null);
   let count = 0;
@@ -48,7 +53,7 @@ function createResult (api: ApiPromise, optStatus: Option<PalletPreimageRequestS
   };
 }
 
-function getParams (hash: Hash | HexString, optStatus: Option<PalletPreimageRequestStatus>): [HexString, BN] {
+function getParams (hash: Hash | HexString, optStatus: Option<any>): [HexString, BN] {
   const status = optStatus.unwrapOr(null);
   const hexHash = isString(hash)
     ? hash
@@ -61,12 +66,12 @@ function getParams (hash: Hash | HexString, optStatus: Option<PalletPreimageRequ
     : [hexHash, BN_ZERO];
 }
 
-export function getPreimageHash (hashOrBounded: Hash | HexString | FrameSupportPreimagesBounded): HexString {
+export function getPreimageHash (hashOrBounded: Hash | HexString | any): HexString {
   if (isString(hashOrBounded)) {
-    return hashOrBounded;
+    return hashOrBounded as `0x${string}`;
   }
 
-  const bounded = hashOrBounded as FrameSupportPreimagesBounded;
+  const bounded = hashOrBounded;
 
   return bounded.isInline
     ? bounded.asInline.hash.toHex()
@@ -77,7 +82,7 @@ export function getPreimageHash (hashOrBounded: Hash | HexString | FrameSupportP
         : hashOrBounded.toHex();
 }
 
-function usePreimageImpl (hashOrBounded?: Hash | HexString | FrameSupportPreimagesBounded | null): Preimage | undefined {
+function usePreimageImpl (hashOrBounded?: Hash | HexString | any | null): Preimage | undefined {
   const { api } = useApi();
 
   const hash = useMemo(
@@ -85,7 +90,7 @@ function usePreimageImpl (hashOrBounded?: Hash | HexString | FrameSupportPreimag
     [hashOrBounded]
   );
 
-  const optStatus = useCall<Option<PalletPreimageRequestStatus>>(hash && api.query.preimage.statusFor, [hash]);
+  const optStatus = useCall<Option<any>>(hash && api.query.preimage.statusFor, [hash]);
 
   const params = useMemo(
     () => hash && optStatus && getParams(hash, optStatus),

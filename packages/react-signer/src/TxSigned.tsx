@@ -6,8 +6,7 @@ import type { SubmittableExtrinsic } from '@polkadot/api/types';
 import type { Ledger } from '@polkadot/hw-ledger';
 import type { KeyringPair } from '@polkadot/keyring/types';
 import type { QueueTx, QueueTxMessageSetStatus } from '@polkadot/react-components/Status/types';
-import type { Option } from '@polkadot/types';
-import type { Multisig, Timepoint } from '@polkadot/types/interfaces';
+import type { Timepoint } from '@polkadot/types/interfaces';
 import type { HexString } from '@polkadot/util/types';
 import type { AddressFlags, AddressProxy, QrState } from './types';
 
@@ -118,11 +117,10 @@ async function wrapTx (api: ApiPromise, currentItem: QueueTx, { isMultiCall, mul
     tx = api.tx.proxy.proxy(proxyRoot, null, tx);
   }
 
-  if (multiRoot) {
-    const multiModule = api.tx.multisig ? 'multisig' : 'utility';
+  if (multiRoot && api.tx.multisig) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const [info, { weight }] = await Promise.all([
-      api.query[multiModule].multisigs(multiRoot, tx.method.hash),
+      api.query.multisig.multisigs(multiRoot, tx.method.hash),
       tx.paymentInfo(multiRoot) as Promise<{ weight: any }>
     ]);
 
@@ -137,19 +135,19 @@ async function wrapTx (api: ApiPromise, currentItem: QueueTx, { isMultiCall, mul
     }
 
     tx = isMultiCall
-      ? api.tx[multiModule].asMulti.meta.args.length === 6
+      ? api.tx.multisig.asMulti.meta.args.length === 6
         // We are doing toHex here since we have a Vec<u8> input
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        ? api.tx[multiModule].asMulti(threshold, others, timepoint, tx.method.toHex(), false, weight)
+        ? api.tx.multisig.asMulti(threshold, others, timepoint, tx.method.toHex(), false, weight)
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        : api.tx[multiModule].asMulti(threshold, others, timepoint, tx.method)
-      : api.tx[multiModule].approveAsMulti.meta.args.length === 5
+        : api.tx.multisig.asMulti(threshold, others, timepoint, tx.method)
+      : api.tx.multisig.approveAsMulti.meta.args.length === 5
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        ? api.tx[multiModule].approveAsMulti(threshold, others, timepoint, tx.method.hash, weight)
+        ? api.tx.multisig.approveAsMulti(threshold, others, timepoint, tx.method.hash, weight)
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        : api.tx[multiModule].approveAsMulti(threshold, others, timepoint, tx.method.hash);
+        : api.tx.multisig.approveAsMulti(threshold, others, timepoint, tx.method.hash);
   }
 
   return tx;

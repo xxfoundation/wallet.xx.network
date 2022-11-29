@@ -4,19 +4,16 @@
 import type { DeriveBalancesAll, DeriveSessionProgress, DeriveStakingAccount } from '@polkadot/api-derive/types';
 import type { StakerState } from '@polkadot/react-hooks/types';
 import type { Option, StorageKey } from '@polkadot/types';
-import type { AccountId32, SlashingSpans, UnappliedSlash } from '@polkadot/types/interfaces';
-import type { PalletStakingStakingLedger, PalletStakingValidatorPrefs } from '@polkadot/types/lookup';
-
-
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import type { PalletStakingUnappliedSlash } from '@polkadot/types/lookup';
+import type { AccountId32 } from '@polkadot/types/interfaces';
+import type { PalletStakingStakingLedger, PalletStakingUnappliedSlash, PalletStakingValidatorPrefs } from '@polkadot/types/lookup';
 import type { SortedTargets } from '../../types';
 import type { Slash } from '../types';
 
+import React, { useCallback, useContext, useMemo } from 'react';
 import styled from 'styled-components';
 
 import { ApiPromise } from '@polkadot/api';
-import { AddressInfo, AddressMini, AddressSmall, Badge, Button, Checkbox, Menu, Popup, StakingBonded, StakingRedeemable, StakingUnbonding, StatusContext, TxButton } from '@polkadot/react-components';
+import { AddressInfo, AddressMini, AddressSmall, Badge, Button, Menu, Popup, StakingBonded, StakingRedeemable, StakingUnbonding, StatusContext, TxButton } from '@polkadot/react-components';
 import { useApi, useCall, useToggle } from '@polkadot/react-hooks';
 import { BN, formatNumber, isFunction } from '@polkadot/util';
 
@@ -81,7 +78,7 @@ function useControllerCalls (api: ApiPromise, controllerId: string | null) {
   return stakingLedger?.unwrapOr(undefined);
 }
 
-function Account ({ allSlashes, className = '', info: { controllerId, destination, hexSessionIdNext, hexSessionIdQueue, isLoading, isOwnController, isOwnStash, isStashNominating, isStashValidating, nominating, sessionIds, stakingLedger, stashId }, isDisabled, targets, minCommission }: Props): React.ReactElement<Props> {
+function Account ({ allSlashes, className = '', info: { controllerId, destination, hexSessionIdNext, hexSessionIdQueue, isLoading, isOwnController, isOwnStash, isStashNominating, isStashValidating, nominating, sessionIds, stakingLedger, stashId }, isDisabled, minCommission, targets }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
   const { queueExtrinsic } = useContext(StatusContext);
@@ -100,6 +97,9 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
   const totalUnlocking = stakingAccount && (stakingAccount.unlocking || []).reduce((acc, { value }) => acc.iadd(value), new BN(0));
 
   const ledger = useControllerCalls(api, controllerId);
+  const ledgers = useMemo(() => stakingLedgers?.map((elem) => {
+    return elem[1].unwrap();
+  }) || [], [stakingLedgers]);
   const cmixId = ledger?.cmixId.isSome ? ledger?.cmixId.unwrap().toString() : undefined;
 
   const sessionInfo = useCall<DeriveSessionProgress>(api.derive.session?.progress);
@@ -223,7 +223,7 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
         {isTransferCmixIdOpen && cmixId && (
           <TransferCmixId
             cmixId={cmixId}
-            ledger={stakingLedgers?.map((elem) => { return elem[1].unwrap(); }) || []}
+            ledgers={ledgers}
             onClose={toggleTransferCmixId}
             stashId={stashId}
             stashes={bondedAddresses}
@@ -344,8 +344,8 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
                     {t<string>('Rebond unlocked funds')}
                   </Menu.Item>
                   <Menu.Item
-                    label={t<string>('Withdraw unbonded funds')}
                     isDisabled={!isOwnController || !stakingAccount || !stakingAccount.redeemable || !stakingAccount.redeemable.gtn(0)}
+                    label={t<string>('Withdraw unbonded funds')}
                     onClick={withdrawFunds}
                   />
                   <Menu.Divider />

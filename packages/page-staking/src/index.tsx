@@ -17,6 +17,7 @@ import basicMd from './md/basic.md';
 import NodeLocationsProvider from './NodeLocationContext/Provider';
 import Actions from './Actions';
 import { STORE_FAVS_BASE } from './constants';
+import Nominators from './Nominators';
 import Payouts from './Payouts';
 import Query from './Query';
 import Slashes from './Slashes';
@@ -32,6 +33,7 @@ const MIN_COMM = new BN(2);
 function createPathRef (basePath: string): Record<string, string | string[]> {
   return {
     bags: `${basePath}/bags`,
+    nominators: `${basePath}/nominators`,
     payout: `${basePath}/payout`,
     pools: `${basePath}/pools`,
     query: [
@@ -104,10 +106,6 @@ function StakingApp ({ basePath, className = '' }: Props): React.ReactElement<Pr
       name: 'nominators',
       text: t<string>('Nominators')
     },
-    {
-      name: 'waiting',
-      text: t<string>('Waiting')
-    },
     hasStashes && isFunction((api.query.voterBagsList || api.query.bagsList || api.query.voterList)?.counterForListNodes) && {
       name: 'bags',
       text: t<string>('Bags')
@@ -162,6 +160,9 @@ function StakingApp ({ basePath, className = '' }: Props): React.ReactElement<Pr
               toggleFavorite={toggleFavorite}
               toggleNominatedBy={toggleNominatedBy}
             />
+          </Route>
+          <Route path={pathRef.current.nominators}>
+            <Nominators ownStashes={ownStashes} />
           </Route>
         </Switch>
         <Actions

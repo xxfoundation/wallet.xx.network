@@ -1,5 +1,6 @@
 // Copyright 2017-2022 @polkadot/apps authors & contributors
 // SPDX-License-Identifier: Apache-2.0
+
 import type { StakerState } from '@polkadot/react-hooks/types';
 import type { Option, StorageKey, u32 } from '@polkadot/types';
 
@@ -91,7 +92,7 @@ function buildVotersListFromChain (chainData: ChainData, ownNominators: StakerSt
       voters.push({
         nominatorId: nomId,
         stake: ledger.active.toString(),
-        targets: filteredTargets,
+        targets: filteredTargets
       });
     }
   });
@@ -179,7 +180,16 @@ function useElectionPredictionImpl (ownNominators: StakerState[] | undefined): E
 
       return undefined;
     },
-    [bonded, ledger, validators, nominators, slashes, ownNominators, count, snapshot]
+    [
+      bonded,
+      ledger,
+      validators,
+      nominators,
+      slashes,
+      ownNominators,
+      count,
+      snapshot
+    ]
   );
 
   return electedStakes;

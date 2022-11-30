@@ -279,15 +279,12 @@ function Targets ({ className = '', isInElection, nominatedBy, ownStashes, targe
 
   useEffect(() => {
     if (electionPrediction && validators) {
-      console.time('Starting');
       validators.forEach((value) => {
         const key = value.accountId.toString();
 
         value.predictedStake = (electionPrediction[key]?.[1]) || BN_ZERO;
         value.predictedElected = (electionPrediction[key]?.[0]) || false;
       });
-
-      console.timeEnd('Starting');
     }
   }, [electionPrediction, validators]);
 

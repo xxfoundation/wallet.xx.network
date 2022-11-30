@@ -113,9 +113,13 @@ function makeSorter (transformer: (n: Nominator) => number): (a: Nominator, b: N
     const x = transformer(a);
     const y = transformer(b);
 
-    if (x > y) { return 1; }
+    if (x > y) {
+      return 1;
+    }
 
-    if (x < y) { return -1; }
+    if (x < y) {
+      return -1;
+    }
 
     return 0;
   };
@@ -185,17 +189,33 @@ function Nominators ({ ownStashes }: Props): React.ReactElement<Props> {
   const nominators = useNominators();
   const nominatorIds = useMemo(() => nominators?.map(({ accountId }) => accountId), [nominators]);
   const teamMultipliers = useCall<[StorageKey<[AccountId32]>, undefined][]>(api.query.xxCustody.custodyAccounts.entries);
-  const teamMultipliersAddresses = (teamMultipliers?.map(([accountId]: [StorageKey<[AccountId32]>, undefined]) => { return accountId.toHuman(); }) as string[])?.map(([elem]) => { return elem; });
+  const teamMultipliersAddresses = useMemo(
+    () => teamMultipliers?.map(([accountId]) => accountId[0]?.toString()),
+    [teamMultipliers]
+  );
   const identities = useIdentities(nominatorIds);
-  const ownStashIds = ownStashes?.map(({ stashId }) => stashId);
+  const ownStashIds = useMemo(() => ownStashes?.map(({ stashId }) => stashId), [ownStashes]);
 
   // we have a very large list, so we use a loading delay
   const isLoading = useLoadingDelay();
 
   const filtered = useMemo(
-    () => applyFilters(toggles.withIdentity, toggles.withAccountNominations, identities, nominators, teamMultipliersAddresses, ownStashIds),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [toggles.withIdentity, toggles.withAccountNominations, identities, nominators, teamMultipliersAddresses, ownStashIds]
+    () => applyFilters(
+      toggles.withIdentity,
+      toggles.withAccountNominations,
+      identities,
+      nominators,
+      teamMultipliersAddresses,
+      ownStashIds
+    ),
+    [
+      toggles.withIdentity,
+      toggles.withAccountNominations,
+      identities,
+      nominators,
+      teamMultipliersAddresses,
+      ownStashIds
+    ]
   );
 
   const labels = useRef<Record<Sorts, string>>({

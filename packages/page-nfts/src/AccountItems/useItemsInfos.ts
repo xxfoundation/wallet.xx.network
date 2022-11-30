@@ -1,5 +1,6 @@
 // Copyright 2017-2022 @polkadot/app-nfts authors & contributors
 // SPDX-License-Identifier: Apache-2.0
+
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */

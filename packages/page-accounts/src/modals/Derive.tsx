@@ -208,7 +208,7 @@ function Derive ({ className = '', from, onClose }: Props): React.ReactElement {
                   onCommit={_onCommit}
                   setName={setName}
                   setPassword={setPassword}
-                />
+                />;
               </AddressRow>
             )}
           </Modal.Content>

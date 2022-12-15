@@ -11,7 +11,7 @@ import { AddressRow, Button, Checkbox, Dropdown, Expander, Input, MarkError, Mar
 import { useLedger, useStepper } from '@polkadot/react-hooks';
 import { keyring } from '@polkadot/ui-keyring';
 import { settings } from '@polkadot/ui-settings';
-import { isHex, u8aToHex } from '@polkadot/util';
+import { isHex, nextTick, u8aToHex } from '@polkadot/util';
 import { hdLedger, hdValidatePath, keyExtractSuri, mnemonicValidate } from '@polkadot/util-crypto';
 
 import { useTranslation } from '../translate';
@@ -172,11 +172,9 @@ function Create ({ className = '', onClose, onStatusChange, seed: propsSeed, typ
   );
 
   const _onChangeSeed = useCallback(
-    (newSeed: string) => {
-      setAddress(
-        updateAddress(newSeed, derivePath, seedType, pairType)
-      );
-    },
+    (newSeed: string) => setAddress(
+      updateAddress(newSeed, derivePath, seedType, pairType)
+    ),
     [derivePath, pairType, seedType]
   );
 
@@ -199,14 +197,14 @@ function Create ({ className = '', onClose, onStatusChange, seed: propsSeed, typ
       }
 
       setIsBusy(true);
-      setTimeout((): void => {
+      nextTick((): void => {
         const options = { genesisHash: genesisHashString, isHardware: false, name: name.trim() };
         const status = createAccount(seed, derivePath, pairType, options, password, t<string>('created account'));
 
         onStatusChange(status);
         setIsBusy(false);
         onClose();
-      }, 0);
+      });
     }, [derivePath, isValid, name, onClose, onStatusChange, pairType, password, seed, t]
   );
 
@@ -332,7 +330,7 @@ function Create ({ className = '', onClose, onStatusChange, seed: propsSeed, typ
             onCommit={_onCommit}
             setName={setName}
             setPassword={setPassword}
-          />
+          />;
           <Modal.Columns>
             <ExternalWarning />
           </Modal.Columns>

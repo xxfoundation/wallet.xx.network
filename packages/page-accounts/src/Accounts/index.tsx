@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { ActionStatus } from '@polkadot/react-components/Status/types';
-import type { PalletIdentityRegistration } from '@polkadot/types/lookup';
-import type { Option } from '@polkadot/types-codec';
-import type { KeyringAddress } from '@polkadot/ui-keyring/types';
 import type { BN } from '@polkadot/util';
 import type { AccountBalance, Delegation, SortedAccount } from '../types';
 
@@ -12,8 +9,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import styled from 'styled-components';
 
 import { InjectionPreference } from '@polkadot/react-api/types';
-import { Button, FilterInput, MarkWarning, PaginationAdvanced, SortDropdown, SummaryBox, Table } from '@polkadot/react-components';
-import { useAccounts, useApi, useCall, useDelegations, useFavorites, useIpfs, useLedger, useLoadingDelay, usePagination, useProxies, useToggle } from '@polkadot/react-hooks';
+import { Button, FilterInput, PaginationAdvanced, SortDropdown, SummaryBox, Table } from '@polkadot/react-components';
+import { useAccounts, useApi, useDelegations, useFavorites, useIpfs, useLedger, useLoadingDelay, usePagination, useProxies, useToggle } from '@polkadot/react-hooks';
 import { keyring } from '@polkadot/ui-keyring';
 import { BN_ZERO, isFunction } from '@polkadot/util';
 
@@ -49,37 +46,10 @@ const DEFAULT_SORT_CONTROLS: SortControls = { sortBy: 'date', sortFromMax: true 
 
 const STORE_FAVS = 'accounts:favorites';
 
-function filterAccounts (accounts: (KeyringAddress | undefined)[], identities?: Option<PalletIdentityRegistration>[], filter?: string) {
-  const _filter = filter?.toLowerCase() ?? '';
-
-  return accounts.filter((acct, index) => {
-    const tags = acct?.meta.tags as string[];
-    const identity: PalletIdentityRegistration | undefined = identities?.[index]?.unwrapOr(undefined);
-
-    const display = identity?.info?.display.toString() ?? '';
-    const nameMatches = acct?.meta.name?.toLowerCase().includes(_filter);
-    const displayMatches = display?.toLowerCase().includes(_filter);
-    const tagsMatches = tags?.reduce((result: boolean, tag: string): boolean => {
-      return result || tag.toLowerCase().includes(_filter);
-    }, false);
-
-    return (_filter?.length ?? 0) === 0 || nameMatches || displayMatches || tagsMatches;
-  });
-}
-
-const dropdownOptions = sortCategory.map((x) => ({ text: x, value: x }));
-
 function Overview ({ className = '', onStatusChange }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api, canInject, loadInjectionPreference } = useApi();
   const { allAccounts, hasAccounts } = useAccounts();
-  const identities = useCall<Option<PalletIdentityRegistration>[]>(api.query.identity?.identityOf.multi, [allAccounts]);
-  const keyringAccounts = useMemo(() => allAccounts.map((acct) => keyring.getAccount(acct)), [allAccounts]);
-  const [filterOn, setFilter] = useState<string>('');
-  const filtered = useMemo(
-    () => filterAccounts(keyringAccounts, identities, filterOn),
-    [filterOn, identities, keyringAccounts]
-  );
   const { isIpfs } = useIpfs();
   const { isLedgerEnabled } = useLedger();
   const [isCreateOpen, toggleCreate, setIsCreateOpen] = useToggle();
@@ -91,6 +61,7 @@ function Overview ({ className = '', onStatusChange }: Props): React.ReactElemen
   const [isExportOpen, toggleExport] = useToggle();
   const [favorites, toggleFavorite] = useFavorites(STORE_FAVS);
   const [balances, setBalances] = useState<Balances>({ accounts: {} });
+  const [filterOn, setFilter] = useState<string>('');
   const [sortedAccounts, setSorted] = useState<SortedAccount[]>([]);
   const [{ sortBy, sortFromMax }, setSortBy] = useState<SortControls>(DEFAULT_SORT_CONTROLS);
   const delegations = useDelegations();
@@ -156,12 +127,10 @@ function Overview ({ className = '', onStatusChange }: Props): React.ReactElemen
   ]);
 
   useEffect((): void => {
+    // We add new accounts to the end
     setSorted((sortedAccounts) =>
-      [
-        ...sortedAccounts.map((x) => accountsWithInfo.find((y) => x.address === y.address)).filter((x): x is SortedAccount => !!x),
-        ...accountsWithInfo.filter((x) => !sortedAccounts.find((y) => x.address === y.address))
-      ]
-    );
+      [...sortedAccounts.map((x) => accountsWithInfo.find((y) => x.address === y.address)).filter((x): x is SortedAccount => !!x),
+        ...accountsWithInfo.filter((x) => !sortedAccounts.find((y) => x.address === y.address))]);
   }, [accountsWithInfo]);
 
   const accounts = balances.accounts;
@@ -203,7 +172,7 @@ function Overview ({ className = '', onStatusChange }: Props): React.ReactElemen
   const accountComponents = useMemo(() => {
     const ret: Record<string, React.ReactNode> = {};
 
-    accountsWithInfo?.forEach(({ account, address, delegation, isFavorite }, index) => {
+    accountsWithInfo.forEach(({ account, address, delegation, isFavorite }, index) => {
       ret[address] =
         <Account
           account={account}
@@ -220,16 +189,11 @@ function Overview ({ className = '', onStatusChange }: Props): React.ReactElemen
     return ret;
   }, [accountsWithInfo, filterOn, proxies, _setBalance, toggleFavorite]);
 
-  const onDropdownChange = useCallback((item: SortCategory) => setSortBy({ sortBy: item, sortFromMax }), [sortFromMax]);
+  const onDropdownChange = () => (item: SortCategory) => setSortBy({ sortBy: item, sortFromMax });
 
-  const onSortDirectionChange = useCallback(() => setSortBy({ sortBy, sortFromMax: !sortFromMax }), [sortBy, sortFromMax]);
+  const dropdownOptions = () => sortCategory.map((x) => ({ text: x, value: x }));
 
-  const banner = <>If you previously used this web wallet and do not find your accounts preloaded here, please visit {' '}
-    <a
-      href='https://explorer.xx.network'
-      rel='noopener noreferrer'
-      target='_blank'
-    >explorer.xx.network</a> and come back.</>;
+  const onSortDirectionChange = () => () => setSortBy({ sortBy, sortFromMax: !sortFromMax });
 
   return (
     <div className={className}>
@@ -282,9 +246,9 @@ function Overview ({ className = '', onStatusChange }: Props): React.ReactElemen
           <SortDropdown
             defaultValue={sortBy}
             label={t<string>('sort by')}
-            onChange={onDropdownChange}
-            onClick={onSortDirectionChange}
-            options={dropdownOptions}
+            onChange={onDropdownChange()}
+            onClick={onSortDirectionChange()}
+            options={dropdownOptions()}
             sortDirection={sortFromMax ? 'ascending' : 'descending'}
           />
           <FilterInput
@@ -307,7 +271,7 @@ function Overview ({ className = '', onStatusChange }: Props): React.ReactElemen
             onClick={_openCreateModal}
           />
           <Button
-            icon='plus'
+            icon='sync'
             isDisabled={isIpfs}
             label={t<string>('Import')}
             onClick={toggleImport}
@@ -346,9 +310,6 @@ function Overview ({ className = '', onStatusChange }: Props): React.ReactElemen
           />
         </Button.Group>
       </SummaryBox>
-      <MarkWarning
-        content={banner}
-      />
       <Table
         empty={!isLoading && finalList && t<string>("You don't have any accounts. Some features are currently hidden and will only become available once you have accounts.")}
         header={header.current}

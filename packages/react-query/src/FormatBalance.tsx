@@ -110,10 +110,6 @@ export default React.memo(styled(FormatBalance)`
   vertical-align: baseline;
   white-space: nowrap;
 
-  &.betanet {
-    margin-bottom: 2em;
-  }
-
   * {
     vertical-align: baseline !important;
   }

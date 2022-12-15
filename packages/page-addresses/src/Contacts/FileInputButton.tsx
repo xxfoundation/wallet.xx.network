@@ -53,7 +53,7 @@ function JSONInputButton ({ onChange, ...props }: Props) {
       value={value}
     />
     <Button
-      icon='plus'
+      icon='sync'
       label={t<string>('Import')}
       onClick={onClick}
     />

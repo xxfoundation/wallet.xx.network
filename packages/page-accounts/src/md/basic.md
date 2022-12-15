@@ -34,7 +34,7 @@ Accounts with a balance lower than the minimal amount (existential deposit) will
 (All remaining funds lost, and the account's state removed from the network). Learn more on the polkadot wiki.
 
 
-Accounts with under 1 XX for Polkadot are considered as nonexistent for the network. If an account's
+Accounts with under 1 XX for xx network are considered as nonexistent for the network. If an account's
 balance ever drops below this amount, it is removed from the network's state. In this web application,
 that account will still be visible, but with a balance of 0.
 

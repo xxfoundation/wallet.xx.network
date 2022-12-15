@@ -36,11 +36,13 @@ import { useTranslation } from '../translate';
 import { createMenuGroup } from '../util';
 import useMultisigApprovals from './useMultisigApprovals';
 import useProxies from './useProxies';
+import { AddressIdentity } from '@polkadot/react-hooks/types';
 
 interface Props {
   account: KeyringAddress;
   className?: string;
   delegation?: Delegation;
+  filter: string;
   isFavorite: boolean;
   proxy?: [ProxyDefinition[], BN];
   setBalance: (address: string, value: AccountBalance) => void;
@@ -73,6 +75,19 @@ const BAL_OPTS_EXPANDED = {
   unlocking: true,
   vested: true
 };
+
+function calcVisible (filter: string, name: string, tags: string[], identity?: AddressIdentity): boolean {
+  if (filter.length === 0) {
+    return true;
+  }
+
+  const _filter = filter.toLowerCase();
+  const display = identity?.display || '';
+
+  return tags.reduce((result: boolean, tag: string): boolean => {
+    return result || tag.toLowerCase().includes(_filter);
+  }, name.toLowerCase().includes(_filter) || display.toLowerCase().includes(_filter));
+}
 
 function calcUnbonding (stakingInfo?: DeriveStakingAccount) {
   if (!stakingInfo?.unlocking) {
@@ -107,7 +122,7 @@ const transformRecovery = {
   transform: (opt: Option<RecoveryConfig>) => opt.unwrapOr(null)
 };
 
-function Account ({ account: { address, meta }, className = '', delegation, isFavorite, proxy, setBalance, toggleFavorite }: Props): React.ReactElement<Props> | null {
+function Account ({ account: { address, meta }, className = '', delegation, filter, isFavorite, proxy, setBalance, toggleFavorite }: Props): React.ReactElement<Props> | null {
   const { t } = useTranslation();
   const [isExpanded, toggleIsExpanded] = useToggle(false);
   const { theme } = useContext(ThemeContext as React.Context<ThemeDef>);
@@ -121,7 +136,7 @@ function Account ({ account: { address, meta }, className = '', delegation, isFa
   const recoveryInfo = useCall<RecoveryConfig | null>(api.api.query.recovery?.recoverable, [address], transformRecovery);
   const multiInfos = useMultisigApprovals(address);
   const proxyInfo = useProxies(address);
-  const { flags: { isDevelopment, isEditable, isEthereum, isExternal, isHardware, isInjected, isMultisig, isProxied }, genesisHash, identity, onSetGenesisHash, tags } = useAccountInfo(address);
+  const { flags: { isDevelopment, isEditable, isEthereum, isExternal, isHardware, isInjected, isMultisig, isProxied }, genesisHash, identity, name: accName, onSetGenesisHash, tags } = useAccountInfo(address);
   const [{ democracyUnlockTx }, setUnlockableIds] = useState<DemocracyUnlockable>({ democracyUnlockTx: null, ids: [] });
   const [vestingVestTx, setVestingTx] = useState<SubmittableExtrinsic<'promise'> | null>(null);
   const [isBackupOpen, toggleBackup] = useToggle();
@@ -176,6 +191,11 @@ function Account ({ account: { address, meta }, className = '', delegation, isFa
       }
     );
   }, [address, api, bestNumber, democracyLocks]);
+
+  const isVisible = useMemo(
+    () => calcVisible(filter, accName, tags, identity),
+    [accName, filter, tags, identity]
+  );
 
   const _onFavorite = useCallback(
     () => toggleFavorite(address),
@@ -381,6 +401,10 @@ function Account ({ account: { address, meta }, className = '', delegation, isFa
     ])
   ].filter((i) => i),
   [_clearDemocracyLocks, _showOnHardware, _vestingVest, api, delegation, democracyUnlockTx, genesisHash, identity, isDevelopment, isEditable, isEthereum, isExternal, isHardware, isInjected, isMultisig, multiInfos, onSetGenesisHash, proxy, recoveryInfo, t, toggleBackup, toggleDelegate, toggleDerive, toggleForget, toggleIdentityMain, toggleIdentitySub, toggleMultisig, togglePassword, toggleProxyOverview, toggleRecoverAccount, toggleRecoverSetup, toggleUndelegate, vestingVestTx]);
+
+  if (!isVisible) {
+    return null;
+  }
 
   return (
     <>

@@ -8,7 +8,6 @@ import accounts from './accounts';
 import addresses from './addresses';
 import alliance from './alliance';
 import assets from './assets';
-import betanet from './betanet';
 import bounties from './bounties';
 import calendar from './calendar';
 import claims from './claims';
@@ -46,7 +45,6 @@ export default function create (t: TFunction): Routes {
     claims(t),
     poll(t),
     transfer(t),
-    betanet(t),
     staking(t),
     collator(t),
     democracy(t),

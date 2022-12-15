@@ -2,6 +2,7 @@
   "extends": "@polkadot/dev/config/tsconfig.json",
   "compilerOptions": {
     "composite": false,
+    "lib": ["es2021", "dom"],
     "jsx": "react",
     "resolveJsonModule": true,
     "paths": {
@@ -65,6 +66,8 @@
       "@polkadot/app-rpc/*": ["page-rpc/src/*"],
       "@polkadot/app-runtime": ["page-runtime/src"],
       "@polkadot/app-runtime/*": ["page-runtime/src/*"],
+      "@polkadot/app-scheduler": ["page-scheduler/src"],
+      "@polkadot/app-scheduler/*": ["page-scheduler/src/*"],
       "@polkadot/app-settings": ["page-settings/src"],
       "@polkadot/app-settings/*": ["page-settings/src/*"],
       "@polkadot/app-signing": ["page-signing/src"],
@@ -109,6 +112,7 @@
       "@polkadot/api-augment": ["custom-types/src/interfaces/augment-api.ts"],
       "@polkadot/types/lookup": ["custom-types/src/interfaces/types-lookup.ts"]
     },
-    "skipLibCheck": true
-  }
-}
+    "skipLibCheck": true,
+    "target": "es2020"
+	}
+ }

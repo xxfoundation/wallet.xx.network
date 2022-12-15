@@ -36,7 +36,7 @@ function useAccountItemsImpl (): AccountItem[] | undefined {
       return;
     }
 
-    const promises = allAccounts.map((account) => api.query.uniques.account.keys(account, account));
+    const promises = allAccounts.map((account) => api.query.uniques.account.keys(account));
 
     Promise.all(promises)
       .then((results) => mountedRef.current && setState(transformResults(results)))

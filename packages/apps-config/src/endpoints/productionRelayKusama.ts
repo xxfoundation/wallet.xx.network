@@ -158,7 +158,7 @@ export const prodParasKusama: EndpointOption[] = [
     paraId: 2123,
     text: 'GM',
     providers: {
-      GMorDieDAO: 'wss://kusama.gmordie.com',
+      // GMorDieDAO: 'wss://kusama.gmordie.com', // https://github.com/polkadot-js/apps/issues/8457
       'bLd Nodes': 'wss://ws.gm.bldnodes.org',
       TerraBioDAO: 'wss://ws-node-gm.terrabiodao.org',
       Leemo: 'wss://leemo.gmordie.com',
@@ -245,6 +245,15 @@ export const prodParasKusama: EndpointOption[] = [
     }
   },
   {
+    info: 'kico 2',
+    homepage: 'https://dico.io/',
+    paraId: 2235,
+    text: 'KICO 2',
+    providers: {
+      // 'DICO Foundation': 'wss://rpc.kico2.dico.io' // https://github.com/polkadot-js/apps/issues/8415
+    }
+  },
+  {
     info: 'kintsugi',
     homepage: 'https://kintsugi.interlay.io/',
     paraId: 2092,
@@ -295,6 +304,15 @@ export const prodParasKusama: EndpointOption[] = [
     }
   },
   {
+    info: 'luhn',
+    homepage: 'https://luhn.network/',
+    paraId: 2232,
+    text: 'Luhn Network',
+    providers: {
+      'Hashed Systems': 'wss://c1.luhn.network'
+    }
+  },
+  {
     info: 'mangata',
     homepage: 'https://mangata.finance',
     paraId: 2110,
@@ -333,7 +351,7 @@ export const prodParasKusama: EndpointOption[] = [
     paraId: 2085,
     text: 'Parallel Heiko',
     providers: {
-      // OnFinality: 'wss://parallel-heiko.api.onfinality.io/public-ws', // https://github.com/polkadot-js/apps/issues/8355
+      // OnFinality: 'wss://parallel-heiko.api.onfinality.io/public-ws', // https://github.com/polkadot-js/apps/issues/8355, then enabled in https://github.com/polkadot-js/apps/pull/8413, then broken in https://github.com/polkadot-js/apps/issues/8421
       Parallel: 'wss://heiko-rpc.parallel.fi'
     }
   },
@@ -351,7 +369,7 @@ export const prodParasKusama: EndpointOption[] = [
     paraId: 2087,
     text: 'Picasso',
     providers: {
-      Composable: 'wss://picasso-rpc.composable.finance'
+      Composable: 'wss://rpc.composablenodes.tech'
     }
   },
   {
@@ -383,6 +401,16 @@ export const prodParasKusama: EndpointOption[] = [
       'Unique America': 'wss://us-ws-quartz.unique.network',
       'Unique Asia': 'wss://asia-ws-quartz.unique.network',
       'Unique Europe': 'wss://eu-ws-quartz.unique.network'
+      // OnFinality: 'wss://quartz.api.onfinality.io/public-ws' // https://github.com/polkadot-js/apps/issues/8436 re-added added previously removed, still unreachable
+    }
+  },
+  {
+    info: 'riodefi',
+    homepage: 'https://riodefi.com',
+    paraId: 2227,
+    text: 'RioDeFi',
+    providers: {
+      RioProtocol: 'wss://rio-kusama.riocorenetwork.com'
     }
   },
   {
@@ -390,6 +418,19 @@ export const prodParasKusama: EndpointOption[] = [
     homepage: 'http://robonomics.network/',
     paraId: 2048,
     text: 'Robonomics',
+    providers: {
+      Airalab: 'wss://kusama.rpc.robonomics.network/',
+      OnFinality: 'wss://robonomics.api.onfinality.io/public-ws',
+      Samsara: 'wss://robonomics.0xsamsara.com',
+      Leemo: 'wss://robonomics.leemo.me'
+    }
+  },
+  {
+    info: 'robonomics',
+    homepage: 'http://robonomics.network/',
+    paraId: 2237,
+    text: 'Robonomics 2',
+    isUnreachable: true,
     providers: {
       Airalab: 'wss://kusama.rpc.robonomics.network/',
       OnFinality: 'wss://robonomics.api.onfinality.io/public-ws',
@@ -467,7 +508,8 @@ export const prodParasKusama: EndpointOption[] = [
     paraId: 2100,
     text: 'SubsocialX',
     providers: {
-      Dappforce: 'wss://para.subsocial.network'
+      'Dappforce 1': 'wss://para.f3joule.space',
+      'Dappforce 2': 'wss://para.subsocial.network'
     }
   },
   {
@@ -503,7 +545,7 @@ export const prodParasKusama: EndpointOption[] = [
     paraId: 2094,
     text: 'Unorthodox',
     providers: {
-      'Standard Protocol': 'wss://rpc.kusama.standard.tech'
+      // 'Standard Protocol': 'wss://rpc.kusama.standard.tech' // https://github.com/polkadot-js/apps/issues/8525
     }
   },
   {
@@ -529,7 +571,7 @@ export const prodParasKusamaCommon: EndpointOption[] = [
       OnFinality: 'wss://statemine.api.onfinality.io/public-ws',
       Dwellir: 'wss://statemine-rpc.dwellir.com',
       Pinknode: 'wss://public-rpc.pinknode.io/statemine',
-      RadiumBlock: 'wss://statemine.public.curie.radiumblock.xyz/ws'
+      RadiumBlock: 'wss://statemine.public.curie.radiumblock.co/ws'
     },
     teleport: [-1]
   },
@@ -559,6 +601,7 @@ export const prodRelayKusama: EndpointOption = {
     Pinknode: 'wss://public-rpc.pinknode.io/kusama',
     // 'Geometry Labs': 'wss://kusama.geometry.io/websockets', // https://github.com/polkadot-js/apps/pull/6746
     'Automata 1RPC': 'wss://1rpc.io/ksm',
+    'Dotters Net': 'wss://rpc.dotters.network/kusama',
     // NOTE: Keep this as the last entry, nothing after it
     'light client': 'light://substrate-connect/kusama' // NOTE: Keep last
   },

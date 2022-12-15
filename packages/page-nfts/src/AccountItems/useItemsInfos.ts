@@ -1,13 +1,8 @@
 // Copyright 2017-2022 @polkadot/app-nfts authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
 import type { Option } from '@polkadot/types';
+import type { PalletUniquesItemMetadata } from '@polkadot/types/lookup';
 import type { BN } from '@polkadot/util';
 import type { AccountItem } from '../types';
 import type { ItemInfo, ItemSupportedIpfsData } from './types';
@@ -41,7 +36,7 @@ const IPFS_FETCH_OPTIONS = {
   }
 };
 
-function extractInfo ([, itemId]: [BN, BN], metadata: Option<any>, accountItems: AccountItem[]): ItemInfo {
+function extractInfo ([, itemId]: [BN, BN], metadata: Option<PalletUniquesItemMetadata>, accountItems: AccountItem[]): ItemInfo {
   const { accountId } = accountItems.find(({ itemId: _itemId }) => _itemId.eq(itemId)) as AccountItem;
 
   return {
@@ -71,7 +66,7 @@ function useItemsInfosImpl (accountItems: AccountItem[]): ItemInfo[] | undefined
     [accountItems]
   );
 
-  const metadata = useCall<[[[BN, BN][]], Option<any>[]]>(api.query.uniques.instanceMetadataOf.multi, [ids], QUERY_OPTS);
+  const metadata = useCall<[[[BN, BN][]], Option<PalletUniquesItemMetadata>[]]>(api.query.uniques.instanceMetadataOf.multi, [ids], QUERY_OPTS);
 
   const ipfsHashes = useMemo((): string[] | undefined => {
     if (metadata && metadata[1].length) {

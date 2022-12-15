@@ -3,14 +3,23 @@
 
 import type { Bytes } from '@polkadot/types';
 import type { Call } from '@polkadot/types/interfaces';
+import type { PalletPreimageRequestStatus } from '@polkadot/types/lookup';
+import type { Registry } from '@polkadot/types/types';
 import type { BN } from '@polkadot/util';
 import type { HexString } from '@polkadot/util/types';
 
 export interface Preimage {
+  deposit?: {
+    amount: BN;
+    who: string;
+  };
   count: number;
   bytes: Bytes | null;
   proposal: Call | null;
+  proposalError: string | null;
   proposalHash: HexString;
   proposalLength: BN;
-  status: any;
+  proposalWarning: string | null;
+  registry: Registry;
+  status: PalletPreimageRequestStatus | null;
 }

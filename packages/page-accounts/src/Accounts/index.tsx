@@ -15,7 +15,7 @@ import { InjectionPreference } from '@polkadot/react-api/types';
 import { Button, FilterInput, MarkWarning, PaginationAdvanced, SortDropdown, SummaryBox, Table } from '@polkadot/react-components';
 import { useAccounts, useApi, useCall, useDelegations, useFavorites, useIpfs, useLedger, useLoadingDelay, usePagination, useProxies, useToggle } from '@polkadot/react-hooks';
 import { keyring } from '@polkadot/ui-keyring';
-import { BN_ZERO } from '@polkadot/util';
+import { BN_ZERO, isFunction } from '@polkadot/util';
 
 import CreateModal from '../modals/Create';
 import ExportModal from '../modals/Export';
@@ -99,35 +99,53 @@ function Overview ({ className = '', onStatusChange }: Props): React.ReactElemen
   const paginated = usePagination(sortedAccounts, { perPage: 5 });
   const finalList = filterOn ? sortedAccounts : paginated.items;
 
-  const favoritesMap = useMemo(() => Object.fromEntries(favorites.map((x) => [x, true])), [favorites]);
+  // We use favorites only to check if it includes some element,
+  // so Object is better than array for that because hashmap access is O(1).
+  const favoritesMap = useMemo(
+    () => Object.fromEntries(favorites.map((x) => [x, true])),
+    [favorites]
+  );
 
-  const accountsWithInfo = useMemo(() =>
-    filtered?.map((account, index): SortedAccount => {
-      const deleg = delegations && delegations[index]?.isDelegating && delegations[index]?.asDelegating;
-      const delegation: Delegation | undefined = (deleg && {
-        accountDelegated: deleg.target.toString(),
-        amount: deleg.balance,
-        conviction: deleg.conviction
-      }) || undefined;
-      const address = account?.address ?? '';
+  // detect multisigs
+  const hasPalletMultisig = useMemo(
+    () => isFunction((api.tx.multisig || api.tx.utility)?.approveAsMulti),
+    [api]
+  );
 
-      return {
-        account,
-        address,
-        delegation,
-        isFavorite: favoritesMap[address] ?? false
-      };
-    }), [filtered, delegations, favoritesMap]);
+  // proxy support
+  const hasPalletProxy = useMemo(
+    () => isFunction(api.tx.proxy?.addProxy),
+    [api]
+  );
 
-  const accountsMap = useMemo(() => {
-    const ret: Record<string, SortedAccount> = {};
+  const accountsWithInfo = useMemo(
+    () => allAccounts
+      .map((address, index): SortedAccount => {
+        const deleg = delegations && delegations[index]?.isDelegating && delegations[index]?.asDelegating;
+        const delegation: Delegation | undefined = (deleg && {
+          accountDelegated: deleg.target.toString(),
+          amount: deleg.balance,
+          conviction: deleg.conviction
+        }) || undefined;
 
-    accountsWithInfo.forEach(function (x) {
+        return {
+          account: keyring.getAccount(address),
+          address,
+          delegation,
+          isFavorite: favoritesMap[address ?? ''] ?? false
+        };
+      }),
+    [allAccounts, favoritesMap, delegations]
+  );
+
+  const accountsMap = useMemo(
+    () => accountsWithInfo.reduce<Record<string, SortedAccount>>((ret, x) => {
       ret[x.address] = x;
-    });
 
-    return ret;
-  }, [accountsWithInfo]);
+      return ret;
+    }, {}),
+    [accountsWithInfo]
+  );
 
   const header = useRef([
     [t('accounts'), 'start', 3],
@@ -310,13 +328,13 @@ function Overview ({ className = '', onStatusChange }: Props): React.ReactElemen
           )}
           <Button
             icon='plus'
-            isDisabled={!(api.tx.multisig || api.tx.utility) || !hasAccounts}
+            isDisabled={!hasPalletMultisig || !hasAccounts}
             label={t<string>('Multisig')}
             onClick={toggleMultisig}
           />
           <Button
             icon='plus'
-            isDisabled={!api.tx.proxy || !hasAccounts}
+            isDisabled={!hasPalletProxy || !hasAccounts}
             label={t<string>('Proxied')}
             onClick={toggleProxy}
           />

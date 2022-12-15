@@ -71,7 +71,7 @@ export const testParasWestend: EndpointOption[] = [
     paraId: 2094,
     text: 'Standard ',
     providers: {
-      'Standard Protocol': 'wss://rpc.westend.standard.tech'
+      // 'Standard Protocol': 'wss://rpc.westend.standard.tech' // https://github.com/polkadot-js/apps/issues/8525
     }
   },
   {
@@ -133,6 +133,7 @@ export const testRelayWestend: EndpointOption = {
     OnFinality: 'wss://westend.api.onfinality.io/public-ws',
     Pinknode: 'wss://rpc.pinknode.io/westend/explorer',
     Dwellir: 'wss://westend-rpc.dwellir.com',
+    'Dotters Net': 'wss://rpc.dotters.network/westend',
     // 'NodeFactory(Vedran)': 'wss://westend.vedran.nodefactory.io/ws', // https://github.com/polkadot-js/apps/issues/5580
     // NOTE: Keep this as the last entry, nothing after it
     'light client': 'light://substrate-connect/westend' // NOTE: Keep last

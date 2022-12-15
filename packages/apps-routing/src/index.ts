@@ -26,6 +26,7 @@ import poll from './poll';
 import preimages from './preimages';
 import rpc from './rpc';
 import runtime from './runtime';
+import scheduler from './scheduler';
 import settings from './settings';
 import signing from './signing';
 import staking from './staking';
@@ -57,6 +58,7 @@ export default function create (t: TFunction): Routes {
     alliance(t),
     preimages(t),
     whitelist(t),
+    scheduler(t),
     assets(t),
     nfts(t),
     calendar(t),

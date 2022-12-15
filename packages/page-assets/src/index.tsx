@@ -1,7 +1,7 @@
 // Copyright 2017-2022 @polkadot/app-assets authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import '@xxnetwork/custom-types/interfaces/augment-api';
+import '@polkadot/api-augment/substrate';
 
 import type { BN } from '@polkadot/util';
 

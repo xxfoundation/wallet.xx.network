@@ -4,6 +4,7 @@
 import '@xxnetwork/custom-types/interfaces/augment';
 import '@xxnetwork/custom-derives/types/augment';
 
+import type { LinkOption } from '@polkadot/apps-config/endpoints/types';
 import type { InjectedExtension } from '@polkadot/extension-inject/types';
 import type { ActionStatusBase, QueueAction$Add } from '@polkadot/react-components/Status/types';
 import type { ProviderStats } from '@polkadot/rpc-provider/types';
@@ -12,10 +13,10 @@ import type { KeyringStore } from '@polkadot/ui-keyring/types';
 import type { ApiProps, ApiState } from './types';
 
 import custom from '@xxnetwork/custom-derives';
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import store from 'store';
 
-import { ApiPromise, WsProvider } from '@polkadot/api';
+import { ApiPromise, ScProvider, WsProvider } from '@polkadot/api';
 import { deriveMapCache, setDeriveCache } from '@polkadot/api-derive/util';
 import { ethereumChains, typesBundle } from '@polkadot/apps-config';
 import { web3AccountsSubscribe, web3Enable } from '@polkadot/extension-dapp';
@@ -30,10 +31,11 @@ import { formatBalance, isNumber, isTestChain, objectSpread, stringify } from '@
 import { defaults as addressDefaults } from '@polkadot/util-crypto/address/defaults';
 
 import ApiContext from './ApiContext';
-import PreferenceAlert from './PreferenceAlert';
+import { lightSpecs, relaySpecs } from './light';
 import registry from './typeRegistry';
-import { InjectionPreference } from './types';
 import { decodeUrlTypes } from './urlTypes';
+import PreferenceAlert from './PreferenceAlert';
+import { InjectionPreference } from './types';
 
 interface Props {
   children: React.ReactNode;
@@ -68,15 +70,29 @@ let api: ApiPromise;
 
 export { api };
 
-type DevTypes = Record<string, Record<string, string>>;
+function isKeyringLoaded () {
+  try {
+    return !!keyring.keyring;
+  } catch {
+    return false;
+  }
+}
 
-function getDevTypes (): DevTypes {
+function getDevTypes (): Record<string, Record<string, string>> {
   const types = decodeUrlTypes() || store.get('types', {}) as Record<string, Record<string, string>>;
   const names = Object.keys(types);
 
   names.length && console.log('Injected types:', names.join(', '));
 
   return types;
+}
+
+function createLink (baseApiUrl: string, isElectron: boolean): (path: string) => string {
+  return (path: string, apiUrl?: string): string =>
+    `${isElectron
+      ? 'https://wallet.xx.network/'
+      : `${window.location.origin}${window.location.pathname}`
+    }?rpc=${encodeURIComponent(apiUrl || baseApiUrl)}#${path}`;
 }
 
 function getStats (...apis: ApiPromise[]): [ProviderStats, number] {
@@ -146,7 +162,7 @@ async function loadOnReady (api: ApiPromise, store: KeyringStore | undefined, ty
   const { properties, systemChain, systemChainType, systemName, systemVersion } = await retrieve(api);
   const chainSS58 = properties.ss58Format.unwrapOr(DEFAULT_SS58).toNumber();
   const ss58Format = settings.prefix === -1
-    ? properties.ss58Format.unwrapOr(DEFAULT_SS58).toNumber()
+    ? chainSS58
     : settings.prefix;
   const tokenSymbol = properties.tokenSymbol.unwrapOr([formatBalance.getDefaults().unit, ...DEFAULT_AUX]);
   const tokenDecimals = properties.tokenDecimals.unwrapOr([DEFAULT_DECIMALS]);
@@ -166,18 +182,13 @@ async function loadOnReady (api: ApiPromise, store: KeyringStore | undefined, ty
   TokenUnit.setAbbr(tokenSymbol[0].toString());
 
   // finally load the keyring
-  try {
-    keyring.loadAll({
-      genesisHash: api.genesisHash,
-      isDevelopment,
-      ss58Format,
-      store,
-      type: isEthereum ? 'ethereum' : 'ed25519'
-    }, []);
-  } catch (err) {
-    // Ignoring the error here because keyring.loadInjected is private and this is
-    // the only method we can call to load
-  }
+  isKeyringLoaded() || keyring.loadAll({
+    genesisHash: api.genesisHash,
+    isDevelopment,
+    ss58Format,
+    store,
+    type: isEthereum ? 'ethereum' : 'ed25519'
+  }, []);
 
   const defaultSection = Object.keys(api.tx)[0];
   const defaultMethod = Object.keys(api.tx[defaultSection])[0];
@@ -292,6 +303,64 @@ async function loadAccounts (injectedAccounts: InjectedAccountExt[], store: Keyr
   return [canInject, hasInjectedAccounts];
 }
 
+/**
+ * @internal
+ * Creates a ScProvider from a <relay>[/parachain] string
+ */
+async function getLightProvider (chain: string): Promise<ScProvider> {
+  const [sc, relayName, paraName] = chain.split('/');
+
+  if (sc !== 'substrate-connect') {
+    throw new Error(`Cannot connect to non substrate-connect protocol ${chain}`);
+  } else if (!relaySpecs[relayName] || (paraName && (!lightSpecs[relayName] || !lightSpecs[relayName][paraName]))) {
+    throw new Error(`Unable to construct light chain ${chain}`);
+  }
+
+  const relay = new ScProvider(relaySpecs[relayName]);
+
+  if (!paraName) {
+    return relay;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  const specMod = await import(`${lightSpecs[relayName][paraName]}`);
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  return new ScProvider(JSON.stringify(specMod.default), relay);
+}
+
+/**
+ * @internal
+ */
+async function createApi (apiUrl: string, signer: ApiSigner, onError: (error: unknown) => void): Promise<Record<string, Record<string, string>>> {
+  const types = getDevTypes();
+  const isLight = apiUrl.startsWith('light://');
+
+  try {
+    const provider = isLight
+      ? await getLightProvider(apiUrl.replace('light://', ''))
+      : new WsProvider(apiUrl);
+
+    api = new ApiPromise({
+      derives: custom,
+      provider,
+      registry,
+      signer,
+      types,
+      typesBundle
+    });
+
+    // See https://github.com/polkadot-js/api/pull/4672#issuecomment-1078843960
+    if (isLight) {
+      await provider.connect();
+    }
+  } catch (error) {
+    onError(error);
+  }
+
+  return types;
+}
+
 function Api ({ apiUrl, children, isElectron, store }: Props): React.ReactElement<Props> | null {
   const { queueAction, queuePayload, queueSetTxStatus } = useContext(StatusContext);
   const [state, setState] = useState<ApiState>({ hasInjectedAccounts: false, isApiReady: false } as unknown as ApiState);
@@ -310,7 +379,6 @@ function Api ({ apiUrl, children, isElectron, store }: Props): React.ReactElemen
     [apiEndpoint]
   );
   const apiRelay = useApiUrl(relayUrls);
-
   const value = useMemo<ApiProps>(
     () => objectSpread({}, state, {
       api,
@@ -318,6 +386,7 @@ function Api ({ apiUrl, children, isElectron, store }: Props): React.ReactElemen
       apiError,
       apiRelay,
       apiUrl,
+      createLink: createLink(apiUrl, isElectron),
       extensions,
       getStats,
       isApiConnected,
@@ -366,6 +435,15 @@ function Api ({ apiUrl, children, isElectron, store }: Props): React.ReactElemen
     }, { ss58Format: api.registry.chainSS58 });
   }
 
+  const onError = useCallback(
+    (error: unknown): void => {
+      console.error(error);
+
+      setApiError((error as Error).message);
+    },
+    [setApiError]
+  );
+
   useEffect(() => {
     if (!subscribed && state.isApiReady && extensions !== undefined) {
       subscribe().catch((err) => {
@@ -391,35 +469,25 @@ function Api ({ apiUrl, children, isElectron, store }: Props): React.ReactElemen
 
   // initial initialization
   useEffect((): void => {
-    const provider = new WsProvider(apiUrl);
+    createApi(apiUrl, new ApiSigner(registry, queuePayload, queueSetTxStatus), onError)
+      .then((types): void => {
+        api.on('connected', () => setIsApiConnected(true));
+        api.on('disconnected', () => setIsApiConnected(false));
+        api.on('error', onError);
+        api.on('ready', (): void => {
+          web3Enable('xx network web wallet')
+          .then(setExtensions)
+          .catch(console.error);
 
-    const signer = new ApiSigner(registry, queuePayload, queueSetTxStatus);
-    const types = getDevTypes();
+          loadOnReady(api, store, types)
+            .then(setState)
+            .catch(onError);
+        });
 
-    api = new ApiPromise({
-      derives: custom,
-      provider,
-      registry,
-      signer,
-      types,
-      typesBundle
-    });
-
-    api.on('connected', () => setIsApiConnected(true));
-    api.on('disconnected', () => setIsApiConnected(false));
-    api.on('error', (error: Error) => setApiError(error.message));
-    api.on('ready', () => {
-      web3Enable('xx network web wallet')
-        .then(setExtensions)
-        .catch(console.error);
-
-      loadOnReady(api, store, types)
-        .then(setState)
-        .catch((error): void => setApiError((error as Error).message));
-    });
-
-    setIsApiInitialized(true);
-  }, [apiEndpoint, apiUrl, queuePayload, queueSetTxStatus, store]);
+        setIsApiInitialized(true);
+      })
+      .catch(onError);
+  }, [apiEndpoint, apiUrl, onError, queuePayload, queueSetTxStatus, store]);
 
   const showPreferenceAlert = (extensions?.length ?? 0) > 0 && injectionPreference === InjectionPreference.NotSet;
 

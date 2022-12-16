@@ -86,7 +86,6 @@ import chainEggnet from './chains/webb.png';
 import chainWestendColl from './chains/westend-collectives.png';
 import xxnetwork from './chains/xxnetwork.svg';
 import extensionPolkadotJs from './extensions/polkadot-js.svg';
-import extensionXxnetwork from './extensions/xxnetwork-circled.svg';
 import externalCommonwealth from './external/commonwealth.png';
 import externalDotreasury from './external/dotreasury.svg';
 import externalDotScanner from './external/dotscanner.png';
@@ -1017,8 +1016,7 @@ export const namedLogos: Record<string, unknown> = {
 
 // extension logos
 export const extensionLogos: Record<string, unknown> = {
-  'polkadot-js': extensionPolkadotJs,
-  'xx-network-extension': extensionXxnetwork
+  'polkadot-js': extensionPolkadotJs
 };
 
 // external logos, i.e. for explorers

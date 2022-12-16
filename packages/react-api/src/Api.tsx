@@ -1,7 +1,7 @@
 // Copyright 2017-2022 @polkadot/react-api authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import '@xxnetwork/custom-types/interfaces/augment';
+import '@xxnetwork/types';
 import '@xxnetwork/custom-derives/types/augment';
 
 import type { InjectedExtension } from '@polkadot/extension-inject/types';

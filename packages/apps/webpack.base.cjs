@@ -50,6 +50,12 @@ function createWebpack (context, mode = 'production') {
     module: {
       rules: [
         {
+          test: /\.m?js/,
+          resolve: {
+              fullySpecified: false
+          }
+        },
+        {
           scheme: 'data',
           type: 'asset/resource',
         },

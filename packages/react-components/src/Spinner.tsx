@@ -38,6 +38,7 @@ export default React.memo(styled(Spinner)`
   line-height: 1rem;
   margin: 0 auto;
   text-align: center;
+  white-space: pre-wrap;
 
   &.variant-appPadded {
     margin-top: 0.5rem;

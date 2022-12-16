@@ -23,7 +23,7 @@ interface Props {
 
 function FullSidebar ({ address, className = '', dataTestId, onClose, onUpdateName }: Props): React.ReactElement<Props> {
   const [inEditMode, setInEditMode] = useState<boolean>(false);
-  const { accountIndex, flags, identity, meta } = useAccountInfo(address);
+  const { accountIndex, flags, identity, cmixId, meta } = useAccountInfo(address);
 
   const ref = useRef<HTMLDivElement>(null);
 
@@ -42,7 +42,7 @@ function FullSidebar ({ address, className = '', dataTestId, onClose, onUpdateNa
         <SidebarEditableSection
           accountIndex={accountIndex}
           address={address}
-          cmixId={identity?.cmixId}
+          cmixId={cmixId}
           isBeingEdited={setInEditMode}
           onUpdateName={onUpdateName}
           sidebarRef={ref}

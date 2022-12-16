@@ -119,14 +119,7 @@ function extractParams (isIterable: boolean, values: RawParams): [RawParams, boo
 function Modules ({ className = '', onAdd }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
-  const k = (api.query.timestamp?.now || api.query.system.events) as unknown as QueryableStorageEntry<'promise'>;
-  const [{ defaultValues, isIterable, key, params }, setKey] = useState<KeyState>(() => ({
-    defaultValues: undefined,
-    isHeadKey: true,
-    isIterable: false,
-    key: k,
-    params: []
-  }));
+  const [{ defaultValues, isIterable, key, params }, setKey] = useState<KeyState>(() => ({ defaultValues: undefined, isHeadKey: true, isIterable: false, key: api.query.timestamp?.now || api.query.system.events, params: [] }));
   const [{ isValid, values }, setValues] = useState<ValState>(() => ({ isValid: true, values: [] }));
   const [{ blockHash, textHash }, setBlockHash] = useState<BlockHash>({ blockHash: null, textHash: '' });
 
@@ -135,7 +128,7 @@ function Modules ({ className = '', onAdd }: Props): React.ReactElement<Props> {
       api.query.timestamp?.now ||
       api.query.system?.events ||
       api.query.substrate.changesTrieConfig
-    ) as unknown as QueryableStorageEntry<'promise'>,
+    ),
     [api]
   );
 

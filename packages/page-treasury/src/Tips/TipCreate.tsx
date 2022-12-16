@@ -40,7 +40,7 @@ function TipCreate ({ members }: Props): React.ReactElement<Props> | null {
   const hasValue = !!value && value.gt(BN_ZERO);
   const hasReason = !!reason && (reason.length >= MIN_REASON_LEN) && (reason.length <= maxReasonLen);
 
-  if (!(api.tx.tips.tipNew)) {
+  if (!(api.tx.tips.tipNew || api.tx.treasury.tipNew)) {
     return null;
   }
 

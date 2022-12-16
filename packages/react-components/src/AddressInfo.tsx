@@ -355,19 +355,7 @@ function createBalanceItems (formatIndex: number, lookup: Record<string, string>
           </>
         }
         value={isAllLocked ? 'all' : deriveBalances.lockedBalance}
-      >
-        <Tooltip
-          text={deriveBalances.lockedBreakdown.map(({ amount, id, reasons }, index): React.ReactNode => (
-            <div key={index}>
-              {amount?.isMax()
-                ? t<string>('everything')
-                : formatBalance(amount, { forceUnit: '-' })
-              }{id && <div className='faded'>{lookupLock(lookup, id)}</div>}<div className='faded'>{reasons.toString()}</div>
-            </div>
-          ))}
-          trigger={`${address}-locks-trigger`}
-        />
-      </FormatBalance>
+      />
     </React.Fragment>
   );
   balanceDisplay.reserved && balancesAll?.reservedBalance?.gtn(0) && allItems.push(
@@ -554,13 +542,13 @@ function AddressInfo (props: Props): React.ReactElement<Props> {
         {withHexSessionId && withHexSessionId[0] && (
           <>
             <Label label={t<string>('session keys')} />
-            <div className='result left'>{withHexSessionId[0]}</div>
+            <div className='result'>{withHexSessionId[0]}</div>
           </>
         )}
         {withHexSessionId && withHexSessionId[0] !== withHexSessionId[1] && (
           <>
             <Label label={t<string>('session next')} />
-            <div className='result'>{withHexSessionId[1]}</div>
+            <div className='result left'>{withHexSessionId[1]}</div>
           </>
         )}
         {renderValidatorPrefs(props, t)}

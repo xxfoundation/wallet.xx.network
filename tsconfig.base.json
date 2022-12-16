@@ -1,11 +1,11 @@
 {
   "extends": "@polkadot/dev/config/tsconfig.json",
-  "compilerOptions": {
+	"compilerOptions": {
     "composite": false,
     "lib": ["es2021", "dom"],
     "jsx": "react",
     "resolveJsonModule": true,
-    "paths": {
+		"paths": {
       "@polkadot/apps/*": ["apps/src/*"],
       "@polkadot/apps": ["apps/src"],
       "@polkadot/apps-config": ["apps-config/src"],
@@ -103,14 +103,8 @@
       "@polkadot/test-support/": ["test-support/src/"],
       "@polkadot/test-support/*": ["test-support/src/*"],
       // xx network overrides
-      "@xxnetwork/custom-types": ["custom-types/src"],
-      "@xxnetwork/custom-types/*": ["custom-types/src/*"],
       "@xxnetwork/custom-derives": ["custom-derives/src"],
-      "@xxnetwork/custom-derives/*": ["custom-derives/src/*"],
-      "@polkadot/rpc-augment": ["custom-types/src/interfaces/augment-api-rpc.ts"],
-      "@polkadot/api-augment/substrate": ["custom-types/src/interfaces/augment-api.ts"],
-      "@polkadot/api-augment": ["custom-types/src/interfaces/augment-api.ts"],
-      "@polkadot/types/lookup": ["custom-types/src/interfaces/types-lookup.ts"]
+      "@xxnetwork/custom-derives/*": ["custom-derives/src/*"]
     },
     "skipLibCheck": true,
     "target": "es2020"

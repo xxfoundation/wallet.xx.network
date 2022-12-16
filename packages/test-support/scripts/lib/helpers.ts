@@ -5,11 +5,11 @@ import { ApiPromise } from '@polkadot/api';
 import { SubmittableExtrinsic } from '@polkadot/api/types';
 import { DeriveCollectiveProposal } from '@polkadot/api-derive/types';
 import { KeyringPair } from '@polkadot/keyring/types';
+import { charlieSigner, daveSigner, eveSigner, ferdieSigner } from '@polkadot/test-support/keyring';
+import { execute } from '@polkadot/test-support/transaction';
 import { Hash } from '@polkadot/types/interfaces';
 import { BN } from '@polkadot/util';
 
-import { charlieSigner, daveSigner, eveSigner, ferdieSigner } from '../../src/keyring';
-import { execute } from '../../src/transaction';
 import { LENGTH_BOUND, TREASURY_ADDRESS, WEIGHT_BOUND } from './constants';
 
 export async function acceptMotion (api: ApiPromise, hash: Hash, index: number): Promise<void> {
@@ -19,7 +19,7 @@ export async function acceptMotion (api: ApiPromise, hash: Hash, index: number):
   const ferdieVote = execute(api.tx.council.vote(hash, index, true), ferdieSigner());
 
   await Promise.all([charlieVote, daveVote, eveVote, ferdieVote]);
-  await execute(api.tx.council.close(hash, index, WEIGHT_BOUND, LENGTH_BOUND), charlieSigner());
+  await execute(api.tx.council.close(hash, index, { refTime: WEIGHT_BOUND }, LENGTH_BOUND), charlieSigner());
 }
 
 export async function fillTreasury (api: ApiPromise, signer: KeyringPair): Promise<void> {
@@ -71,7 +71,7 @@ async function multiVoteAye (acceptMotionSigners: KeyringPair[], api: ApiPromise
 async function multiCloseMotion (api: ApiPromise, indexes: number[], hashes: Hash[]) {
   await execute(
     api.tx.utility.batch(
-      indexes.map((bountyIndex, i) => api.tx.council.close(hashes[i], bountyIndex, WEIGHT_BOUND, LENGTH_BOUND))),
+      indexes.map((bountyIndex, i) => api.tx.council.close(hashes[i], bountyIndex, { refTime: WEIGHT_BOUND }, LENGTH_BOUND))),
     charlieSigner()
   );
 }

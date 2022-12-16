@@ -1,8 +1,6 @@
 // Copyright 2017-2022 @polkadot/apps authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import './transferLocalStorage';
-
 import queryString from 'query-string';
 import store from 'store';
 

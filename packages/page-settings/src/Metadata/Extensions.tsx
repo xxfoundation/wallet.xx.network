@@ -22,7 +22,6 @@ interface Props {
 function Extensions ({ chainInfo, className }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { extensions } = useExtensions();
-
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isBusy, toggleBusy] = useToggle();
   const options = useMemo(
@@ -52,7 +51,7 @@ function Extensions ({ chainInfo, className }: Props): React.ReactElement<Props>
   return (
     <Table
       className={className}
-      empty={t<string>('No upgradable extensions')}
+      empty={t<string>('No Upgradable extensions')}
       header={headerRef.current}
     >
       {extensions
@@ -68,7 +67,7 @@ function Extensions ({ chainInfo, className }: Props): React.ReactElement<Props>
                 />
               </td>
             </tr>
-            <tr className='hasOddRowColoring'>
+            <tr className='isOdd'>
               <td>
                 <Button.Group>
                   <Button

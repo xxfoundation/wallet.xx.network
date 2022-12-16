@@ -1,7 +1,6 @@
 // Copyright 2017-2022 @polkadot/app-treasury authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { QueryableStorageEntry } from '@polkadot/api/types';
 import type { StorageKey } from '@polkadot/types';
 import type { Hash } from '@polkadot/types/interfaces';
 

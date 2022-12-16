@@ -69,7 +69,7 @@ function Close ({ hasFailed, hash, idNumber, proposal, type }: Props): React.Rea
                     : [hash, idNumber, weight, encodedCallLength]
                   : [hash, idNumber]
               }
-              tx={api.tx[modLocation].close}
+              tx={api.tx[modLocation].closeOperational || api.tx[modLocation].close}
             />
           </Modal.Actions>
         </Modal>

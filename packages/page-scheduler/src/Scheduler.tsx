@@ -4,7 +4,7 @@
 import type { ApiPromise } from '@polkadot/api';
 import type { Bytes, Option, u8, u32 } from '@polkadot/types';
 import type { BlockNumber, Call, Hash, Scheduled } from '@polkadot/types/interfaces';
-import type { PalletSchedulerScheduledV2 } from '@polkadot/types/lookup';
+import type { FrameSupportPreimagesBounded, PalletSchedulerScheduled } from '@polkadot/types/lookup';
 import type { Codec, ITuple } from '@polkadot/types/types';
 import type { ScheduledExt } from './types';
 
@@ -41,7 +41,7 @@ interface FrameSupportScheduleMaybeHashed extends Codec {
 }
 
 const OPT_SCHED = {
-  transform: (entries: [{ args: [BlockNumber] }, Option<Scheduled | PalletSchedulerScheduledV2 | PalletSchedulerScheduledV3>[]][]): ScheduledExt[] => {
+  transform: (entries: [{ args: [BlockNumber] }, Option<Scheduled | PalletSchedulerScheduled | PalletSchedulerScheduledV3>[]][], api: ApiPromise): ScheduledExt[] => {
     return entries
       .filter(([, all]) => all.some((o) => o.isSome))
       .reduce((items: ScheduledExt[], [key, all]): ScheduledExt[] => {

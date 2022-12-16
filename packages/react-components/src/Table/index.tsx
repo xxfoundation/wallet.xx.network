@@ -133,6 +133,7 @@ export default React.memo(styled(Table)`
 
     &.withCollapsibleRows tbody tr {
       background-color: unset;
+
       &:nth-child(4n - 2),
       &:nth-child(4n - 3) {
         background-color: var(--bg-table);
@@ -307,11 +308,6 @@ export default React.memo(styled(Table)`
     }
 
     tr {
-      &.hasOddRowColoring,
-      &:nth-child(odd) {
-        background: var(--bg-table);
-      }
-
       &:first-child {
         td {
           border-top: 0.25rem solid var(--bg-page);

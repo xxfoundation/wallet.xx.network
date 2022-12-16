@@ -63,7 +63,7 @@ function Content ({ className }: Props): React.ReactElement<Props> {
       {!missingApis && !window.location.href.includes('generate')
         ? (
           <div className='connecting'>
-            <Spinner label={t<string>('Initializing connection')} />
+            <Spinner label={t<string>('Initializing connection.\n\nIf this is taking too long, please click the xx mainnet button on the left side menu and select one of the options.')} />
           </div>
         )
         : (

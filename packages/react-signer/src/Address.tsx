@@ -137,11 +137,13 @@ function filterProxies (allAccounts: string[], tx: Call | SubmittableExtrinsic<'
 }
 
 async function queryForMultisig (api: ApiPromise, requestAddress: string, proxyAddress: string | null, tx: SubmittableExtrinsic<'promise'>): Promise<MultiState | null> {
-  if (isFunction(api.query.multisig.multisigs)) {
+  const multiModule = api.tx.multisig ? 'multisig' : 'utility';
+
+  if (isFunction(api.query[multiModule]?.multisigs)) {
     const address = proxyAddress || requestAddress;
     const { threshold, who } = extractExternal(address);
     const hash = (proxyAddress ? api.tx.proxy.proxy(requestAddress, null, tx) : tx).method.hash;
-    const optMulti = await api.query.multisig.multisigs<Option<Multisig>>(address, hash);
+    const optMulti = await api.query[multiModule].multisigs<Option<Multisig>>(address, hash);
     const multi = optMulti.unwrapOr(null);
 
     return multi

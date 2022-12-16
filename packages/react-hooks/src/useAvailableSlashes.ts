@@ -33,10 +33,10 @@ function useAvailableSlashesImpl (): [BN, PalletStakingUnappliedSlash[]][] {
 
     if (mountedRef.current && indexes && from) {
       const range: BN[] = [];
+      const end = indexes.activeEra.add(offset);
       let start = new BN(from);
 
-      // any <= activeEra (we include activeEra since slashes are immediately reflected)
-      while (start.lte(indexes.activeEra)) {
+      while (start.lte(end)) {
         range.push(start);
         start = start.add(BN_ONE);
       }

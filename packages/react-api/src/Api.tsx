@@ -409,7 +409,7 @@ function Api ({ apiUrl, children, isElectron, store }: Props): React.ReactElemen
     api.on('disconnected', () => setIsApiConnected(false));
     api.on('error', (error: Error) => setApiError(error.message));
     api.on('ready', () => {
-      web3Enable('xx-network-explorer')
+      web3Enable('xx network web wallet')
         .then(setExtensions)
         .catch(console.error);
 

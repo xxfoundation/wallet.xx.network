@@ -103,7 +103,6 @@ export interface AddressFlags extends DeriveAccountFlags {
 }
 
 export interface AddressIdentity extends DeriveAccountRegistration {
-  cmixId?: string;
   isExistent: boolean;
   isKnownGood: boolean;
   waitCount: number;
@@ -118,6 +117,7 @@ export interface UseAccountInfo {
   setTags: React.Dispatch<string[]>;
   genesisHash: string | null;
   identity?: AddressIdentity;
+  cmixId?: string;
   isEditingName: boolean;
   meta?: KeyringJson$Meta;
   toggleIsEditingName: () => void;

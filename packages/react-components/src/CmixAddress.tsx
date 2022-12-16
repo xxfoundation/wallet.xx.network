@@ -13,7 +13,8 @@ const shortHash = (addr: string) => addr
   : '';
 
 const toDashboardNodeUrl = (addr: string) => {
-  const basedAf = toBase64Url(addr);
+  const base64addr = addr.startsWith('0x') ? Buffer.from(addr.slice(2).concat('02'), 'hex').toString('base64') : addr;
+  const basedAf = toBase64Url(base64addr);
 
   return `https://dashboard.xx.network/nodes/${basedAf}`;
 };

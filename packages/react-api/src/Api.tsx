@@ -4,7 +4,6 @@
 import '@xxnetwork/custom-types/interfaces/augment';
 import '@xxnetwork/custom-derives/types/augment';
 
-import type { LinkOption } from '@polkadot/apps-config/endpoints/types';
 import type { InjectedExtension } from '@polkadot/extension-inject/types';
 import type { ActionStatusBase, QueueAction$Add } from '@polkadot/react-components/Status/types';
 import type { ProviderStats } from '@polkadot/rpc-provider/types';
@@ -280,7 +279,7 @@ async function loadAccounts (injectedAccounts: InjectedAccountExt[], store: Keyr
 
   const canInject = injectedAccounts.length > 0;
   const hasInjectedAccounts = injectionPreference === InjectionPreference.Inject && canInject;
-  const filteredAccounts = injectedAccounts.filter(({ meta }) => meta.genesisHash === genesisHash.toString());
+  const filteredAccounts = injectedAccounts.filter(({ meta }) => meta.genesisHash === null || meta.genesisHash === genesisHash.toString());
 
   if (hasInjectedAccounts) {
     notifyOfInjectionChanges(injectedAccounts, filteredAccounts, queueAction);
@@ -465,7 +464,7 @@ function Api ({ apiUrl, children, isElectron, store }: Props): React.ReactElemen
         })
         .catch((error): void => setApiError((error as Error).message));
     }
-  }, [store, subscribed, injectionPreference, injectedAccounts, queueAction, state]);
+  }, [store, subscribed, injectionPreference, injectedAccounts, queueAction]);
 
   // initial initialization
   useEffect((): void => {

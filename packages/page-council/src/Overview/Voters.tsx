@@ -3,9 +3,9 @@
 
 import type { AccountId, Balance } from '@polkadot/types/interfaces';
 
-import React, { useMemo } from 'react';
+import React, { useCallback } from 'react';
 
-import { AddressMini, Expander } from '@polkadot/react-components';
+import { AddressMini, ExpanderScroll } from '@polkadot/react-components';
 import { FormatBalance } from '@polkadot/react-query';
 import { formatNumber } from '@polkadot/util';
 
@@ -15,38 +15,32 @@ interface Props {
 }
 
 function Voters ({ balance, voters }: Props): React.ReactElement<Props> {
-  const summary = useMemo(
-    () => balance
-      ? <FormatBalance value={balance} />
-      : formatNumber(voters?.length),
-    [balance, voters]
+  const renderVoters = useCallback(
+    () => voters && voters.map((who): React.ReactNode =>
+      <AddressMini
+        key={who.toString()}
+        value={who}
+        withLockedVote
+      />
+    ),
+    [voters]
   );
 
-  if (!voters || !voters.length) {
-    return <><td className='all number' /><td className='number'>0</td></>;
+  if (!balance || !voters || !voters.length) {
+    return <><td className='all number' /><td className='number' /></>;
   }
 
   return (
     <>
-      <td
-        className='all expand'
-        colSpan={balance ? 1 : 2}
-      >
-        <Expander summary={summary}>
-          {voters.map((who): React.ReactNode =>
-            <AddressMini
-              key={who.toString()}
-              value={who}
-              withLockedVote
-            />
-          )}
-        </Expander>
+      <td className='all expand'>
+        <ExpanderScroll
+          renderChildren={renderVoters}
+          summary={<FormatBalance value={balance} />}
+        />
       </td>
-      {balance && (
-        <td className='number'>
-          {formatNumber(voters?.length || 0)}
-        </td>
-      )}
+      <td className='number'>
+        {formatNumber(voters.length)}
+      </td>
     </>
   );
 }

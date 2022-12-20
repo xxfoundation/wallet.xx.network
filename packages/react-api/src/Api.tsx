@@ -213,7 +213,7 @@ async function loadOnReady (api: ApiPromise, store: KeyringStore | undefined, ty
   };
 }
 
-function notifyOfInjectionChanges (injectedAccounts: InjectedAccountExt[], filteredAccounts: InjectedAccountExt[], queueAction: QueueAction$Add) {
+function notifyOfInjectionChanges (accounts: InjectedAccountExt[], queueAction: QueueAction$Add) {
   const notification = (message: string, result: ActionStatusBase['status']): void => {
     queueAction && queueAction({
       action: 'extension',
@@ -229,20 +229,14 @@ function notifyOfInjectionChanges (injectedAccounts: InjectedAccountExt[], filte
       return { address, name: meta.name };
     });
 
-  const filteredAddresses = filteredAccounts.map(({ address, meta }) => {
-    return { address, name: meta.name };
-  });
-
-  const injectedAddresses = injectedAccounts.map(({ address, meta }) => {
+  const injectedAddresses = accounts.map(({ address, meta }) => {
     return { address, name: meta.name };
   });
 
   // Get addresses of accounts being removed
-  const removingAddresses = keyringAddresses.filter((x) => !filteredAddresses.some(({ address }) => address === x.address));
+  const removingAddresses = keyringAddresses.filter((x) => !injectedAddresses.some(({ address }) => address === x.address));
   // Get addresses of accounts being added
-  const addingAddresses = filteredAddresses.filter((x) => !keyringAddresses.some(({ address }) => address === x.address));
-  // Get addresses of accounts on different networks
-  const wrongNetworkAddresses = injectedAddresses.filter((x) => !filteredAddresses.some(({ address }) => address === x.address));
+  const addingAddresses = injectedAddresses.filter((x) => !keyringAddresses.some(({ address }) => address === x.address));
 
   // Remove accounts that are in keyring but not in new filtered accounts
   removingAddresses.forEach(({ address }) => keyring.forgetAccount(address));
@@ -257,13 +251,8 @@ function notifyOfInjectionChanges (injectedAccounts: InjectedAccountExt[], filte
     notification(`Injected ${addingAddresses.length} account${addingAddresses.length > 1 ? 's' : ''}: ${addingAddresses.map(({ name }) => name).join(', ')}`, 'success');
   }
 
-  // Notify user of accounts in extension that are on different network
-  if (wrongNetworkAddresses.length) {
-    notification(`${wrongNetworkAddresses.length} account${wrongNetworkAddresses.length > 1 ? 's' : ''}: ${wrongNetworkAddresses.map(({ name }) => name).join(', ')} can't be injected due to being on a different network. Change the network in the extension if you wish to inject any of these accounts`, 'eventWarn');
-  }
-
   // Notify user if nothing was done
-  if (removingAddresses.length === 0 && addingAddresses.length === 0 && wrongNetworkAddresses.length === 0) {
+  if (removingAddresses.length === 0 && addingAddresses.length === 0) {
     notification('No accounts to be injected', 'eventWarn');
   }
 }
@@ -279,10 +268,20 @@ async function loadAccounts (injectedAccounts: InjectedAccountExt[], store: Keyr
 
   const canInject = injectedAccounts.length > 0;
   const hasInjectedAccounts = injectionPreference === InjectionPreference.Inject && canInject;
-  const filteredAccounts = injectedAccounts.filter(({ meta }) => meta.genesisHash === null || meta.genesisHash === genesisHash.toString());
+  const accounts = injectedAccounts.map(({ address, meta }) => {
+    return {
+      address,
+      meta: {
+        genesisHash: genesisHash.toString(),
+        name: meta.name,
+        source: meta.source,
+        whenCreated: meta.whenCreated,
+      }
+    }
+  });
 
   if (hasInjectedAccounts) {
-    notifyOfInjectionChanges(injectedAccounts, filteredAccounts, queueAction);
+    notifyOfInjectionChanges(accounts, queueAction);
   }
 
   // finally load the keyring
@@ -293,7 +292,7 @@ async function loadAccounts (injectedAccounts: InjectedAccountExt[], store: Keyr
       ss58Format,
       store,
       type: isEthereum ? 'ethereum' : 'ed25519'
-    }, hasInjectedAccounts ? filteredAccounts : []);
+    }, hasInjectedAccounts ? accounts : []);
   } catch (err) {
     // Ignoring the error here because keyring.loadInjected is private and this is
     // the only method we can call to load

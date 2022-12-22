@@ -542,7 +542,7 @@ function AddressInfo (props: Props): React.ReactElement<Props> {
         {withHexSessionId && withHexSessionId[0] && (
           <>
             <Label label={t<string>('session keys')} />
-            <div className='result'>{withHexSessionId[0]}</div>
+            <div className='result left'>{withHexSessionId[0]}</div>
           </>
         )}
         {withHexSessionId && withHexSessionId[0] !== withHexSessionId[1] && (

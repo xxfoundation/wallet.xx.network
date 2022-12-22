@@ -69,13 +69,6 @@ function Legend ({ className, isRelay, minCommission }: Props): React.ReactEleme
       </span>
       <span>
         <Badge
-          color='orange'
-          icon='hand-paper'
-        />
-        {t('Intend to Nominate')}
-      </span>
-      <span>
-        <Badge
           color='red'
           icon='balance-scale-right'
         />

@@ -29,8 +29,8 @@ function Accounts ({ allSlashes, className, footer, isInElection, list, minCommi
   const hdrRef = useRef([
     [t('stashes'), 'start', 2],
     [t('controller'), 'address'],
-    [t('rewards'), 'start media--1200'],
     [t('bonded'), 'number'],
+    [],
     []
   ]);
 

@@ -94,7 +94,6 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
   const [isSetCmixIdOpen, toggleSetCmixId] = useToggle();
   const [isTransferCmixIdOpen, toggleTransferCmixId] = useToggle();
   const { activeValidators, balancesAll, bonded, spanCount, stakingAccount, stakingLedgers, stakingValidators } = useStashCalls(api, stashId);
-  const totalUnlocking = stakingAccount && (stakingAccount.unlocking || []).reduce((acc, { value }) => acc.iadd(value), new BN(0));
 
   const ledger = useControllerCalls(api, controllerId);
   const ledgers = useMemo(() => stakingLedgers?.map((elem) => {
@@ -233,12 +232,6 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
       <td className='address'>
         <AddressMini value={controllerId} />
       </td>
-      <td className='start media--1200'>
-        {destination?.isAccount
-          ? <AddressMini value={destination.asAccount} />
-          : destination?.toString()
-        }
-      </td>
       <td className='number'>
         <StakingBonded stakingInfo={stakingAccount} />
         <StakingUnbonding stakingInfo={stakingAccount} />
@@ -338,11 +331,10 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
                     onClick={toggleUnbond}
                   />
                   <Menu.Item
-                    isDisabled={!isOwnController || !stakingAccount || !totalUnlocking || !totalUnlocking.gtn(0)}
+                    isDisabled={!isOwnController || !stakingAccount || !stakingAccount.unlocking || !stakingAccount.unlocking.length}
+                    label={t<string>('Rebond funds')}
                     onClick={toggleRebond}
-                  >
-                    {t<string>('Rebond unlocked funds')}
-                  </Menu.Item>
+                  />
                   <Menu.Item
                     isDisabled={!isOwnController || !stakingAccount || !stakingAccount.redeemable || !stakingAccount.redeemable.gtn(0)}
                     label={t<string>('Withdraw unbonded funds')}
@@ -381,15 +373,15 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
                   {isStashNominating && (
                     <Menu.Item
                       isDisabled={!isOwnController || !targets.validators?.length}
+                      label={t<string>('Set nominees')}
                       onClick={toggleNominate}
-                    >
-                      {t<string>('Set nominees')}
-                    </Menu.Item>
+                    />
                   )}
                   {!isStashNominating && (
-                    <Menu.Item onClick={toggleInject}>
-                      {t<string>('Inject session keys (advanced)')}
-                    </Menu.Item>
+                    <Menu.Item
+                      label={t<string>('Inject session keys (advanced)')}
+                      onClick={toggleInject}
+                    />
                   )}
                   <Menu.Divider />
                   {

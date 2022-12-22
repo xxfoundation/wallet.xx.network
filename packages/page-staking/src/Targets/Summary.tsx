@@ -60,8 +60,8 @@ function Summary ({ avgStaked, custodyRewardsActive, lastEra, lowStaked, minNomi
   const helpLowest = t('Team multipliers are included in the lowest / avg staked numbers');
 
   const progressStake = useMemo(
-    () => getProgressInfo(totalStaked, totalIssuance),
-    [totalIssuance, totalStaked]
+    () => getProgressInfo(totalStaked, totalStakeableIssuance),
+    [totalStakeableIssuance, totalStaked]
   );
 
   const progressAvg = useMemo(

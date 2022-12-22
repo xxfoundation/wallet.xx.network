@@ -71,6 +71,10 @@ function ValidateAmount ({ currentAmount, isNominating, minNominated, minNominat
           newError = t('The bonded amount is less than the minimum threshold of {{minBond}} for nominators', {
             replace: { minBond: formatBalance(minNominatorBond) }
           });
+        } else if (minNominated && check.lt(minNominated)) {
+          newWarning = t('The bonded amount is less than the current active minimum nominated amount of {{minNomination}} and depending on the network state, may not be selected to participate', {
+            replace: { minNomination: formatBalance(minNominated) }
+          });
         }
       } else {
         if (minValidatorBond && check.lt(minValidatorBond)) {

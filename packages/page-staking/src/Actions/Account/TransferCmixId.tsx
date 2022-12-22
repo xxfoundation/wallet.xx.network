@@ -46,7 +46,6 @@ function TransferCmixId ({ cmixId, ledgers, onClose, stashId, stashes }: Props):
 
   return (
     <Modal
-      className='staking--BondExtra'
       header={t<string>('Transfer Cmix ID')}
       onClose={onClose}
       size='large'

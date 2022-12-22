@@ -28,7 +28,6 @@ import useSortedTargets from './useSortedTargets';
 import Validators from './Validators';
 
 const HIDDEN_ACC = ['actions', 'payout'];
-const MIN_COMM = new BN(2);
 
 function createPathRef (basePath: string): Record<string, string | string[]> {
   return {
@@ -54,14 +53,15 @@ function StakingApp ({ basePath, className = '' }: Props): React.ReactElement<Pr
   const [loadNominations, setLoadNominations] = useState(false);
   const nominatedBy = useNominations(loadNominations);
   const stakingOverview = useCall<DeriveStakingOverview>(api.derive.staking.overview);
-  const targets = useSortedTargets(favorites);
+  const minCommission = useCall<BN>(api.query.staking.minValidatorCommission);
   const ownStashes = useOwnStashInfos();
   const slashes = useAvailableSlashes();
+  const targets = useSortedTargets(favorites);
   const pathRef = useRef(createPathRef(basePath));
 
   const hasQueries = useMemo(
-    () => !!(api.query.imOnline?.authoredBlocks) && !!(api.query.staking.activeEra),
-    [api]
+    () => hasAccounts && !!(api.query.imOnline?.authoredBlocks) && !!(api.query.staking.activeEra),
+    [api, hasAccounts]
   );
 
   const hasStashes = useMemo(
@@ -167,7 +167,7 @@ function StakingApp ({ basePath, className = '' }: Props): React.ReactElement<Pr
         </Switch>
         <Actions
           className={pathname === `${basePath}/actions` ? '' : '--hidden'}
-          minCommission={MIN_COMM}
+          minCommission={minCommission}
           ownStashes={ownStashes}
           targets={targets}
         />
@@ -176,7 +176,7 @@ function StakingApp ({ basePath, className = '' }: Props): React.ReactElement<Pr
           favorites={favorites}
           hasAccounts={hasAccounts}
           hasQueries={hasQueries}
-          minCommission={MIN_COMM}
+          minCommission={minCommission}
           nominatedBy={nominatedBy}
           ownStashes={ownStashes}
           stakingOverview={stakingOverview}

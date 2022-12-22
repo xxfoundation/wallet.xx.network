@@ -21,6 +21,7 @@ interface Props {
 function Validate ({ controllerId, minCommission, onClose, stashId }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const [{ validateTx }, setTx] = useState<ValidateInfo>({});
+  const [isCommissionValid, setIsCommissionValid] = useState(false);
 
   return (
     <Modal
@@ -34,6 +35,7 @@ function Validate ({ controllerId, minCommission, onClose, stashId }: Props): Re
           minCommission={minCommission}
           onChange={setTx}
           stashId={stashId}
+          onChangeCommission={setIsCommissionValid}
           withSenders
         />
       </Modal.Content>
@@ -42,7 +44,7 @@ function Validate ({ controllerId, minCommission, onClose, stashId }: Props): Re
           accountId={controllerId}
           extrinsic={validateTx}
           icon='certificate'
-          isDisabled={!validateTx}
+          isDisabled={!validateTx || !isCommissionValid}
           label={t<string>('Validate')}
           onStart={onClose}
         />

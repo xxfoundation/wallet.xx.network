@@ -1,7 +1,7 @@
 // Copyright 2017-2022 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { QueryableStorageEntry, QueryableStorageMultiArg } from '@polkadot/api/types';
+import type { QueryableStorageMultiArg } from '@polkadot/api/types';
 import type { DeriveSessionIndexes } from '@polkadot/api-derive/types';
 import type { Option } from '@polkadot/types';
 import type { EraIndex, Exposure, Nominations, SlashingSpans } from '@polkadot/types/interfaces';
@@ -100,16 +100,14 @@ function useInactivesImpl (stashId: string, nominees?: string[]): Inactives {
     if (mountedRef.current && nominees && nominees.length && indexes) {
       api
         .queryMulti(
-          [[api.query.staking.nominators, stashId] as unknown as QueryableStorageMultiArg<'promise'>]
+          [[api.query.staking.nominators, stashId] as QueryableStorageMultiArg<'promise'>]
             .concat(
-              nominees.map(
-                (id) => [api.query.staking.erasStakers as unknown as QueryableStorageEntry<'promise'>, [indexes.activeEra, id]]
-              )
+              api.query.staking.erasStakers
+                ? nominees.map((id) => [api.query.staking.erasStakers, [indexes.activeEra, id]])
+                : nominees.map((id) => [api.query.staking.stakers, id])
             )
             .concat(
-              nominees.map(
-                (id) => [api.query.staking.slashingSpans as unknown as QueryableStorageEntry<'promise'>, id]
-              )
+              nominees.map((id) => [api.query.staking.slashingSpans, id])
             ),
           ([optNominators, ...exposuresAndSpans]: [Option<Nominations>, ...(Exposure | Option<SlashingSpans>)[]]): void => {
             const exposures = exposuresAndSpans.slice(0, nominees.length) as Exposure[];

@@ -4,7 +4,6 @@
 /* eslint-disable object-curly-newline */
 
 import type { ApiPromise } from '@polkadot/api';
-import type { QueryableStorageMultiArg } from '@polkadot/api/types';
 import type { DeriveEraPrefs, DeriveSessionInfo, DeriveStakingElected, DeriveStakingQuery, DeriveStakingWaiting } from '@polkadot/api-derive/types';
 import type { Compact, Option, u32, u128 } from '@polkadot/types';
 import type { SortedTargets, TargetSortBy, ValidatorInfo } from './types';
@@ -169,15 +168,6 @@ function extractSingle (api: ApiPromise, allAccounts: string[], custodyRewardsAc
     const lastEraPayout = !lastEra.isZero()
       ? stakingLedger.claimedRewards[stakingLedger.claimedRewards.length - 1]
       : undefined;
-
-    // only use if it is more recent than historyDepth
-    let lastPayout: BN | undefined = earliestEra && lastEraPayout && lastEraPayout.gt(earliestEra)
-      ? lastEraPayout
-      : undefined;
-
-    if (lastPayout && !sessionLength.eq(BN_ONE)) {
-      lastPayout = lastEra.sub(lastPayout).mul(eraLength);
-    }
 
     const validatorNominators = (exposure.others || []).map((indv) => indv.who.toString());
     const ownNominatingAccounts = validatorNominators.filter((id) => allAccounts.includes(id));
@@ -382,28 +372,16 @@ const transformEra = {
 function useSortedTargetsImpl (favorites: string[]): SortedTargets {
   const { api } = useApi();
   const { allAccounts } = useAccounts();
-  const {
-    counterForNominators,
-    counterForValidators,
-    historyDepth,
-    maxNominatorsCount,
-    maxValidatorsCount,
-    minNominatorBond,
-    minValidatorBond,
-    totalIssuance
-  } = useCallMulti<MultiResult>(
-    [
-      api.query.staking.historyDepth,
-      api.query.staking.counterForNominators,
-      api.query.staking.counterForValidators,
-      api.query.staking.maxNominatorsCount,
-      api.query.staking.maxValidatorsCount,
-      api.query.staking.minNominatorBond,
-      api.query.staking.minValidatorBond,
-      api.query.balances?.totalIssuance
-    ] as QueryableStorageMultiArg<'promise'>[],
-    OPT_MULTI
-  );
+  const { counterForNominators, counterForValidators, historyDepth, maxNominatorsCount, maxValidatorsCount, minNominatorBond, minValidatorBond, totalIssuance } = useCallMulti<MultiResult>([
+    api.query.staking.historyDepth,
+    api.query.staking.counterForNominators,
+    api.query.staking.counterForValidators,
+    api.query.staking.maxNominatorsCount,
+    api.query.staking.maxValidatorsCount,
+    api.query.staking.minNominatorBond,
+    api.query.staking.minValidatorBond,
+    api.query.balances?.totalIssuance
+  ], OPT_MULTI);
   const electedInfo = useCall<DeriveStakingElectedWithCustody>(api.derive.staking.electedInfo, [{ ...DEFAULT_FLAGS_ELECTED, withLedger: true }]);
   const waitingInfo = useCall<DeriveStakingWaitingWithCustody>(api.derive.staking.waitingInfo, [{ ...DEFAULT_FLAGS_WAITING, withLedger: true }]);
   const lastEraInfo = useCall<LastEra>(api.derive.session.info, undefined, transformEra);
@@ -424,26 +402,27 @@ function useSortedTargetsImpl (favorites: string[]): SortedTargets {
 
   const inflation = useInflation(baseInfo?.totalStaked, totalTeamMultipliers);
 
-  const partial = useMemo(
-    () => inflation && inflation.stakedReturn && lastErasPoints
-      ? addReturns(inflation, baseInfo, lastErasPoints)
-      : baseInfo,
-    [baseInfo, inflation, lastErasPoints]
+  return useMemo(
+    (): SortedTargets => ({
+      counterForNominators,
+      counterForValidators,
+      historyDepth: api.consts.staking.historyDepth || historyDepth,
+      custodyRewardsActive,
+      inflation,
+      maxNominatorsCount,
+      maxValidatorsCount,
+      medianComm: 0,
+      minNominated: BN_ZERO,
+      minNominatorBond,
+      minValidatorBond,
+      ...(
+        inflation && inflation.stakedReturn && lastErasPoints
+          ? addReturns(inflation, baseInfo, lastErasPoints)
+          : baseInfo
+      )
+    }),
+    [api, baseInfo, counterForNominators, counterForValidators, historyDepth, inflation, lastErasPoints, maxNominatorsCount, maxValidatorsCount, minNominatorBond, minValidatorBond]
   );
-
-  return {
-    counterForNominators,
-    counterForValidators,
-    custodyRewardsActive,
-    inflation,
-    maxNominatorsCount,
-    maxValidatorsCount,
-    medianComm: 0,
-    minNominated: BN_ZERO,
-    minNominatorBond,
-    minValidatorBond,
-    ...partial
-  };
 }
 
 export default createNamedHook('useSortedTargets', useSortedTargetsImpl);

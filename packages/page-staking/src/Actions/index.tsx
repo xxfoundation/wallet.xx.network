@@ -7,6 +7,7 @@ import type { SortedTargets } from '../types';
 import React, { useMemo, useRef, useState } from 'react';
 
 import { Button, ToggleGroup } from '@polkadot/react-components';
+import PaginationAdvanced from '@polkadot/react-components/Pagination/Advanced';
 import { useApi, useAvailableSlashes, usePagination } from '@polkadot/react-hooks';
 import { FormatBalance } from '@polkadot/react-query';
 import { BN, BN_ZERO } from '@polkadot/util';
@@ -140,7 +141,7 @@ function Actions ({ className = '', isInElection, minCommission, ownStashes, tar
       state.foundStashes && filterStashes(stashTypeIndex, state.foundStashes),
       (
         <tr key='footer'>
-          <td colSpan={4} />
+          <td colSpan={3} />
           <td className='number'>{formatTotal(stashTypeIndex, state)}</td>
           <td colSpan={2} />
         </tr>
@@ -191,6 +192,7 @@ function Actions ({ className = '', isInElection, minCommission, ownStashes, tar
         />
       )
       }
+      <PaginationAdvanced {...stashPagination} />
     </div>
   );
 }

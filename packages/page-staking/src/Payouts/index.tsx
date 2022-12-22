@@ -14,7 +14,6 @@ import { useApi, useBlockInterval, useCall, useOwnEraRewards } from '@polkadot/r
 import { FormatBalance } from '@polkadot/react-query';
 import { BN, BN_THREE } from '@polkadot/util';
 
-import ElectionBanner from '../ElectionBanner';
 import { useTranslation } from '../translate';
 import PayButton from './PayButton';
 import Stash from './Stash';
@@ -23,7 +22,6 @@ import Validator from './Validator';
 interface Props {
   className?: string;
   historyDepth?: BN;
-  isInElection?: boolean;
   ownValidators: StakerState[];
 }
 
@@ -157,7 +155,7 @@ function getOptions (blockTime: BN, eraLength: BN | undefined, historyDepth: BN 
   return eraSelection;
 }
 
-function Payouts ({ className = '', historyDepth, isInElection, ownValidators }: Props): React.ReactElement<Props> {
+function Payouts ({ className = '', historyDepth, ownValidators }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
   const [hasOwnValidators] = useState(() => ownValidators.length !== 0);
@@ -234,11 +232,9 @@ function Payouts ({ className = '', historyDepth, isInElection, ownValidators }:
         />
         <PayButton
           isAll
-          isDisabled={isInElection}
           payout={validators}
         />
       </Button.Group>
-      <ElectionBanner isInElection={isInElection} />
       {!isLoadingRewards && !stashes?.length && (
         <MarkWarning
           className='warning centered'
@@ -281,7 +277,6 @@ function Payouts ({ className = '', historyDepth, isInElection, ownValidators }:
           {!isLoadingRewards && validators.filter(({ available }) => !available.isZero()).map((payout): React.ReactNode => (
             <Validator
               historyDepth={historyDepth}
-              isDisabled={isInElection}
               key={payout.validatorId}
               payout={payout}
             />

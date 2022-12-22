@@ -26,7 +26,7 @@ function Voters ({ balance, voters }: Props): React.ReactElement<Props> {
     [voters]
   );
 
-  if (!balance || !voters || !voters.length) {
+  if (!voters || !voters.length) {
     return <><td className='all number' /><td className='number' /></>;
   }
 

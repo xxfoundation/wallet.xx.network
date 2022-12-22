@@ -1,8 +1,6 @@
 // Copyright 2017-2022 @polkadot/app-council authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
 import type { Hash, Proposal, ProposalIndex } from '@polkadot/types/interfaces';
 
 import React, { useState } from 'react';
@@ -68,7 +66,7 @@ function Close ({ hasFailed, hash, idNumber, proposal }: Props): React.ReactElem
                     : [hash, idNumber, weight, encodedCallLength]
                   : [hash, idNumber]
               }
-              tx={api.tx[modLocation].close}
+              tx={api.tx[modLocation].closeOperational || api.tx[modLocation].close}
             />
           </Modal.Actions>
         </Modal>

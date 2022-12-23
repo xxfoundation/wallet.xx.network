@@ -48,7 +48,6 @@ function Validator ({ allSlashes, canSelect, filterName, info, isNominated, isSe
     isElected,
     isFavorite,
     key,
-    nominatingAccounts,
     numNominators,
     pastAvgCommission,
     predictedElected,
@@ -58,20 +57,18 @@ function Validator ({ allSlashes, canSelect, filterName, info, isNominated, isSe
     teamMultiplier } = info;
   const { t } = useTranslation();
   const { api } = useApi();
-
+  const accountInfo = useDeriveAccountInfo(accountId);
   const locationContext = useContext(NodeLocationContext);
   const location = useMemo(() => {
-    return (locationContext && locationContext.nodeLocations && info && info.cmixId)
-      ? locationContext.nodeLocations[info.cmixId]
+    return (locationContext && locationContext.nodeLocations && cmixId)
+      ? locationContext.nodeLocations[cmixId]
       : null;
-  }, [locationContext, info]);
+  }, [locationContext, cmixId]);
   const trimmedLocation =
     (location ?? '').split(',')
       .map((s) => s.trim())
       .filter((s) => !!s)
       .join(', ');
-
-  const accountInfo = useDeriveAccountInfo(info.accountId);
 
   const isVisible = useMemo(
     () => accountInfo
@@ -84,7 +81,7 @@ function Validator ({ allSlashes, canSelect, filterName, info, isNominated, isSe
     () => (allSlashes || [])
       .map(([era, all]) => ({ era, slashes: all.filter(({ validator }) => validator.eq(accountId)) }))
       .filter(({ slashes }) => slashes.length),
-    [accountId, allSlashes]
+    [allSlashes, accountId]
   );
 
   const _onQueryStats = useCallback(

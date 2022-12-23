@@ -4246,7 +4246,7 @@ __metadata:
     "@polkadot/extension-compat-metamask": ^0.44.6
     "@polkadot/extension-dapp": ^0.44.6
     "@polkadot/rpc-provider": ^9.10.2
-    "@xxnetwork/types": ^1.0.1
+    "@xxnetwork/types": ^1.0.4
     fflate: ^0.7.4
     rxjs: ^7.6.0
   languageName: unknown
@@ -6936,12 +6936,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@xxnetwork/types@npm:^1.0.1":
-  version: 1.0.1
-  resolution: "@xxnetwork/types@npm:1.0.1"
+"@xxnetwork/types@npm:^1.0.4":
+  version: 1.0.4
+  resolution: "@xxnetwork/types@npm:1.0.4"
   dependencies:
     "@polkadot/api": ^9.10.3
-  checksum: 60a1e15668053a637c55f4872fcef76509a8394c807a024bb68a95036ff8d7dc19658055ab1701812b8990dff49e1c93695a0f84eb5cf6373de9895db7801b60
+  checksum: 52465df708b4f608b65caadfe1382e91c5e2bf229bb1c9f2ef1d22ff6fde736ee81c7b6dfa12ccc8194a71d92f80b5fc305198d3a83c560d48259c9e87d00478
   languageName: node
   linkType: hard
 

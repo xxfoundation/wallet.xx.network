@@ -35,7 +35,6 @@ interface Props {
   stakingOverview?: DeriveStakingOverview;
   targets: SortedTargets;
   toggleFavorite: (address: string) => void;
-  ownNominators: StakerState[];
   toggleNominatedBy: () => void;
 }
 
@@ -66,7 +65,7 @@ const CLASSES: Record<string, string> = {
   rankTeamMultiplier: 'is-secondary'
 };
 const MAX_CAP_PERCENT = 100; // 75 if only using numNominators
-const MAX_COMM_PERCENT = 10; // -1 for median
+const MAX_COMM_PERCENT = 20; // -1 for median
 const MAX_DAYS = 7;
 const SORT_KEYS = ['rankComm', 'rankTeamMultiplier', 'rankBondOwn', 'rankBondOther', 'rankBondTotal', 'rankPredictedStake', 'rankOverall'];
 
@@ -190,10 +189,10 @@ function selectProfitable (list: ValidatorInfo[], maxNominations: number): strin
 const DEFAULT_FLAGS = {
   withAccountNominations: false,
   withElected: false,
-  withGroup: true,
+  withGroup: false,
   withIdentity: false,
   withPayout: false,
-  withoutComm: true,
+  withoutComm: false,
   withoutOver: true
 };
 

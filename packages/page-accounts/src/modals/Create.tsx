@@ -330,7 +330,7 @@ function Create ({ className = '', onClose, onStatusChange, seed: propsSeed, typ
             onCommit={_onCommit}
             setName={setName}
             setPassword={setPassword}
-          />;
+          />
           <Modal.Columns>
             <ExternalWarning />
           </Modal.Columns>

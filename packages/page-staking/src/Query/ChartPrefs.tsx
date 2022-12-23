@@ -61,7 +61,7 @@ function ChartPrefs ({ validatorId }: Props): React.ReactElement<Props> {
 
   const legendsRef = useRef([
     t<string>('commission'),
-    t<string>('average')
+    t<string>('network average')
   ]);
 
   return (

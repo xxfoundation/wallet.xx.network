@@ -1,8 +1,6 @@
 // Copyright 2017-2022 @polkadot/app-tech-comm authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
 import type { CollectiveType } from '@polkadot/react-hooks/types';
 import type { Hash, Proposal, ProposalIndex } from '@polkadot/types/interfaces';
 

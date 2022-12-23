@@ -120,10 +120,10 @@ function Validator ({ allSlashes, canSelect, filterName, info, isNominated, isSe
           isFavorite={isFavorite}
           toggleFavorite={toggleFavorite}
         />
-        {isNominated || nominatingAccounts.length > 0
+        {isNominated
           ? (
             <Badge
-              color={nominatingAccounts.length > 0 ? 'green' : 'orange'}
+              color='green'
               icon='hand-paper'
             />
           )

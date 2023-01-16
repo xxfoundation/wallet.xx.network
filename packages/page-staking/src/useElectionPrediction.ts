@@ -88,7 +88,7 @@ function buildVotersListFromChain (chainData: ChainData, ownNominators: StakerSt
     }));
     const ledger = chainData.ledgers[chainData.controllers[nomId]];
 
-    if (targets.length > 0) {
+    if (filteredTargets.length > 0) {
       voters.push({
         nominatorId: nomId,
         stake: ledger.active.toString(),

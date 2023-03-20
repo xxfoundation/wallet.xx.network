@@ -1,4 +1,4 @@
-// Copyright 2017-2022 @polkadot/apps-config authors & contributors
+// Copyright 2017-2023 @polkadot/apps-config authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { EndpointOption } from './types';
@@ -22,7 +22,7 @@ export const prodChains: EndpointOption[] = [
     text: 'xx mainnet',
     providers: {
       'xx foundation': 'wss://rpc.xx.network',
-      Dwellir: 'wss://xxnetwork-rpc.dwellir.com'
+      onFinality: 'wss://xx.api.onfinality.io/public-ws'
     }
   }
 ];

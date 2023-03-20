@@ -1,4 +1,4 @@
-// Copyright 2017-2022 @polkadot/app-staking authors & contributors
+// Copyright 2017-2023 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { DeriveStakingOverview } from '@polkadot/api-derive/types';
@@ -16,6 +16,7 @@ import { BN, isFunction } from '@polkadot/util';
 import basicMd from './md/basic.md';
 import NodeLocationsProvider from './NodeLocationContext/Provider';
 import Actions from './Actions';
+//import Bags from './Bags';
 import { STORE_FAVS_BASE } from './constants';
 import Nominators from './Nominators';
 import Payouts from './Payouts';
@@ -136,6 +137,9 @@ function StakingApp ({ basePath, className = '' }: Props): React.ReactElement<Pr
           items={items}
         />
         <Switch>
+        {/* <Route path={pathRef.current.bags}>
+          <Bags ownStashes={ownStashes} />
+        </Route> */}
           <Route path={pathRef.current.payout}>
             <Payouts
               historyDepth={targets.historyDepth}

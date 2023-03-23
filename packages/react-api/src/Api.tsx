@@ -235,10 +235,28 @@ async function createApi (apiUrl: string, signer: ApiSigner, onError: (error: un
       ? await getLightProvider(apiUrl.replace('light://', ''))
       : new WsProvider(apiUrl);
 
+    types['MultiSignature'] = {
+      '_enum': {
+        'Ed25519': 'Ed25519Signature',
+        'Sr25519': 'Sr25519Signature',
+        'Ecdsa': 'EcdsaSignature',
+        'Wots': 'Bytes'
+      }
+    };
+    types['ExtrinsicSignature'] = 'MultiSignature';
+
     api = new ApiPromise({
       provider,
       registry,
       signer,
+      signedExtensions: {
+        SetNextPk: {
+          extrinsic: {
+            next_pk: 'Option<AccountId>'
+          },
+          payload: {}
+        }
+      },
       types,
       typesBundle
     });

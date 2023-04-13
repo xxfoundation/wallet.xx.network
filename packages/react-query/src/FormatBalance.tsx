@@ -65,8 +65,8 @@ function applyFormat (value: Compact<any> | BN | string, [decimals, token]: [num
 
   if (prefix.length > M_LENGTH) {
     const [major, rest] = formatBalance(value, { decimals, withUnit: false }).split('.');
-    const minor = rest.substring(0, 4);
-    const unit = rest.substring(4);
+    const minor = rest.substr(0, 4);
+    const unit = rest.substr(4);
 
     return <>{major}.<span className='ui--FormatBalance-postfix'>{minor}</span><span className='ui--FormatBalance-unit'>{unit}{unit ? unitPost : ` ${unitPost}`}</span>{labelPost || ''}</>;
   }
@@ -98,7 +98,7 @@ function FormatBalance ({ children, className = '', format, formatIndex, isShort
                 ? <>{t<string>('everything')}{labelPost || ''}</>
                 : applyFormat(value, formatInfo, withCurrency, withSi, isShort, labelPost)
               : isString(labelPost)
-                ? `-${labelPost.toString()}`
+                ? `-${labelPost}`
                 : labelPost
         }</span>{children}
     </div>
@@ -109,6 +109,10 @@ export default React.memo(styled(FormatBalance)`
   display: inline-block;
   vertical-align: baseline;
   white-space: nowrap;
+
+  &.betanet {
+    margin-bottom: 2em;
+  }
 
   * {
     vertical-align: baseline !important;

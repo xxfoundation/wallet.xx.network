@@ -36,13 +36,11 @@ import { useTranslation } from '../translate';
 import { createMenuGroup } from '../util';
 import useMultisigApprovals from './useMultisigApprovals';
 import useProxies from './useProxies';
-import { AddressIdentity } from '@polkadot/react-hooks/types';
 
 interface Props {
   account: KeyringAddress;
   className?: string;
   delegation?: Delegation;
-  filter: string;
   isFavorite: boolean;
   proxy?: [ProxyDefinition[], BN];
   setBalance: (address: string, value: AccountBalance) => void;
@@ -52,41 +50,6 @@ interface Props {
 interface DemocracyUnlockable {
   democracyUnlockTx: SubmittableExtrinsic<'promise'> | null;
   ids: BN[];
-}
-
-const BAL_OPTS_DEFAULT = {
-  available: false,
-  bonded: false,
-  locked: false,
-  redeemable: false,
-  reserved: false,
-  total: true,
-  unlocking: false,
-  vested: false
-};
-
-const BAL_OPTS_EXPANDED = {
-  available: true,
-  bonded: true,
-  locked: true,
-  redeemable: true,
-  reserved: true,
-  total: false,
-  unlocking: true,
-  vested: true
-};
-
-function calcVisible (filter: string, name: string, tags: string[], identity?: AddressIdentity): boolean {
-  if (filter.length === 0) {
-    return true;
-  }
-
-  const _filter = filter.toLowerCase();
-  const display = identity?.display || '';
-
-  return tags.reduce((result: boolean, tag: string): boolean => {
-    return result || tag.toLowerCase().includes(_filter);
-  }, name.toLowerCase().includes(_filter) || display.toLowerCase().includes(_filter));
 }
 
 function calcUnbonding (stakingInfo?: DeriveStakingAccount) {
@@ -122,7 +85,7 @@ const transformRecovery = {
   transform: (opt: Option<RecoveryConfig>) => opt.unwrapOr(null)
 };
 
-function Account ({ account: { address, meta }, className = '', delegation, filter, isFavorite, proxy, setBalance, toggleFavorite }: Props): React.ReactElement<Props> | null {
+function Account ({ account: { address, meta }, className = '', delegation, isFavorite, proxy, setBalance, toggleFavorite }: Props): React.ReactElement<Props> | null {
   const { t } = useTranslation();
   const [isExpanded, toggleIsExpanded] = useToggle(false);
   const { theme } = useContext(ThemeContext as React.Context<ThemeDef>);
@@ -156,10 +119,9 @@ function Account ({ account: { address, meta }, className = '', delegation, filt
   useEffect((): void => {
     if (balancesAll) {
       setBalance(address, {
-        // some chains don't have "active" in the Ledger
-        bonded: stakingInfo?.stakingLedger.active?.unwrap() || BN_ZERO,
+        bonded: stakingInfo?.stakingLedger.active.unwrap() ?? BN_ZERO,
         locked: balancesAll.lockedBalance,
-        redeemable: stakingInfo?.redeemable || BN_ZERO,
+        redeemable: stakingInfo?.redeemable ?? BN_ZERO,
         total: balancesAll.freeBalance.add(balancesAll.reservedBalance),
         transferrable: balancesAll.availableBalance,
         unbonding: calcUnbonding(stakingInfo)
@@ -191,11 +153,6 @@ function Account ({ account: { address, meta }, className = '', delegation, filt
       }
     );
   }, [address, api, bestNumber, democracyLocks]);
-
-  const isVisible = useMemo(
-    () => calcVisible(filter, accName, tags, identity),
-    [accName, filter, tags, identity]
-  );
 
   const _onFavorite = useCallback(
     () => toggleFavorite(address),
@@ -258,33 +215,37 @@ function Account ({ account: { address, meta }, className = '', delegation, filt
         <Menu.Item
           icon='link'
           key='identityMain'
-          label={t('Set on-chain identity')}
           onClick={toggleIdentityMain}
-        />
+        >
+          {t('Set on-chain identity')}
+        </Menu.Item>
       ),
       isFunction(api.api.tx.identity?.setSubs) && identity?.display && !isHardware && (
         <Menu.Item
           icon='vector-square'
           key='identitySub'
-          label={t('Set on-chain sub-identities')}
           onClick={toggleIdentitySub}
-        />
+        >
+          {t('Set on-chain sub-identities')}
+        </Menu.Item>
       ),
       isFunction(api.api.tx.democracy?.unlock) && democracyUnlockTx && (
         <Menu.Item
           icon='broom'
           key='clearDemocracy'
-          label={t('Clear expired democracy locks')}
           onClick={_clearDemocracyLocks}
-        />
+        >
+          {t('Clear expired democracy locks')}
+        </Menu.Item>
       ),
       isFunction(api.api.tx.vesting?.vest) && vestingVestTx && (
         <Menu.Item
           icon='unlock'
           key='vestingVest'
-          label={t('Unlock vested amount')}
           onClick={_vestingVest}
-        />
+        >
+          {t('Unlock vested amount')}
+        </Menu.Item>
       )
     ], t('Identity')),
     createMenuGroup('deriveGroup', [
@@ -292,17 +253,19 @@ function Account ({ account: { address, meta }, className = '', delegation, filt
         <Menu.Item
           icon='download'
           key='deriveAccount'
-          label={t('Derive account via derivation path')}
           onClick={toggleDerive}
-        />
+        >
+          {t('Derive account via derivation path')}
+        </Menu.Item>
       ),
       isHardware && (
         <Menu.Item
           icon='eye'
           key='showHwAddress'
-          label={t('Show address on hardware device')}
           onClick={_showOnHardware}
-        />
+        >
+          {t('Show address on hardware device')}
+        </Menu.Item>
       )
     ], t('Derive')),
     createMenuGroup('backupGroup', [
@@ -310,25 +273,28 @@ function Account ({ account: { address, meta }, className = '', delegation, filt
         <Menu.Item
           icon='database'
           key='backupJson'
-          label={t('Create a backup file for this account')}
           onClick={toggleBackup}
-        />
+        >
+          {t('Create a backup file for this account')}
+        </Menu.Item>
       ),
       !(isExternal || isHardware || isInjected || isMultisig || isDevelopment) && (
         <Menu.Item
           icon='edit'
           key='changePassword'
-          label={t("Change this account's password")}
           onClick={togglePassword}
-        />
+        >
+          {t("Change this account's password")}
+        </Menu.Item>
       ),
       !(isInjected || isDevelopment) && (
         <Menu.Item
           icon='trash-alt'
           key='forgetAccount'
-          label={t('Forget this account')}
           onClick={toggleForget}
-        />
+        >
+          {t('Forget this account')}
+        </Menu.Item>
       )
     ], t('Backup')),
     isFunction(api.api.tx.recovery?.createRecovery) && createMenuGroup('reoveryGroup', [
@@ -336,59 +302,67 @@ function Account ({ account: { address, meta }, className = '', delegation, filt
         <Menu.Item
           icon='redo'
           key='makeRecoverable'
-          label={t('Make recoverable')}
           onClick={toggleRecoverSetup}
-        />
+        >
+          {t('Make recoverable')}
+        </Menu.Item>
       ),
       <Menu.Item
         icon='screwdriver'
         key='initRecovery'
-        label={t('Initiate recovery for another')}
         onClick={toggleRecoverAccount}
-      />
+      >
+        {t('Initiate recovery for another')}
+      </Menu.Item>
     ], t('Recovery')),
     isFunction(api.api.tx.multisig?.asMulti) && isMultisig && createMenuGroup('multisigGroup', [
       <Menu.Item
         icon='file-signature'
         isDisabled={!multiInfos || !multiInfos.length}
         key='multisigApprovals'
-        label={t('Multisig approvals')}
         onClick={toggleMultisig}
-      />
+      >
+        {t('Multisig approvals')}
+      </Menu.Item>
     ], t('Multisig')),
     isFunction(api.api.query.democracy?.votingOf) && delegation?.accountDelegated && createMenuGroup('undelegateGroup', [
       <Menu.Item
         icon='user-edit'
         key='changeDelegate'
-        label={t('Change democracy delegation')}
         onClick={toggleDelegate}
-      />,
+      >
+        {t('Change democracy delegation')}
+      </Menu.Item>,
       <Menu.Item
         icon='user-minus'
         key='undelegate'
-        label= {t('Undelegate')}
         onClick={toggleUndelegate}
-      />
+      >
+        {t('Undelegate')}
+      </Menu.Item>
     ], t('Undelegate')),
     createMenuGroup('delegateGroup', [
       isFunction(api.api.query.democracy?.votingOf) && !delegation?.accountDelegated && (
         <Menu.Item
           icon='user-plus'
           key='delegate'
-          label={t('Delegate democracy votes')}
           onClick={toggleDelegate}
-        />
+        >
+
+          {t('Delegate democracy votes')}
+        </Menu.Item>
       ),
       isFunction(api.api.query.proxy?.proxies) && (
         <Menu.Item
           icon='sitemap'
           key='proxy-overview'
-          label={proxy?.[0].length
+          onClick={toggleProxyOverview}
+        >
+          {proxy?.[0].length
             ? t('Manage proxies')
             : t('Add proxy')
           }
-          onClick={toggleProxyOverview}
-        />
+        </Menu.Item>
       )
     ], t('Delegate')),
     isEditable && !api.isDevelopment && createMenuGroup('genesisGroup', [
@@ -401,10 +375,6 @@ function Account ({ account: { address, meta }, className = '', delegation, filt
     ])
   ].filter((i) => i),
   [_clearDemocracyLocks, _showOnHardware, _vestingVest, api, delegation, democracyUnlockTx, genesisHash, identity, isDevelopment, isEditable, isEthereum, isExternal, isHardware, isInjected, isMultisig, multiInfos, onSetGenesisHash, proxy, recoveryInfo, t, toggleBackup, toggleDelegate, toggleDerive, toggleForget, toggleIdentityMain, toggleIdentitySub, toggleMultisig, togglePassword, toggleProxyOverview, toggleRecoverAccount, toggleRecoverSetup, toggleUndelegate, vestingVestTx]);
-
-  if (!isVisible) {
-    return null;
-  }
 
   return (
     <>
@@ -639,7 +609,16 @@ function Account ({ account: { address, meta }, className = '', delegation, filt
           <AddressInfo
             address={address}
             balancesAll={balancesAll}
-            withBalance={BAL_OPTS_DEFAULT}
+            withBalance={{
+              available: false,
+              bonded: false,
+              locked: false,
+              redeemable: false,
+              reserved: false,
+              total: true,
+              unlocking: false,
+              vested: false
+            }}
             withExtended={false}
           />
         </td>
@@ -648,6 +627,7 @@ function Account ({ account: { address, meta }, className = '', delegation, filt
             <LinkExternal
               className='ui--AddressCard-exporer-link media--1400'
               data={address}
+              isLogo
               type='address'
             />
             {isFunction(api.api.tx.balances?.transfer) && (
@@ -693,7 +673,16 @@ function Account ({ account: { address, meta }, className = '', delegation, filt
           <AddressInfo
             address={address}
             balancesAll={balancesAll}
-            withBalance={BAL_OPTS_EXPANDED}
+            withBalance={{
+              available: true,
+              bonded: true,
+              locked: true,
+              redeemable: true,
+              reserved: true,
+              total: false,
+              unlocking: true,
+              vested: true
+            }}
             withExtended={false}
           />
         </td>

@@ -1,6 +1,6 @@
-// Copyright 2017-2022 @polkadot/apps authors & contributors
-// SPDX-License-Identifier: Apache-2.0
+/* eslint-disable header/header */
 
+// import type { AccountData } from '@polkadot/types/interfaces';
 import type { FrameSystemAccountInfo } from '@polkadot/types/lookup';
 import type { BN } from '@polkadot/util';
 

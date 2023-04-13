@@ -20,13 +20,13 @@ const definitions: OverrideBundleDefinition = {
           end: 'BlockNumber',
           estimates: 'Option<u64>',
           range_index: 'Option<u8>',
-          bsc_address: 'Option<Bytes>',
+          eth_address: 'Option<Bytes>',
           multiplier: 'MultiplierOption',
           reward: 'u128'
         },
         AresPriceData: {
           price: 'u64',
-          account_id: 'AccountId',
+          account_id: 'AuthorityId',
           create_bn: 'BlockNumber',
           fraction_len: 'FractionLength',
           raw_number: 'JsonNumberValue',
@@ -37,7 +37,7 @@ const definitions: OverrideBundleDefinition = {
           block_number: 'BlockNumber',
           winners: 'Vec<AccountParticipateEstimates>',
           public: 'AccountId',
-          estimates_id: 'u64',
+          estimates_config: 'Bytes',
           symbol: 'Bytes',
           price: '(u64, FractionLength)'
         },
@@ -99,8 +99,7 @@ const definitions: OverrideBundleDefinition = {
           is_income: 'bool'
         },
         PurchasedId: 'Bytes',
-        PriceKey: 'Vec<u8>',
-        PriceToken: 'Bytes',
+        PriceKey: 'Bytes',
         PreCheckPayload: {
           block_number: 'BlockNumber',
           pre_check_stash: 'AccountId',
@@ -165,7 +164,8 @@ const definitions: OverrideBundleDefinition = {
         PurchasedDefaultData: {
           submit_threshold: 'u8',
           max_duration: 'u64',
-          avg_keep_duration: 'u64'
+          avg_keep_duration: 'u64',
+          unit_price: 'u64'
         },
         PurchasedForceCleanPayload: {
           BlockNumber: 'BlockNumber',
@@ -174,14 +174,6 @@ const definitions: OverrideBundleDefinition = {
           public: 'MultiSigner'
         },
         PurchaseId: 'Vec<u8>',
-        Releases: {
-          _enum: [
-            'V1_0_0_Ancestral',
-            'V1_0_1_HttpErrUpgrade',
-            'V1_1_0_HttpErrUpgrade',
-            'V1_2_0'
-          ]
-        },
         RequestInterval: 'u8',
         StatusErr: '(u16)',
         SymbolEstimatesConfig: {

@@ -1,51 +1,44 @@
 // Copyright 2017-2021 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { PalletStakingStakingLedger } from '@polkadot/types/lookup';
+import React, { useState, useCallback } from 'react';
+import type { AccountId } from '@polkadot/types/interfaces';
 
-import React, { useCallback, useState } from 'react';
-
-import { InputAddress, MarkError, Modal, Static, TxButton } from '@polkadot/react-components';
 import { useApi } from '@polkadot/react-hooks';
-import { DisplayValue } from '@polkadot/react-query';
+import { InputAddress, MarkError, Modal, TxButton, Static } from '@polkadot/react-components';
 
 import { useTranslation } from '../../translate';
+import { DisplayValue } from '@polkadot/react-query';
 
 interface Props {
   onClose: () => void;
   stashId: string;
   cmixId: string;
-  ledgers: PalletStakingStakingLedger[];
+  ledger: any[];
   stashes: string[];
 }
 
-function TransferCmixId ({ cmixId, ledgers, onClose, stashId, stashes }: Props): React.ReactElement<Props> {
+function TransferCmixId({ onClose, stashId, cmixId, ledger, stashes }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
-  const [dest, setDest] = useState<string | null>(null);
+  const [dest, setDest] = useState<AccountId | null>(null);
   const [destErrorNoCmixId, setDestErrorNoCmixId] = useState<boolean>(false);
   const [destErrorNotStash, setDestErrorNotStash] = useState<boolean>(false);
 
   const cmixHint = t<string>('The cMix ID is the identifier of your cMix Node in the xx network. Validators are required to have a cMix ID set on-chain. This can be found in your cmix-IDF.json file, under the field “hexNodeID”.');
 
   const _setDest = useCallback(
-    (address: string | null) => {
-      const hasNoCmixId = ledgers
-        .filter((elem) => elem.stash.toString() === address)
-        .some((elem) => !elem.cmixId.isEmpty);
-
-      setDestErrorNoCmixId(hasNoCmixId);
-
-      const isNotStash = !stashes.some((elem) => elem === address);
-
-      setDestErrorNotStash(isNotStash);
-      setDest(address);
+    (address) => {
+      ledger.filter(elem => elem.stash.toString() == address).some(elem => !elem.cmixId.isEmpty) ? setDestErrorNoCmixId(true) : setDestErrorNoCmixId(false)
+      !stashes.some(elem => elem == address) ? setDestErrorNotStash(true) : setDestErrorNotStash(false)
+      setDest(address)
     },
-    [ledgers, stashes]
+    [ledger]
   );
 
   return (
     <Modal
+      className='staking--BondExtra'
       header={t<string>('Transfer Cmix ID')}
       onClose={onClose}
       size='large'
@@ -67,8 +60,8 @@ function TransferCmixId ({ cmixId, ledgers, onClose, stashId, stashes }: Props):
         {
           <Modal.Columns>
             <InputAddress
-              label={t<string>('destination stash account')}
               onChange={_setDest}
+              label={t<string>('destination stash account')}
             />
             {destErrorNoCmixId &&
               <MarkError

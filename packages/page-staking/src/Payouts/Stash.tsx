@@ -14,7 +14,6 @@ import { createErasString } from './util';
 
 interface Props {
   className?: string;
-  historyDepth?: BN;
   payout: PayoutStash;
 }
 
@@ -23,9 +22,9 @@ interface EraInfo {
   oldestEra?: BN;
 }
 
-function Stash ({ className = '', historyDepth, payout: { available, rewards, stashId } }: Props): React.ReactElement<Props> {
+function Stash ({ className = '', payout: { available, rewards, stashId } }: Props): React.ReactElement<Props> {
   const [{ eraStr, oldestEra }, setEraInfo] = useState<EraInfo>({ eraStr: '' });
-  const eraBlocks = useEraBlocks(historyDepth, oldestEra);
+  const eraBlocks = useEraBlocks(oldestEra);
 
   useEffect((): void => {
     rewards && setEraInfo({

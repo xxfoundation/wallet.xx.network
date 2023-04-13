@@ -5,9 +5,9 @@ import type { ValidateInfo } from './types';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { Dropdown, InputAddress, InputNumber, MarkError, Modal } from '@polkadot/react-components';
+import { Dropdown, InputAddress, InputNumber, Modal } from '@polkadot/react-components';
 import { useApi } from '@polkadot/react-hooks';
-import { BN, BN_HUNDRED as MAX_COMM, BN_ONE, isFunction } from '@polkadot/util';
+import { BN, BN_HUNDRED as MAX_COMM, isFunction } from '@polkadot/util';
 
 import { useTranslation } from '../../translate';
 
@@ -15,7 +15,6 @@ interface Props {
   className?: string;
   controllerId: string;
   onChangeCommission?: (isCommissionValid: boolean) => void;
-  minCommission?: BN;
   onChange: (info: ValidateInfo) => void;
   stashId: string;
   withSenders?: boolean;
@@ -24,12 +23,12 @@ interface Props {
 const COMM_MUL = new BN(1e2);
 const DEFAULT_LENGTH = new BN(1e9);
 const DECIMALS = 2;
+const MIN_COMM = new BN(2);
 
-function Validate ({ className = '', controllerId, minCommission, onChange, onChangeCommission, stashId, withSenders }: Props): React.ReactElement<Props> {
+function Validate ({ className = '', controllerId, onChange, onChangeCommission, stashId, withSenders }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
-  const minComm = minCommission && minCommission.mul(COMM_MUL).div(DEFAULT_LENGTH) || BN_ONE;
-  const [commission, setCommission] = useState(minComm);
+  const [commission, setCommission] = useState<BN>(MIN_COMM);
   const [maxLengthWithDecimals, setMaxLengthWithDecimals] = useState<number>(3);
   const [allowNoms, setAllowNoms] = useState(true);
 
@@ -43,7 +42,7 @@ function Validate ({ className = '', controllerId, minCommission, onChange, onCh
       onChange({
         validateTx: api.tx.staking.validate({
           blocked: !allowNoms,
-          commission
+          commission: commission
         })
       });
     } catch {
@@ -59,18 +58,15 @@ function Validate ({ className = '', controllerId, minCommission, onChange, onCh
 
       value && setCommission(
         value.isZero()
-          ? minComm // small non-zero set to avoid isEmpty
+          ? MIN_COMM // small non-zero set to avoid isEmpty
           : value.div(COMM_MUL)
       );
+      value
+        ? onChangeCommission && onChangeCommission(value.lte(MAX_COMM.mul(DEFAULT_LENGTH)))
+        : onChangeCommission && onChangeCommission(false);
     },
-    []
+    [onChangeCommission]
   );
-
-  const commErr = minCommission && commission.lt(minCommission);
-
-  useEffect((): void => {
-    onChangeCommission && onChangeCommission(!commErr)
-  }, [commErr, onChangeCommission]);
 
   return (
     <div className={className}>
@@ -92,17 +88,14 @@ function Validate ({ className = '', controllerId, minCommission, onChange, onCh
         <InputNumber
           bitLength={128}
           commission={true}
-          isError={commErr}
           help={t<string>('The percentage reward (2-100) that should be applied for the validator')}
           isSi
           label={t<string>('reward commission percentage')}
           maxLength={maxLengthWithDecimals}
           maxValue={MAX_COMM.mul(DEFAULT_LENGTH)}
+          minValue={MIN_COMM.mul(DEFAULT_LENGTH)}
           onChange={_setCommission}
         />
-        {commErr && (
-          <MarkError content={t<string>('The commission is below the on-chain minimum of {{p}}%', { replace: { p: (minCommission.mul(COMM_MUL).div(DEFAULT_LENGTH).toNumber()).toFixed(2) } })} />
-        )}
       </Modal.Columns>
       {isFunction(api.tx.staking.kick) && (
         <Modal.Columns hint={t<string>('The validator can block any new nominations. By default it is set to allow all nominations.')}>

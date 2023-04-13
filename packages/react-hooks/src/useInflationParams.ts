@@ -1,9 +1,10 @@
-// Copyright 2017-2022 @polkadot/apps authors & contributors
-// SPDX-License-Identifier: Apache-2.0
+/* eslint-disable header/header */
 import type { ApiPromise } from '@polkadot/api';
 import type { Compact } from '@polkadot/types';
 import type { Perbill } from '@polkadot/types/interfaces/runtime';
 
+// TODO import the real type
+// import { InflationFixedParams } from '@xxnetwork/custom-types';
 import { getInflationParams } from '@polkadot/apps-config';
 import { useCall } from '@polkadot/react-hooks';
 

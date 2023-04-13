@@ -1,8 +1,5 @@
-// Copyright 2017-2022 @polkadot/apps authors & contributors
-// SPDX-License-Identifier: Apache-2.0
-
 /* eslint-disable multiline-ternary */
-
+/* eslint-disable header/header */
 import base64url from 'base64url';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -13,8 +10,7 @@ const shortHash = (addr: string) => addr
   : '';
 
 const toDashboardNodeUrl = (addr: string) => {
-  const base64addr = addr.startsWith('0x') ? Buffer.from(addr.slice(2).concat('02'), 'hex').toString('base64') : addr;
-  const basedAf = toBase64Url(base64addr);
+  const basedAf = toBase64Url(addr);
 
   return `https://dashboard.xx.network/nodes/${basedAf}`;
 };

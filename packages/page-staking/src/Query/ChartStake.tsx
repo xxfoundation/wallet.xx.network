@@ -62,7 +62,7 @@ function ChartStake ({ validatorId }: Props): React.ReactElement<Props> {
   const legends = useMemo(() => [
     t<string>('{{currency}} clipped', { replace: { currency } }),
     t<string>('{{currency}} total', { replace: { currency } }),
-    t<string>('network average')
+    t<string>('{{currency}} average', { replace: { currency } })
   ], [currency, t]);
 
   return (

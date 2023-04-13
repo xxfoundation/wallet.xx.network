@@ -2,10 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { CopyToClipboard } from 'react-copy-to-clipboard';
 
-import { AccountName, Button, CmixAddress, IdentityIcon, Input } from '@polkadot/react-components';
-import { useToggle } from '@polkadot/react-hooks';
+import { AccountName, CmixAddress, IdentityIcon, Input } from '@polkadot/react-components';
 import { AddressFlags } from '@polkadot/react-hooks/types';
 
 import { useTranslation } from '../translate';
@@ -22,8 +20,6 @@ interface Props {
 
 function AddressSection ({ accountIndex, cmixId, defaultValue, editingName, flags, onChange, value }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
-  const [isCopyShown, toggleIsCopyShown] = useToggle();
-  const NOOP = () => undefined;
 
   return (
     <div className='ui--AddressSection'>
@@ -64,24 +60,6 @@ function AddressSection ({ accountIndex, cmixId, defaultValue, editingName, flag
             <label>{t<string>('index')}:</label> {accountIndex}
           </div>
         )}
-      </div>
-      <div className='ui--AddressSection__CopyColumn'>
-        <div className='ui--AddressMenu-copyaddr'>
-          <CopyToClipboard
-            text={value}
-          >
-            <span>
-              <Button.Group>
-                <Button
-                  icon={isCopyShown ? 'check' : 'copy'}
-                  label={isCopyShown ? t<string>('Copied') : t<string>('Copy')}
-                  onClick={isCopyShown ? NOOP : toggleIsCopyShown }
-                  onMouseLeave={isCopyShown ? toggleIsCopyShown : NOOP }
-                />
-              </Button.Group>
-            </span>
-          </CopyToClipboard>
-        </div>
       </div>
     </div>
   );

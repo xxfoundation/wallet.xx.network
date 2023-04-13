@@ -1,11 +1,9 @@
-// Copyright 2017-2022 @polkadot/app-accounts authors & contributors
-// SPDX-License-Identifier: Apache-2.0
-
 import React, { useCallback, useContext } from 'react';
 
 import { Keyring } from '@polkadot/keyring';
 import { Button, StatusContext } from '@polkadot/react-components';
-import { useToggle } from '@polkadot/react-hooks';
+import { ActionStatusBase } from '@polkadot/react-components/Status/types';
+import { useCall, useToggle } from '@polkadot/react-hooks';
 import { keyring } from '@polkadot/ui-keyring';
 
 import CreateModal from '../../modals/Create';
@@ -61,8 +59,8 @@ function Step3 ({ className = '', onFinish, standardMnemonic }: Props): React.Re
       )}
       <Element
         header={t<string>('xx network PUBLIC address')}
-        noIndex={true}
         value={wallet.address}
+        noIndex={true}
       />
       <div style={{ margin: '2em 0' }}>
         {!keyring.genesisHash

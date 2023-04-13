@@ -72,7 +72,7 @@ function Vote ({ electionsInfo }: Props): React.ReactElement<Props> | null {
   return (
     <>
       <Button
-        icon='check-to-slot'
+        icon='check'
         isDisabled={available.length === 0}
         label={t<string>('Vote')}
         onClick={toggleVisible}

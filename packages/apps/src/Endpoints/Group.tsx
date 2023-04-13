@@ -3,7 +3,7 @@
 
 import type { Group } from './types';
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 import styled from 'styled-components';
 
 import { Icon } from '@polkadot/react-components';
@@ -28,11 +28,6 @@ function GroupDisplay ({ affinities, apiUrl, children, className = '', index, is
     [index, isSelected, setGroup]
   );
 
-  const filtered = useMemo(
-    () => networks.filter(({ isUnreachable }) => !isUnreachable),
-    [networks]
-  );
-
   return (
     <div className={`${className}${isSelected ? ' isSelected' : ''}`}>
       <div
@@ -45,7 +40,7 @@ function GroupDisplay ({ affinities, apiUrl, children, className = '', index, is
       {isSelected && (
         <>
           <div className='groupNetworks'>
-            {filtered.map((network, index): React.ReactNode => (
+            {networks.map((network, index): React.ReactNode => (
               <Network
                 affinity={affinities[network.name]}
                 apiUrl={apiUrl}

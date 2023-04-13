@@ -208,6 +208,7 @@ function Import ({ className = '', onClose, onStatusChange }: Props): React.Reac
             <MarkWarning content={t<string>('One or more accounts imported were originally generated on a different network than the one you are currently connected to. Once imported ensure you toggle the "allow on any network" option for the account to keep it visible on the current network.')} />
           )}
         </Modal.Columns>
+
         <Modal.Columns hint={t<string>('The password previously used to encrypt this account.')}>
           <Password
             className='full'

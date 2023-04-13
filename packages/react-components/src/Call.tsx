@@ -21,7 +21,6 @@ export interface Props {
   labelHash?: React.ReactNode;
   labelSignature?: React.ReactNode;
   mortality?: string;
-  noIndent?: boolean;
   onError?: () => void;
   value: IExtrinsic | IMethod;
   withBorder?: boolean;
@@ -85,7 +84,7 @@ function extractState (value: IExtrinsic | IMethod, withHash?: boolean, withSign
   return { hash, params, signature, signatureType, values };
 }
 
-function Call ({ children, className = '', labelHash, labelSignature, mortality, noIndent, onError, tip, value, withBorder, withHash, withSignature }: Props): React.ReactElement<Props> {
+function Call ({ children, className = '', labelHash, labelSignature, mortality, onError, tip, value, withBorder, withHash, withSignature }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const [{ hash, params, signature, signatureType, values }, setExtracted] = useState<Extracted>({ hash: null, params: [], signature: null, signatureType: null, values: [] });
 
@@ -104,7 +103,7 @@ function Call ({ children, className = '', labelHash, labelSignature, mortality,
         withBorder={withBorder}
       />
       {children}
-      <div className={`ui--Extrinsic--toplevel${noIndent ? ' noIndent' : ''}`}>
+      <div className='ui--Extrinsic--toplevel'>
         {signature && (
           <Static
             className='hash'
@@ -148,11 +147,7 @@ export default React.memo(styled(Call)`
     word-wrap: unset;
   }
 
-  .ui--Extrinsic--toplevel.noIndent {
-    margin-top: 0.25rem;
-  }
-
-  .ui--Extrinsic--toplevel:not(.noIndent) {
+  .ui--Extrinsic--toplevel {
     margin-top: 0.75rem;
 
     .ui--Labelled {

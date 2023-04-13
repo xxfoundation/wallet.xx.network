@@ -15,9 +15,9 @@ import { BN_ZERO } from '@polkadot/util';
 
 import { useTranslation } from '../../translate';
 import InputValidateAmount from '../Account/InputValidateAmount';
+import InputValidateCmix from '../Account/InputValidateCmix';
 import InputValidationController from '../Account/InputValidationController';
 import useUnbondDuration from '../useUnbondDuration';
-import { isHex } from '@polkadot/util';
 
 interface Props {
   className?: string;
@@ -52,16 +52,13 @@ function Bond ({ className = '', isNominating, isValidating, minNominated, minNo
   const [cmixId, setCmixId] = useState<string | null>(null);
   const [hasCmixId, setHasCmixId] = useToggle();
 
-  const _setError = useCallback(
+  const _setControllerError = useCallback(
     (_: string | null, isFatal: boolean) => setControllerError(isFatal),
     []
   );
 
-  const _validateCmixId = useCallback(
-    (value: string) => {
-      setCmixError(!isHex(value, 256));
-      setCmixId(value);
-    },
+  const _setCmixAddressError = useCallback(
+    (error: string | null) => setCmixError(!!error),
     []
   );
 
@@ -128,14 +125,14 @@ function Bond ({ className = '', isNominating, isValidating, minNominated, minNo
         <InputValidationController
           accountId={stashId}
           controllerId={controllerId}
-          onError={_setError}
+          onError={_setControllerError}
         />
       </Modal.Columns>
       {startBalance && (
         <Modal.Columns
           hint={
             <>
-              <p>{t<string>('The amount placed at-stake should not be your full available amount to allow for transaction fees.')}</p>
+              <p>{t<string>('The amount placed at-stake should not be your full available available amount to allow for transaction fees.')}</p>
               <p>{t<string>('Once bonded, it will need to be unlocked/withdrawn and will be locked for at least the bonding duration.')}</p>
             </>
           }
@@ -180,7 +177,12 @@ function Bond ({ className = '', isNominating, isValidating, minNominated, minNo
             cmixId={cmixId}
             includeToggle={false}
             isError={cmixError}
-            onChange={_validateCmixId}
+            onChange={setCmixId}
+          />
+          <InputValidateCmix
+            onError={_setCmixAddressError}
+            required={true}
+            value={cmixId}
           />
           <MarkWarning
             content={t<string>('Please make sure you set your cMix ID correctly. If you don’t, you will need to fully UNBOND your stash, and wait for the bonding duration specified above, before you can correct your cMix ID. Be aware you will NOT EARN any potential rewards during this unbonding period.')}
@@ -211,8 +213,13 @@ function Bond ({ className = '', isNominating, isValidating, minNominated, minNo
                 cmixId={cmixId}
                 enabled={hasCmixId}
                 isError={cmixError}
-                onChange={_validateCmixId}
+                onChange={setCmixId}
                 onEnabledChanged={setHasCmixId}
+              />
+              <InputValidateCmix
+                onError={_setCmixAddressError}
+                required={hasCmixId}
+                value={cmixId}
               />
               <MarkWarning
                 content={t<string>('A cMix ID is not needed if you only wish to nominate. However, if at any point you decide to use this stash account to become a validator, you MUST specify your cMix ID. In that case, please make sure you set your cMix ID correctly. If you don’t, you will need to fully UNBOND your stash, and wait for the bonding duration specified above, before you can correct your cMix ID!')}

@@ -7,7 +7,7 @@ import type { BN } from '@polkadot/util';
 import React, { useState } from 'react';
 import styled from 'styled-components';
 
-import { InputAddress, InputBalance, Modal, Static, Toggle, TxButton } from '@polkadot/react-components';
+import { InputAddress, InputBalance, Modal, Static, TxButton } from '@polkadot/react-components';
 import { useApi } from '@polkadot/react-hooks';
 import { BalanceCustomized, BlockToTime } from '@polkadot/react-query';
 
@@ -27,6 +27,7 @@ function Unbond ({ controllerId, onClose, stakingLedger, stashId }: Props): Reac
   const bondedBlocks = useUnbondDuration();
   const [maxBalance] = useState<BN | null>(() => stakingLedger?.active?.unwrap() || null);
   const [maxUnbond, setMaxUnbond] = useState<BN | null>(null);
+  const withMax = false;
 
   return (
     <Modal
@@ -52,8 +53,8 @@ function Unbond ({ controllerId, onClose, stakingLedger, stashId }: Props): Reac
             autoFocus
             defaultValue={maxBalance}
             help={t<string>('The amount of funds to unbond, this is adjusted using the bonded funds on the stash account.')}
-            isDisabled={false}
-            key={`unbondAmount-false`}
+            isDisabled={withMax}
+            key={`unbondAmount-${withMax.toString()}`}
             label={t<string>('unbond amount')}
             labelExtra={
               <BalanceCustomized
@@ -80,10 +81,10 @@ function Unbond ({ controllerId, onClose, stakingLedger, stashId }: Props): Reac
         <TxButton
           accountId={controllerId}
           icon='unlock'
-          isDisabled={!(maxUnbond?.gtn(0))}
+          isDisabled={!((withMax ? maxBalance : maxUnbond)?.gtn(0))}
           label={t<string>('Unbond')}
           onStart={onClose}
-          params={[maxUnbond]}
+          params={[withMax ? maxBalance : maxUnbond]}
           tx={api.tx.staking.unbond}
         />
       </Modal.Actions>

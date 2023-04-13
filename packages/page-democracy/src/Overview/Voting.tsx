@@ -108,7 +108,7 @@ function Voting ({ proposal, referendumId }: Props): React.ReactElement<Props> |
         </Modal>
       )}
       <Button
-        icon='check-to-slot'
+        icon='check'
         label={t<string>('Vote')}
         onClick={toggleVoting}
       />

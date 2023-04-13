@@ -4,7 +4,6 @@
 import type { DeriveStakingAccount } from '@polkadot/api-derive/types';
 import type { Option } from '@polkadot/types';
 import type { SlashingSpans } from '@polkadot/types/interfaces';
-import type { BN } from '@polkadot/util';
 
 import React from 'react';
 
@@ -14,30 +13,23 @@ import { FormatBalance } from '@polkadot/react-query';
 import { useTranslation } from './translate';
 import TxButton from './TxButton';
 
-interface DeriveStakingAccountPartial {
-  controllerId: DeriveStakingAccount['controllerId'] | string;
-  stashId: DeriveStakingAccount['stashId'] | string;
-  redeemable?: BN;
-}
-
 interface Props {
   className?: string;
-  isPool?: boolean;
-  stakingInfo?: DeriveStakingAccountPartial;
+  stakingInfo?: DeriveStakingAccount;
 }
 
-const OPT_SPAN = {
+const transformSpan = {
   transform: (optSpans: Option<SlashingSpans>): number =>
     optSpans.isNone
       ? 0
       : optSpans.unwrap().prior.length + 1
 };
 
-function StakingRedeemable ({ className = '', isPool, stakingInfo }: Props): React.ReactElement<Props> | null {
+function StakingRedeemable ({ className = '', stakingInfo }: Props): React.ReactElement<Props> | null {
   const { api } = useApi();
   const { allAccounts } = useAccounts();
   const { t } = useTranslation();
-  const spanCount = useCall<number>(api.query.staking.slashingSpans, [stakingInfo?.stashId], OPT_SPAN);
+  const spanCount = useCall<number>(api.query.staking.slashingSpans, [stakingInfo?.stashId], transformSpan);
 
   if (!stakingInfo?.redeemable?.gtn(0)) {
     return null;
@@ -54,17 +46,12 @@ function StakingRedeemable ({ className = '', isPool, stakingInfo }: Props): Rea
               isIcon
               key='unlock'
               params={
-                isPool
-                  ? [stakingInfo.controllerId, spanCount]
-                  : api.tx.staking.withdrawUnbonded.meta.args.length === 1
-                    ? [spanCount]
-                    : []
+                api.tx.staking.withdrawUnbonded.meta.args.length === 1
+                  ? [spanCount]
+                  : []
               }
               tooltip={t<string>('Withdraw these unbonded funds')}
-              tx={
-                isPool
-                  ? api.tx.nominationPools.withdrawUnbonded
-                  : api.tx.staking.withdrawUnbonded}
+              tx={api.tx.staking.withdrawUnbonded}
             />
           )
           : <span className='icon-void'>&nbsp;</span>}

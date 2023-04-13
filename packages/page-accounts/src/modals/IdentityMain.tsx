@@ -43,11 +43,11 @@ interface ValueState {
 
 const WHITESPACE = [' ', '\t'];
 
-export function isData (data: Data | unknown): data is Data {
+export function isData(data: Data | unknown): data is Data {
   return (data as Data).isRaw !== undefined;
 }
 
-function setData (data: Data | Array<IdentityInfoAdditional>, setActive: null | ((isActive: boolean) => void), setVal: (val: string) => void): void {
+function setData(data: Data | Array<IdentityInfoAdditional>, setActive: null | ((isActive: boolean) => void), setVal: (val: string) => void): void {
   if (isData(data) && data.isRaw) {
     setActive && setActive(true);
     setVal(u8aToString(data.asRaw.toU8a(true)));
@@ -61,7 +61,7 @@ function setData (data: Data | Array<IdentityInfoAdditional>, setActive: null | 
   }
 }
 
-function WrapToggle ({ children, onChange, value }: WrapProps): React.ReactElement<WrapProps> {
+function WrapToggle({ children, onChange, value }: WrapProps): React.ReactElement<WrapProps> {
   const { t } = useTranslation();
 
   return (
@@ -77,7 +77,7 @@ function WrapToggle ({ children, onChange, value }: WrapProps): React.ReactEleme
   );
 }
 
-function checkValue (hasValue: boolean, value: string | null | undefined, minLength: number, includes: string[], excludes: string[], starting: string[], notStarting: string[] = WHITESPACE, notEnding: string[] = WHITESPACE): boolean {
+function checkValue(hasValue: boolean, value: string | null | undefined, minLength: number, includes: string[], excludes: string[], starting: string[], notStarting: string[] = WHITESPACE, notEnding: string[] = WHITESPACE): boolean {
   return !hasValue || (
     !!value &&
     (value.length >= minLength) &&
@@ -89,7 +89,7 @@ function checkValue (hasValue: boolean, value: string | null | undefined, minLen
   );
 }
 
-function parseDiscord (additional: Array<IdentityInfoAdditional>): Data | undefined {
+function parseDiscord(additional: Array<IdentityInfoAdditional>): Data | undefined {
   // Using full for loop here for simplicity
   for (let info of additional) {
     const key = u8aToString(info[0].asRaw.toU8a(true));
@@ -100,7 +100,7 @@ function parseDiscord (additional: Array<IdentityInfoAdditional>): Data | undefi
   return undefined
 }
 
-function encodeDiscord (value: string): { [x: string]: string | null; }[] {
+function encodeDiscord(value: string): { [x: string]: string | null; }[] {
   return [
     {
       ['raw']: 'discord'
@@ -111,7 +111,7 @@ function encodeDiscord (value: string): { [x: string]: string | null; }[] {
   ]
 }
 
-function IdentityMain ({ address, className = '', onClose }: Props): React.ReactElement<Props> {
+function IdentityMain({ address, className = '', onClose }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
   const identityOpt = useCall<Option<Registration>>(api.query.identity.identityOf, [address]);

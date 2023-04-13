@@ -36,7 +36,7 @@ interface ParamState {
 
 const DEFAULT_PARAMS: ParamState = { params: [], values: [] };
 
-const OPT_PROP = {
+const transformProposal = {
   transform: (optProp: Option<TreasuryProposal>) => optProp.unwrapOr(null)
 };
 
@@ -44,7 +44,7 @@ function TreasuryCell ({ className = '', value }: Props): React.ReactElement<Pro
   const { t } = useTranslation();
   const { api } = useApi();
   const [proposalId] = useState(() => value.unwrap());
-  const proposal = useCall<TreasuryProposal | null>(api.query.treasury.proposals, [proposalId], OPT_PROP);
+  const proposal = useCall<TreasuryProposal | null>(api.query.treasury.proposals, [proposalId], transformProposal);
   const [{ params, values }, setExtracted] = useState<ParamState>(DEFAULT_PARAMS);
 
   useEffect((): void => {

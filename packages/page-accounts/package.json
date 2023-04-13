@@ -11,19 +11,21 @@
   },
   "sideEffects": false,
   "type": "module",
-  "version": "0.122.3-120-x",
+  "version": "0.106.2-10",
   "dependencies": {
-    "@babel/runtime": "^7.20.6",
-    "@polkadot/hw-ledger": "^10.2.1",
-    "@polkadot/phishing": "^0.18.12",
-    "@polkadot/react-components": "^0.122.3-120-x",
-    "@polkadot/react-hooks": "^0.122.3-120-x",
-    "@polkadot/util": "^10.2.1",
-    "@polkadot/vanitygen": "^0.52.19",
+    "@babel/runtime": "^7.17.2",
+    "@polkadot/hw-ledger": "^8.4.1",
+    "@polkadot/phishing": "^0.8.179",
+    "@polkadot/react-components": "^0.106.2-10",
+    "@polkadot/react-hooks": "^0.106.2-10",
+    "@polkadot/util": "^8.4.1",
+    "@polkadot/vanitygen": "^0.49.4-0",
+    "@polkadot/wasm-crypto": "^6.3.1",
+    "@xxnetwork/wasm-crypto": "^1.0.0",
     "detect-browser": "^5.3.0",
     "file-saver": "^2.0.5"
   },
   "devDependencies": {
-    "@polkadot/test-support": "0.122.3-120-x"
+    "@polkadot/test-support": "0.106.2-10"
   }
 }

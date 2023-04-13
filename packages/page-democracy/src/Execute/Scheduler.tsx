@@ -1,0 +1,91 @@
+// Copyright 2017-2022 @polkadot/app-democracy authors & contributors
+// SPDX-License-Identifier: Apache-2.0
+
+// TODO fix the types for this file
+
+import type { Option } from '@polkadot/types';
+import type { BlockNumber, Call, Scheduled } from '@polkadot/types/interfaces';
+// import type { FrameSupportScheduleMaybeHashed, PalletSchedulerScheduledV3 } from '@polkadot/types/lookup';
+import type { ScheduledExt } from './types';
+
+import React, { useMemo, useRef } from 'react';
+
+import { Table } from '@polkadot/react-components';
+import { useApi, useBestNumber, useCall } from '@polkadot/react-hooks';
+
+import { useTranslation } from '../translate';
+import ScheduledView from './Scheduled';
+
+interface Props {
+  className?: string;
+}
+
+const transformEntries = {
+  transform: (entries: [{ args: [BlockNumber] }, Option<Scheduled | any>[]][]): ScheduledExt[] => {
+    return entries
+      .filter(([, all]) => all.some((o) => o.isSome))
+      .reduce((items: ScheduledExt[], [key, all]): ScheduledExt[] => {
+        const blockNumber = key.args[0];
+
+        return all
+          .filter((o) => o.isSome)
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+          .map((o) => o.unwrap())
+          .reduce((items: ScheduledExt[], { call: callOrEnum, maybeId, maybePeriodic, priority }, index) => {
+            let call: Call | null = null;
+
+            if ((callOrEnum as unknown as Record<string, any>).inner) {
+              if ((callOrEnum as unknown as Record<string, any>).isValue) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                call = (callOrEnum as unknown as Record<string, any>).asValue;
+              }
+            } else {
+              call = callOrEnum as Call;
+            }
+
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            items.push({ blockNumber, call, key: `${blockNumber.toString()}-${index}`, maybeId, maybePeriodic, priority });
+
+            return items;
+          }, items);
+      }, []);
+  }
+};
+
+function Schedule ({ className = '' }: Props): React.ReactElement<Props> {
+  const { t } = useTranslation();
+  const { api } = useApi();
+  const bestNumber = useBestNumber();
+  const items = useCall<ScheduledExt[]>(api.query.scheduler.agenda.entries, undefined, transformEntries);
+
+  const filtered = useMemo(
+    () => bestNumber && items && items.filter(({ blockNumber }) => blockNumber.gte(bestNumber)),
+    [bestNumber, items]
+  );
+
+  const headerRef = useRef([
+    [t('scheduled'), 'start'],
+    [t('id'), 'start'],
+    [t('remaining')],
+    [t('period')],
+    [t('count')]
+  ]);
+
+  return (
+    <Table
+      className={className}
+      empty={filtered && t<string>('No active schedules')}
+      header={headerRef.current}
+    >
+      {filtered?.map((value): React.ReactNode => (
+        <ScheduledView
+          bestNumber={bestNumber}
+          key={value.key}
+          value={value}
+        />
+      ))}
+    </Table>
+  );
+}
+
+export default React.memo(Schedule);

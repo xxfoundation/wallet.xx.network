@@ -12,23 +12,18 @@ interface Props {
   value: EventRecord;
 }
 
-function Event ({ className = '', value: { event } }: Props): React.ReactElement<Props> {
+function Event({ className = '', value: { event } }: Props): React.ReactElement<Props> {
   return (
     <Expander
       className={className}
-      data={event.data}
       summary={`${event.section}.${event.method}`}
       summaryMeta={event.meta}
+      data={event.data}
     >
-      {event.data.length
-        ? (
-          <EventDisplay
-            className='details'
-            value={event}
-          />
-        )
-        : null
-      }
+      <EventDisplay
+        className='details'
+        value={event}
+      />
     </Expander>
   );
 }

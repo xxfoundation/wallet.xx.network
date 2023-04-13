@@ -1,7 +1,6 @@
 // Copyright 2017-2022 @polkadot/react-components authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { ApiPromise } from '@polkadot/api';
 import type { SubmittableExtrinsic } from '@polkadot/api/types';
 import type { DeriveAccountFlags, DeriveAccountRegistration } from '@polkadot/api-derive/types';
 import type { DisplayedJudgement } from '@polkadot/react-components/types';
@@ -17,7 +16,7 @@ export type CallParams = [] | CallParam[];
 export interface CallOptions <T> {
   defaultValue?: T;
   paramMap?: (params: any) => CallParams;
-  transform?: (value: any, api: ApiPromise) => T;
+  transform?: (value: any) => T;
   withParams?: boolean;
   withParamsTransform?: boolean;
 }
@@ -28,7 +27,7 @@ export type TxDefs = SubmittableExtrinsic<'promise'> | IExtrinsic | Call | TxDef
 
 export type TxSource<T extends TxDefs> = [T, boolean];
 
-export type CollectiveType = 'alliance' | 'council' | 'membership' | 'technicalCommittee';
+export type CollectiveType = 'council' | 'membership' | 'technicalCommittee';
 
 export interface ModalState {
   isOpen: boolean;
@@ -103,6 +102,7 @@ export interface AddressFlags extends DeriveAccountFlags {
 }
 
 export interface AddressIdentity extends DeriveAccountRegistration {
+  cmixId?: string;
   isExistent: boolean;
   isKnownGood: boolean;
   waitCount: number;
@@ -117,7 +117,6 @@ export interface UseAccountInfo {
   setTags: React.Dispatch<string[]>;
   genesisHash: string | null;
   identity?: AddressIdentity;
-  cmixId?: string;
   isEditingName: boolean;
   meta?: KeyringJson$Meta;
   toggleIsEditingName: () => void;
@@ -162,10 +161,3 @@ export interface Judgement {
 }
 
 export type UseJudgements = Judgement[]
-
-export type BatchType = 'all' | 'default';
-
-export interface BatchOptions {
-  max?: number;
-  type?: BatchType;
-}

@@ -15,8 +15,6 @@ import { createNamedHook } from './createNamedHook';
 import { useApi } from './useApi';
 
 interface StateBase {
-  hasLedgerChain: boolean;
-  hasWebUsb: boolean;
   isLedgerCapable: boolean;
   isLedgerEnabled: boolean;
 }
@@ -26,8 +24,6 @@ interface State extends StateBase {
 }
 
 const EMPTY_STATE: StateBase = {
-  hasLedgerChain: false,
-  hasWebUsb: false,
   isLedgerCapable: false,
   isLedgerEnabled: false
 };
@@ -57,12 +53,9 @@ function retrieveLedger (api: ApiPromise): Ledger {
 }
 
 function getState (api: ApiPromise): StateBase {
-  const hasLedgerChain = ledgerHashes.includes(api.genesisHash.toHex());
-  const isLedgerCapable = hasWebUsb && hasLedgerChain;
+  const isLedgerCapable = hasWebUsb && ledgerHashes.includes(api.genesisHash.toHex()) && api.runtimeVersion.specVersion.toNumber() >= 203;
 
   return {
-    hasLedgerChain,
-    hasWebUsb,
     isLedgerCapable,
     isLedgerEnabled: isLedgerCapable && uiSettings.ledgerConn !== 'none'
   };

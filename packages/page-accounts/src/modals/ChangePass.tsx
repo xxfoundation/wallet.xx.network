@@ -5,7 +5,6 @@ import React, { useCallback, useState } from 'react';
 
 import { AddressRow, Button, Modal, Password, PasswordStrength } from '@polkadot/react-components';
 import { keyring } from '@polkadot/ui-keyring';
-import { nextTick } from '@polkadot/util';
 
 import { useTranslation } from '../translate';
 
@@ -58,7 +57,7 @@ function ChangePass ({ address, className = '', onClose }: Props): React.ReactEl
       }
 
       setIsBusy(true);
-      nextTick((): void => {
+      setTimeout((): void => {
         try {
           if (!account.isLocked) {
             account.lock();
@@ -83,7 +82,7 @@ function ChangePass ({ address, className = '', onClose }: Props): React.ReactEl
 
         setIsBusy(false);
         onClose();
-      });
+      }, 0);
     },
     [address, newPass1, oldPass, onClose]
   );

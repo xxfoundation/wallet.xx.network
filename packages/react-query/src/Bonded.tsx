@@ -17,18 +17,18 @@ interface Props {
   label?: React.ReactNode;
 }
 
-const OPT_C = {
+const transformController = {
   transform: (value: Option<AccountId>) => value.unwrapOr(null)
 };
 
-const OPT_L = {
+const transformLedger = {
   transform: (value: Option<StakingLedger>) => value.unwrapOr(null)
 };
 
 function BondedDisplay ({ children, className = '', label, params }: Props): React.ReactElement<Props> {
   const { api } = useApi();
-  const controllerId = useCall<AccountId | null>(api.query.staking?.bonded, [params], OPT_C);
-  const stakingLedger = useCall<StakingLedger | null>(controllerId && api.query.staking?.ledger, [controllerId], OPT_L);
+  const controllerId = useCall<AccountId | null>(api.query.staking?.bonded, [params], transformController);
+  const stakingLedger = useCall<StakingLedger | null>(controllerId && api.query.staking?.ledger, [controllerId], transformLedger);
 
   return (
     <FormatBalance

@@ -5,7 +5,8 @@ import type { SubmittableExtrinsicFunction } from '@polkadot/api/types';
 
 import { DeriveBounties } from '@polkadot/api-derive/types';
 import { balanceOf } from '@polkadot/test-support/creation/balance';
-import { BN, BN_ONE } from '@polkadot/util';
+import { BlockNumber } from '@polkadot/types/interfaces';
+import { BN } from '@polkadot/util';
 
 import { BountyApi } from '../../src/hooks';
 
@@ -15,15 +16,15 @@ export const defaultBountyApi: BountyApi = {
   acceptCurator: jest.fn() as unknown as SubmittableExtrinsicFunction<'promise'>,
   approveBounty: jest.fn() as unknown as SubmittableExtrinsicFunction<'promise'>,
   awardBounty: jest.fn().mockReturnValue('mockAwardExtrinsic') as unknown as SubmittableExtrinsicFunction<'promise'>,
-  bestNumber: BN_ONE,
+  bestNumber: new BN(1) as BlockNumber,
   bounties: [] as DeriveBounties,
   bountyCuratorDeposit: balanceOf(500000),
-  bountyDepositBase: BN_ONE,
+  bountyDepositBase: new BN(1),
   bountyUpdatePeriod: defaultBountyUpdatePeriod,
-  bountyValueMinimum: BN_ONE,
+  bountyValueMinimum: new BN(1),
   claimBounty: jest.fn() as unknown as SubmittableExtrinsicFunction<'promise'>,
   closeBounty: jest.fn().mockReturnValue({ length: 4 }) as unknown as SubmittableExtrinsicFunction<'promise'>,
-  dataDepositPerByte: BN_ONE,
+  dataDepositPerByte: new BN(1),
   extendBountyExpiry: jest.fn().mockReturnValue('mockExtendExtrinsic') as unknown as SubmittableExtrinsicFunction<'promise'>,
   maximumReasonLength: 100,
   proposeBounty: jest.fn() as unknown as SubmittableExtrinsicFunction<'promise'>,

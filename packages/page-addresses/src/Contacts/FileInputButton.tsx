@@ -1,5 +1,4 @@
-// Copyright 2017-2022 @polkadot/apps authors & contributors
-// SPDX-License-Identifier: Apache-2.0
+/* eslint-disable header/header */
 import React, { useCallback, useRef, useState } from 'react';
 
 import { useTranslation } from '@polkadot/app-storage/translate';
@@ -53,7 +52,7 @@ function JSONInputButton ({ onChange, ...props }: Props) {
       value={value}
     />
     <Button
-      icon='sync'
+      icon='plus'
       label={t<string>('Import')}
       onClick={onClick}
     />

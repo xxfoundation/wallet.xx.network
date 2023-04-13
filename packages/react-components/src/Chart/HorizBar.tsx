@@ -1,20 +1,22 @@
 // Copyright 2017-2022 @polkadot/react-components authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { ChartData, ChartOptions, TooltipItem } from 'chart.js';
 import type { HorizBarProps, HorizBarValue } from './types';
 
+import ChartJs from 'chart.js';
 import React, { useEffect, useState } from 'react';
-import { Bar } from 'react-chartjs-2';
+import { HorizontalBar } from 'react-chartjs-2';
 
 import { bnToBn, isNumber } from '@polkadot/util';
 
-import { alphaColor } from './utils';
-
 interface State {
-  chartData?: ChartData;
-  chartOptions?: ChartOptions;
+  chartData?: ChartJs.ChartData;
+  chartOptions?: ChartJs.ChartOptions;
   jsonValues?: string;
+}
+
+interface TooltipItem {
+  index: number;
 }
 
 interface Config {
@@ -25,6 +27,10 @@ interface Config {
     hoverBackgroundColor: string[];
   }[];
 }
+
+const alphaColor = (hexColor: string): string =>
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
+  ChartJs.helpers.color(hexColor).alpha(0.65).rgbString();
 
 function calculateOptions (aspectRatio: number, values: HorizBarValue[], jsonValues: string, max: number, showLabels: boolean): State {
   const chartData = values.reduce((data, { colors: [normalColor = '#00f', hoverColor], label, value }): Config => {
@@ -48,22 +54,24 @@ function calculateOptions (aspectRatio: number, values: HorizBarValue[], jsonVal
   return {
     chartData,
     chartOptions: {
+      // width/height by default this is "1", i.e. a square box
       aspectRatio,
-      plugins: {
-        legend: {
-          display: false
-        },
-        tooltip: {
-          callbacks: {
-            label: (item: TooltipItem<any>): string =>
-              values[item.dataIndex].tooltip || values[item.dataIndex].label
-          }
-        }
+      // no need for the legend, expect the labels contain everything
+      legend: {
+        display: false
       },
       scales: {
-        x: showLabels
-          ? { beginAtZero: true, max }
-          : { display: false }
+        xAxes: [{
+          ticks: showLabels
+            ? { beginAtZero: true, max }
+            : { display: false }
+        }]
+      },
+      tooltips: {
+        callbacks: {
+          label: (item: TooltipItem): string =>
+            values[item.index].tooltip || values[item.index].label
+        }
       }
     },
     jsonValues
@@ -88,12 +96,10 @@ function ChartHorizBar ({ aspectRatio = 8, className = '', max = 100, showLabels
   // HACK on width/height to get the aspectRatio to work
   return (
     <div className={className}>
-      <Bar
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        data={chartData as any}
+      <HorizontalBar
+        data={chartData}
         height={null as unknown as number}
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        options={chartOptions as any}
+        options={chartOptions}
         width={null as unknown as number}
       />
     </div>

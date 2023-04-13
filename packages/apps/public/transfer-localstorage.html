@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Transfer Utility</title>
+</head>
+<body>
+  <script>
+    const entries = Object.entries(localStorage);
+    const event = { type: 'localStorageTransfer',  entries };
+    window.parent.postMessage(JSON.stringify(event), 'https://explorer-staging-2.xx.network');
+  </script>
+</body>
+</html>

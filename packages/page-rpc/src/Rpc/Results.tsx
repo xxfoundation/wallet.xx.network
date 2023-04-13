@@ -24,15 +24,15 @@ function Results ({ queue = [] }: Props): React.ReactElement<Props> | null {
 
   return (
     <section className='rpc--Results'>
-      {filtered.map(({ error, id, result, rpc: { method, section, type } }): React.ReactNode => (
+      {filtered.map(({ error, id, result, rpc: { method, section } }): React.ReactNode => (
         <Output
           isError={!!error}
           key={id}
-          label={`${id}: ${section}.${method}: ${type}`}
+          label={`${id}: ${section}.${method}`}
           value={
             error
               ? error.message
-              : <pre>{valueToText('', result as null)}</pre>
+              : <pre>{valueToText('', result as null, false)}</pre>
           }
         />
       ))}

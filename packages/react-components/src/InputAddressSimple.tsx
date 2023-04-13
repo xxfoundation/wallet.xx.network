@@ -14,32 +14,26 @@ interface Props {
   className?: string;
   defaultValue?: string | null;
   help?: React.ReactNode;
-  isDisabled?: boolean;
   isError?: boolean;
   isFull?: boolean;
   label?: React.ReactNode;
-  noConvert?: boolean;
   onChange?: (address: string | null) => void;
   onEnter?: () => void;
   onEscape?: () => void;
 }
 
-function InputAddressSimple ({ autoFocus, children, className = '', defaultValue, help, isDisabled, isError, isFull, label, noConvert, onChange, onEnter, onEscape }: Props): React.ReactElement<Props> {
+function InputAddressSimple ({ autoFocus, children, className = '', defaultValue, help, isError, isFull, label, onChange, onEnter, onEscape }: Props): React.ReactElement<Props> {
   const [address, setAddress] = useState<string | null>(defaultValue || null);
 
   const _onChange = useCallback(
     (_address: string): void => {
       const address = toAddress(_address) || null;
-      const output = noConvert
-        ? address
-          ? _address
-          : null
-        : address;
 
-      setAddress(output);
-      onChange && onChange(output);
+      setAddress(address);
+
+      onChange && onChange(address);
     },
-    [noConvert, onChange]
+    [onChange]
   );
 
   return (
@@ -48,7 +42,6 @@ function InputAddressSimple ({ autoFocus, children, className = '', defaultValue
         autoFocus={autoFocus}
         defaultValue={defaultValue}
         help={help}
-        isDisabled={isDisabled}
         isError={isError || !address}
         isFull={isFull}
         label={label}

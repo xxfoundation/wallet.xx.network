@@ -1,1 +1,1 @@
-# @polkadot/app-rpc
+# @polkadot/app-toolbox

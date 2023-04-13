@@ -32,7 +32,7 @@ function AccountIndex ({ children, className = '', defaultValue, label, value }:
     [info]
   );
 
-  if (!api || !api.query.indices) {
+  if (!api.query.indices) {
     return null;
   }
 

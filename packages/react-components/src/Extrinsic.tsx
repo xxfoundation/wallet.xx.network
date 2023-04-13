@@ -16,9 +16,7 @@ import paramComponents from './Params';
 
 interface Props {
   className?: string;
-  defaultArgs?: RawParam[];
   defaultValue: SubmittableExtrinsicFunction<'promise'>;
-  filter?: (section: string, method?: string) => boolean;
   isDisabled?: boolean;
   isError?: boolean;
   isPrivate?: boolean;
@@ -30,29 +28,15 @@ interface Props {
   withLabel?: boolean;
 }
 
-interface ParamDef {
-  name: string;
-  type: TypeDef;
-}
-
 interface CallState {
-  extrinsic: {
-    fn: SubmittableExtrinsicFunction<'promise'>;
-    params: ParamDef[];
-  },
-  values: RawParam[];
+  fn: SubmittableExtrinsicFunction<'promise'>;
+  params: {
+    name: string;
+    type: TypeDef
+  }[];
 }
 
-function isValuesValid (params: ParamDef[], values: RawParam[]): boolean {
-  return values.reduce((isValid, value): boolean =>
-    isValid &&
-    !isUndefined(value) &&
-    !isUndefined(value.value) &&
-    value.isValid, params.length === values.length
-  );
-}
-
-function getParams ({ meta }: SubmittableExtrinsicFunction<'promise'>): ParamDef[] {
+function getParams ({ meta }: SubmittableExtrinsicFunction<'promise'>): { name: string; type: TypeDef }[] {
   return meta.args.map(({ name, type, typeName }): { name: string; type: TypeDef } => ({
     name: name.toString(),
     type: {
@@ -65,21 +49,22 @@ function getParams ({ meta }: SubmittableExtrinsicFunction<'promise'>): ParamDef
   }));
 }
 
-function getCallState (fn: SubmittableExtrinsicFunction<'promise'>, values: RawParam[] = []): CallState {
-  return {
-    extrinsic: {
-      fn,
-      params: getParams(fn)
-    },
-    values
-  };
-}
-
-function ExtrinsicDisplay ({ defaultArgs, defaultValue, filter, isDisabled, isError, isPrivate, label, onChange, onEnter, onError, onEscape, withLabel }: Props): React.ReactElement<Props> {
-  const [{ extrinsic, values }, setDisplay] = useState<CallState>(() => getCallState(defaultValue, defaultArgs));
+function ExtrinsicDisplay ({ defaultValue, isDisabled, isError, isPrivate, label, onChange, onEnter, onError, onEscape, withLabel }: Props): React.ReactElement<Props> {
+  const [extrinsic, setCall] = useState<CallState>(() => ({ fn: defaultValue, params: getParams(defaultValue) }));
+  const [values, setValues] = useState<RawParam[]>([]);
 
   useEffect((): void => {
-    const isValid = isValuesValid(extrinsic.params, values);
+    setValues([]);
+  }, [extrinsic]);
+
+  useEffect((): void => {
+    const isValid = values.reduce((isValid, value): boolean =>
+      isValid &&
+      !isUndefined(value) &&
+      !isUndefined(value.value) &&
+      value.isValid, extrinsic.params.length === values.length
+    );
+
     let method;
 
     if (isValid) {
@@ -96,18 +81,7 @@ function ExtrinsicDisplay ({ defaultArgs, defaultValue, filter, isDisabled, isEr
   }, [extrinsic, onChange, onError, values]);
 
   const _onChangeMethod = useCallback(
-    (fn: SubmittableExtrinsicFunction<'promise'>) =>
-      setDisplay((prev): CallState =>
-        fn.section === prev.extrinsic.fn.section && fn.method === prev.extrinsic.fn.method
-          ? prev
-          : getCallState(fn)
-      ),
-    []
-  );
-
-  const _setValues = useCallback(
-    (values: RawParam[]) =>
-      setDisplay(({ extrinsic }) => ({ extrinsic, values })),
+    (fn: SubmittableExtrinsicFunction<'promise'>): void => setCall({ fn, params: getParams(fn) }),
     []
   );
 
@@ -117,7 +91,6 @@ function ExtrinsicDisplay ({ defaultArgs, defaultValue, filter, isDisabled, isEr
     <div className='extrinsics--Extrinsic'>
       <InputExtrinsic
         defaultValue={defaultValue}
-        filter={filter}
         help={meta?.docs.join(' ')}
         isDisabled={isDisabled}
         isError={isError}
@@ -128,12 +101,11 @@ function ExtrinsicDisplay ({ defaultArgs, defaultValue, filter, isDisabled, isEr
       />
       <Params
         key={`${section}.${method}:params` /* force re-render on change */}
-        onChange={_setValues}
+        onChange={setValues}
         onEnter={onEnter}
         onEscape={onEscape}
         overrides={paramComponents}
         params={params}
-        values={values}
       />
     </div>
   );

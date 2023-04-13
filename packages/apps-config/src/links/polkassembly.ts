@@ -7,22 +7,9 @@ import { externalLogos } from '../ui/logos';
 
 export const PolkassemblyIo = {
   chains: {
-    Altair: 'Altair',
-    Astar: 'astar',
-    'Bifrost Polkadot': 'bifrost',
-    Calamari: 'calamari',
-    'Centrifuge Mainnet': 'centrifuge',
-    Khala: 'khala',
     Kusama: 'kusama',
     'Kusama CC3': 'kusama',
-    Parallel: 'parallel',
-    'Parallel Heiko': 'heiko',
-    'Pioneer Network': 'pioneer',
-    Polkadex: 'polkadex',
-    Polkadot: 'polkadot',
-    Robonomics: 'robonomics',
-    Shibuya: 'shibuya',
-    Shiden: 'shiden'
+    Polkadot: 'polkadot'
   },
   create: (chain: string, path: string, data: BN | number | string): string =>
     `https://${chain}.polkassembly.io/${path}/${data.toString()}`,
@@ -32,7 +19,6 @@ export const PolkassemblyIo = {
     bounty: 'bounty',
     council: 'motion',
     proposal: 'proposal',
-    referenda: 'referenda',
     referendum: 'referendum',
     tip: 'tip',
     treasury: 'treasury'
@@ -47,8 +33,6 @@ export const PolkassemblyNetwork = {
     'KILT Spiritnet': 'kilt',
     Karura: 'karura',
     'Khala Network': 'khala',
-    Moonbase: 'moonbase',
-    Moonbeam: 'moonbeam',
     Moonriver: 'moonriver'
   },
   create: (chain: string, path: string, data: BN | number | string): string =>

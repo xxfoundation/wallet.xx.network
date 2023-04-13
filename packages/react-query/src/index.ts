@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export { default as Available } from './Available';
+export { default as Balance } from './Balance';
 export { default as BalanceFree } from './BalanceFree';
 export { default as BalanceCustomized } from './BalanceCustomized';
 export { default as BalanceVoting } from './BalanceVoting';
@@ -21,6 +22,5 @@ export { default as NodeVersion } from './NodeVersion';
 export { default as Nonce } from './Nonce';
 export { default as SessionToTime } from './SessionToTime';
 export { default as TimeNow } from './TimeNow';
-export { default as TotalInactive } from './TotalInactive';
 export { default as TotalIssuance } from './TotalIssuance';
 export { default as TotalStakeableIssuance } from './TotalStakeableIssuance';

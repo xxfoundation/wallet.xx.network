@@ -23,18 +23,6 @@ interface Props {
   valueLabel: React.ReactNode;
 }
 
-function exclude (prev: string[], address: string): string[] {
-  return prev.includes(address)
-    ? prev.filter((a) => a !== address)
-    : prev;
-}
-
-function include (prev: string[], address: string, maxCount: number): string[] {
-  return !prev.includes(address) && (prev.length < maxCount)
-    ? prev.concat(address)
-    : prev;
-}
-
 function InputAddressMulti ({ available, availableLabel, className = '', defaultValue, maxCount, onChange, valueLabel }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const [_filter, setFilter] = useState<string>('');
@@ -51,12 +39,24 @@ function InputAddressMulti ({ available, availableLabel, className = '', default
   }, [onChange, selected]);
 
   const _onSelect = useCallback(
-    (address: string) => setSelected((prev) => include(prev, address, maxCount)),
+    (address: string): void =>
+      setSelected(
+        (selected: string[]) =>
+          !selected.includes(address) && (selected.length < maxCount)
+            ? selected.concat(address)
+            : selected
+      ),
     [maxCount]
   );
 
   const _onDeselect = useCallback(
-    (address: string) => setSelected((prev) => exclude(prev, address)),
+    (address: string): void =>
+      setSelected(
+        (selected: string[]) =>
+          selected.includes(address)
+            ? selected.filter((a) => a !== address)
+            : selected
+      ),
     []
   );
 
@@ -89,15 +89,17 @@ function InputAddressMulti ({ available, availableLabel, className = '', default
           <div className='ui--InputAddressMulti-items'>
             {isLoading
               ? <Spinner />
-              : available.map((address) => (
-                <Available
-                  address={address}
-                  filter={filter}
-                  isHidden={selected?.includes(address)}
-                  key={address}
-                  onSelect={_onSelect}
-                />
-              ))
+              : (
+                available.map((address) => (
+                  <Available
+                    address={address}
+                    filter={filter}
+                    isHidden={selected?.includes(address)}
+                    key={address}
+                    onSelect={_onSelect}
+                  />
+                ))
+              )
             }
           </div>
         </div>

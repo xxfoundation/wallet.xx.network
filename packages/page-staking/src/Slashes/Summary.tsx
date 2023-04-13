@@ -17,7 +17,7 @@ interface Props {
   slash: SlashEra;
 }
 
-function Summary ({ slash: { era, nominators, reporters, total, validators } }: Props): React.ReactElement<Props> | null {
+function Header ({ slash: { era, nominators, reporters, total, validators } }: Props): React.ReactElement<Props> | null {
   const { t } = useTranslation();
   const { api } = useApi();
   const sessionInfo = useCall<DeriveSessionProgress>(api.derive.session?.progress);
@@ -62,4 +62,4 @@ function Summary ({ slash: { era, nominators, reporters, total, validators } }: 
   );
 }
 
-export default React.memo(Summary);
+export default React.memo(Header);

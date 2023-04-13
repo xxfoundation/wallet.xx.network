@@ -54,7 +54,6 @@ function useAccountInfoImpl (value: string | null, isContract = false): UseAccou
   const [name, setName] = useState('');
   const [genesisHash, setGenesisHash] = useState<string | null>(null);
   const [identity, setIdentity] = useState<AddressIdentity | undefined>();
-  const [cmixId, setCmixId] = useState<string | undefined>();
   const [flags, setFlags] = useState<AddressFlags>(IS_NONE);
   const [meta, setMeta] = useState<KeyringJson$Meta | undefined>();
   const [isEditingName, toggleIsEditingName, setIsEditingName] = useToggle();
@@ -82,7 +81,10 @@ function useAccountInfoImpl (value: string | null, isContract = false): UseAccou
   }, [accountFlags]);
 
   useEffect(() => {
-    stakingLedger && stakingLedger.cmixId && setCmixId(stakingLedger.cmixId);
+    stakingLedger && stakingLedger.cmixId && setIdentity((identity) => identity && ({
+      ...identity,
+      cmixId: stakingLedger.cmixId
+    }));
   }, [stakingLedger]);
 
   useEffect((): void => {
@@ -261,7 +263,6 @@ function useAccountInfoImpl (value: string | null, isContract = false): UseAccou
     flags,
     genesisHash,
     identity,
-    cmixId,
     isEditing,
     isEditingName,
     isEditingTags,

@@ -15,14 +15,13 @@ import { useTranslation } from './translate';
 
 interface Props {
   className?: string;
-  error?: Error;
   emptyLabel?: React.ReactNode;
-  events?: KeyedEvent[] | null;
+  events?: KeyedEvent[];
   eventClassName?: string;
   label?: React.ReactNode;
 }
 
-function Events ({ className = '', emptyLabel, error, eventClassName, events, label }: Props): React.ReactElement<Props> {
+function Events ({ className = '', emptyLabel, eventClassName, events, label }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
 
   const header = useMemo(() => [
@@ -35,32 +34,22 @@ function Events ({ className = '', emptyLabel, error, eventClassName, events, la
       empty={emptyLabel || t<string>('No events available')}
       header={header}
     >
-      {error
-        ? (
-          <tr
-            className={eventClassName}
-            key='error'
-          >
-            <td>{error.message}</td>
-          </tr>
-        )
-        : events && events.map(({ blockHash, blockNumber, indexes, key, record }): React.ReactNode => (
-          <tr
-            className={eventClassName}
-            key={key}
-          >
-            <td className='overflow'>
-              <Event value={record} />
-              {blockNumber && (
-                <div className='event-link'>
-                  {indexes.length !== 1 && <span>({formatNumber(indexes.length)}x)&nbsp;</span>}
-                  <Link to={`/explorer/query/${blockHash || ''}`}>{formatNumber(blockNumber)}-{indexes[0]}</Link>
-                </div>
-              )}
-            </td>
-          </tr>
-        ))
-      }
+      {events && events.map(({ blockHash, blockNumber, indexes, key, record }): React.ReactNode => (
+        <tr
+          className={eventClassName}
+          key={key}
+        >
+          <td className='overflow'>
+            <Event value={record} />
+            {blockNumber && (
+              <div className='event-link'>
+                {indexes.length !== 1 && <span>({formatNumber(indexes.length)}x)&nbsp;</span>}
+                <Link to={`/explorer/query/${blockHash || ''}`}>{formatNumber(blockNumber)}-{indexes[0]}</Link>
+              </div>
+            )}
+          </td>
+        </tr>
+      ))}
     </Table>
   );
 }

@@ -51,7 +51,7 @@ function MultisigApprove ({ className = '', onClose, ongoing, threshold, who }: 
   const { allAccounts } = useAccounts();
   const [callHex, setCallHex] = useState<string>('');
   const [{ callData, callError, callInfo }, setCallData] = useState<CallData>(EMPTY_CALL);
-  const { encodedCallLength, weight } = useWeight(callData);
+  const [callWeight] = useWeight(callData);
   const [hash, setHash] = useState<string | null>(() => ongoing[0][0].toHex());
   const [{ isMultiCall, multisig }, setMultisig] = useState<MultiInfo>(() => ({ isMultiCall: false, multisig: null }));
   const [isCallOverride, setCallOverride] = useState(true);
@@ -138,27 +138,21 @@ function MultisigApprove ({ className = '', onClose, ongoing, threshold, who }: 
         ? type === 'aye'
           ? isMultiCall && isCallOverride
             ? callData
-              ? multiMod.asMulti.meta.args.length === 5
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-                ? multiMod.asMulti(threshold, others, multisig.when, callData.toHex(), weight as any)
-                : multiMod.asMulti.meta.args.length === 6
-                  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                  // @ts-ignore (We are doing toHex here since we have a Vec<u8> input)
-                  ? multiMod.asMulti(threshold, others, multisig.when, callData.toHex(), false, weight)
-                  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                  // @ts-ignore (We are doing toHex here since we have a Vec<u8> input)
-                  : multiMod.asMulti(threshold, others, multisig.when, callData)
+              ? multiMod.asMulti.meta.args.length === 6
+                ? multiMod.asMulti(threshold, others, multisig.when, callData.toHex(), false, callWeight)
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore (We are doing toHex here since we have a Vec<u8> input)
+                : multiMod.asMulti(threshold, others, multisig.when, callData)
               : null
             : multiMod.approveAsMulti.meta.args.length === 5
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-              ? multiMod.approveAsMulti(threshold, others, multisig.when, hash, weight as any)
+              ? multiMod.approveAsMulti(threshold, others, multisig.when, hash, callWeight)
               // eslint-disable-next-line @typescript-eslint/ban-ts-comment
               // @ts-ignore
               : multiMod.approveAsMulti(threshold, others, multisig.when, hash)
           : multiMod.cancelAsMulti(threshold, others, multisig.when, hash)
         : null
     );
-  }, [api, callData, hash, isCallOverride, isMultiCall, others, multisig, threshold, type, weight]);
+  }, [api, callData, callWeight, hash, isCallOverride, isMultiCall, others, multisig, threshold, type]);
 
   const isAye = type === 'aye';
 
@@ -283,7 +277,7 @@ function MultisigApprove ({ className = '', onClose, ongoing, threshold, who }: 
           accountId={signatory}
           extrinsic={tx}
           icon={isAye ? 'check' : 'times'}
-          isDisabled={!tx || (isAye && (!whoFilter.length || (!!callData && !encodedCallLength)))}
+          isDisabled={!tx || (isAye && !whoFilter.length)}
           label={isAye ? 'Approve' : 'Reject'}
           onStart={onClose}
         />

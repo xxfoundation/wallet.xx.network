@@ -1,11 +1,9 @@
-// Copyright 2017-2022 @polkadot/app-accounts authors & contributors
-// SPDX-License-Identifier: Apache-2.0
-
 import React, { useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
 
 import { Button, Checkbox, MarkWarning } from '@polkadot/react-components';
-import { bip39Generate, generateSleeve, waitReady } from '@polkadot/wasm-crypto';
+import { bip39Generate, waitReady as waitReadyPolkadot } from '@polkadot/wasm-crypto';
+import { generateSleeve, waitReady } from '@xxnetwork/wasm-crypto';
 
 import { useTranslation } from '../../translate';
 import { Element } from '../index';
@@ -64,6 +62,7 @@ function Step1 ({ className = '', onFinish, setMnemonics }: Props): React.ReactE
 
   const generateWallet = useCallback(async () => {
     // first wait until the WASM has been loaded (async init)
+    await waitReadyPolkadot();
     await waitReady();
 
     // generate quantum seed

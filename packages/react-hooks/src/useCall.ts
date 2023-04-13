@@ -1,7 +1,6 @@
 // Copyright 2017-2022 @polkadot/react-hooks authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { ApiPromise } from '@polkadot/api';
 import type { PromiseResult, QueryableStorageEntry } from '@polkadot/api/types';
 import type { StorageEntryTypeLatest } from '@polkadot/types/interfaces';
 import type { AnyFunction, Codec } from '@polkadot/types/types';
@@ -10,9 +9,8 @@ import type { MountedRef } from './useIsMountedRef';
 
 import { useEffect, useRef, useState } from 'react';
 
-import { isFunction, isNull, isUndefined, nextTick } from '@polkadot/util';
+import { isNull, isUndefined } from '@polkadot/util';
 
-import { useApi } from './useApi';
 import { useIsMountedRef } from './useIsMountedRef';
 
 type VoidFn = () => void;
@@ -47,12 +45,10 @@ type CallFn = (...params: unknown[]) => Promise<VoidFn>;
 export type TrackFn = PromiseResult<AnyFunction> | QueryFn;
 
 export interface Tracker {
-  error: Error | null;
   fn: TrackFn | undefined | null | false;
   isActive: boolean;
   serialized: string | null;
   subscriber: TrackFnResult | null;
-  type: 'useCall' | 'useCallMulti';
 }
 
 interface TrackerRef {
@@ -68,10 +64,6 @@ function isMapFn (fn: unknown): fn is QueryMapFn {
   return !!(fn as QueryTrackFn).meta?.type?.isMap;
 }
 
-function isQuery (fn: unknown): fn is QueryableStorageEntry<'promise', []> {
-  return !!fn && !isUndefined((fn as QueryableStorageEntry<'promise', []>).creator);
-}
-
 // extract the serialized and mapped params, all ready for use in our call
 function extractParams <T> (fn: unknown, params: unknown[], { paramMap = transformIdentity }: CallOptions<T> = {}): [string, CallParams | null] {
   return [
@@ -82,35 +74,27 @@ function extractParams <T> (fn: unknown, params: unknown[], { paramMap = transfo
   ];
 }
 
-export function handleError (error: Error, tracker: TrackerRef, fn?: unknown): void {
-  console.error(
-    tracker.current.error = new Error(`${tracker.current.type}(${
-      isQuery(fn)
-        ? `${fn.creator.section}.${fn.creator.method}`
-        : '...'
-    }):: ${error.message}:: ${error.stack || '<unknown>'}`)
-  );
-}
-
 // unsubscribe and remove from  the tracker
 export function unsubscribe (tracker: TrackerRef): void {
   tracker.current.isActive = false;
 
   if (tracker.current.subscriber) {
-    tracker.current.subscriber
-      .then((u) => isFunction(u) && (u as VoidFn)())
-      .catch((e) => handleError(e as Error, tracker));
+    tracker.current.subscriber.then((u) => (u as VoidFn)()).catch(console.error);
     tracker.current.subscriber = null;
   }
 }
 
+function isQuery (fn: TrackFn): fn is QueryableStorageEntry<'promise', []> {
+  return !isUndefined((fn as QueryableStorageEntry<'promise', []>).creator);
+}
+
 // subscribe, trying to play nice with the browser threads
-function subscribe <T> (api: ApiPromise, mountedRef: MountedRef, tracker: TrackerRef, fn: TrackFn | undefined, params: CallParams, setValue: (value: any) => void, { transform = transformIdentity, withParams, withParamsTransform }: CallOptions<T> = {}): void {
+function subscribe <T> (mountedRef: MountedRef, tracker: TrackerRef, fn: TrackFn | undefined, params: CallParams, setValue: (value: any) => void, { transform = transformIdentity, withParams, withParamsTransform }: CallOptions<T> = {}): void {
   const validParams = params.filter((p) => !isUndefined(p));
 
   unsubscribe(tracker);
 
-  nextTick((): void => {
+  setTimeout((): void => {
     if (mountedRef.current) {
       const canQuery = !!fn && (
         isMapFn(fn)
@@ -127,31 +111,27 @@ function subscribe <T> (api: ApiPromise, mountedRef: MountedRef, tracker: Tracke
             try {
               setValue(
                 withParams
-                  ? [params, transform(value, api)]
+                  ? [params, transform(value)]
                   : withParamsTransform
-                    ? transform([params, value], api)
-                    : transform(value, api)
+                    ? transform([params, value])
+                    : transform(value)
               );
             } catch (error) {
-              handleError(error as Error, tracker, fn);
+              let extra = '...';
+
+              if (isQuery(fn)) {
+                extra = `${fn.creator.section}.${fn.creator.method}`;
+              }
+
+              throw new Error(`useCall(${extra}):: ${(error as Error).message}:: ${(error as Error).stack || '<unknown>'}`);
             }
           }
-        }).catch((error) => handleError(error as Error, tracker, fn));
+        });
       } else {
         tracker.current.subscriber = null;
       }
     }
-  });
-}
-
-export function throwOnError (tracker: Tracker): void {
-  if (tracker.error) {
-    const error = tracker.error;
-
-    tracker.error = null;
-
-    throw error;
-  }
+  }, 0);
 }
 
 // tracks a stream, typically an api.* call (derive, rpc, query) that
@@ -160,9 +140,8 @@ export function throwOnError (tracker: Tracker): void {
 // FIXME The typings here need some serious TLC
 // FIXME This is generic, we cannot really use createNamedHook
 export function useCall <T> (fn: TrackFn | undefined | null | false, params?: CallParams | null, options?: CallOptions<T>): T | undefined {
-  const { api } = useApi();
   const mountedRef = useIsMountedRef();
-  const tracker = useRef<Tracker>({ error: null, fn: null, isActive: false, serialized: null, subscriber: null, type: 'useCall' });
+  const tracker = useRef<Tracker>({ fn: null, isActive: false, serialized: null, subscriber: null });
   const [value, setValue] = useState<T | undefined>((options || {}).defaultValue);
 
   // initial effect, we need an un-subscription
@@ -180,12 +159,10 @@ export function useCall <T> (fn: TrackFn | undefined | null | false, params?: Ca
         tracker.current.fn = fn;
         tracker.current.serialized = serialized;
 
-        subscribe(api, mountedRef, tracker, fn, mappedParams, setValue, options);
+        subscribe(mountedRef, tracker, fn, mappedParams, setValue, options);
       }
     }
-  }, [api, fn, options, mountedRef, params]);
-
-  // throwOnError(tracker.current);
+  }, [fn, options, mountedRef, params]);
 
   return value;
 }

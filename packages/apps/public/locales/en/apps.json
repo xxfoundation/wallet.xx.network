@@ -6,9 +6,7 @@
   "Files": "Files",
   "Governance": "Governance",
   "Initializing connection": "Initializing connection",
-  "Initializing connection.\n\nIf this is taking too long, please click the xx mainnet button on the left side menu and select one of the options.": "Initializing connection.\n\nIf this is taking too long, please click the xx mainnet button on the left side menu and select one of the options.",
   "Network": "Network",
-  "Relay chain": "Relay chain",
   "Settings": "Settings",
   "Switch": "Switch",
   "Waiting for authorization from the extension. Please open the installed extension and approve or reject access.": "Waiting for authorization from the extension. Please open the installed extension and approve or reject access.",
@@ -20,8 +18,5 @@
   "nav.wiki": "nav.wiki",
   "transfer received": "transfer received",
   "update on #{{index}}": "update on #{{index}}",
-  "xx wallet": "xx wallet",
-  "{{relay}} Common": "{{relay}} Common",
-  "{{relay}} Parachain": "{{relay}} Parachain",
-  "{{relay}} System": "{{relay}} System"
+  "xx wallet": "xx wallet"
 }

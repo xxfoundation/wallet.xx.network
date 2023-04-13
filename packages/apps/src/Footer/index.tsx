@@ -1,5 +1,3 @@
-// Copyright 2017-2022 @polkadot/apps authors & contributors
-// SPDX-License-Identifier: Apache-2.0
 import React from 'react';
 import styled from 'styled-components';
 
@@ -28,8 +26,8 @@ const ListLink = styled('a')({
     textDecoration: 'underline'
   },
   color: 'white !important',
-  display: 'block',
   fontSize: 12,
+  display: 'block',
   paddingBottom: '0.75rem'
 });
 

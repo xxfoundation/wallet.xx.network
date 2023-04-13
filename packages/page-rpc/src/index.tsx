@@ -23,7 +23,7 @@ function RpcApp ({ basePath }: Props): React.ReactElement<Props> {
   ]);
 
   return (
-    <main className='rpc--App'>
+    <main className='toolbox--App'>
       <Tabs
         basePath={basePath}
         items={itemsRef.current}

@@ -1,8 +1,6 @@
 // Copyright 2017-2022 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { BN } from '@polkadot/util';
-
 import React from 'react';
 import styled from 'styled-components';
 
@@ -13,10 +11,9 @@ import { useTranslation } from './translate';
 interface Props {
   className?: string;
   isRelay?: boolean;
-  minCommission?: BN;
 }
 
-function Legend ({ className, isRelay, minCommission }: Props): React.ReactElement<Props> {
+function Legend ({ className, isRelay }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
 
   return (
@@ -28,15 +25,6 @@ function Legend ({ className, isRelay, minCommission }: Props): React.ReactEleme
         />
         {t('Next session')}
       </span>
-      {minCommission && (
-        <span>
-          <Badge
-            color='red'
-            icon='cancel'
-          />
-          {t('Chilled')}
-        </span>
-      )}
       {isRelay && (
         <span>
           <Badge
@@ -66,6 +54,13 @@ function Legend ({ className, isRelay, minCommission }: Props): React.ReactEleme
           icon='hand-paper'
         />
         {t('Nominating')}
+      </span>
+      <span>
+        <Badge
+          color='orange'
+          icon='hand-paper'
+        />
+        {t('Intend to Nominate')}
       </span>
       <span>
         <Badge

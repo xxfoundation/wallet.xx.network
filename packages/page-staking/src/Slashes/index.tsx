@@ -10,7 +10,7 @@ import React, { useMemo, useState } from 'react';
 import { getSlashProposalThreshold } from '@polkadot/apps-config';
 import { Table, ToggleGroup } from '@polkadot/react-components';
 import { useAccounts, useApi, useCollectiveMembers } from '@polkadot/react-hooks';
-import { BN, BN_ONE, formatNumber } from '@polkadot/util';
+import { BN, formatNumber } from '@polkadot/util';
 
 import { useTranslation } from '../translate';
 import Era from './Era';
@@ -98,17 +98,11 @@ function Slashes ({ ownStashes = [], slashes }: Props): React.ReactElement<Props
   );
 
   const eraOpts = useMemo(
-    () => rows
-      .map(({ era }) =>
-        api.query.staking.earliestUnappliedSlash || !api.consts.staking.slashDeferDuration
-          ? era
-          : era.sub(api.consts.staking.slashDeferDuration).sub(BN_ONE)
-      )
-      .map((era) => ({
-        text: t<string>('era {{era}}', { replace: { era: formatNumber(era) } }),
-        value: era.toString()
-      })),
-    [api, rows, t]
+    () => rows.map(({ era }) => ({
+      text: t<string>('era {{era}}', { replace: { era: formatNumber(era) } }),
+      value: era.toString()
+    })),
+    [rows, t]
   );
 
   const councilId = useMemo(

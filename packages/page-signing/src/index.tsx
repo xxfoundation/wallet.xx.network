@@ -8,6 +8,7 @@ import { Route, Switch } from 'react-router';
 
 import { Tabs } from '@polkadot/react-components';
 
+import Hash from './Hash';
 import Sign from './Sign';
 import { useTranslation } from './translate';
 import Verify from './Verify';
@@ -24,6 +25,10 @@ function SigningApp ({ basePath }: Props): React.ReactElement<Props> {
     {
       name: 'verify',
       text: t<string>('Verify signature')
+    },
+    {
+      name: 'hash',
+      text: t<string>('Hash data')
     }
   ]);
 
@@ -34,6 +39,7 @@ function SigningApp ({ basePath }: Props): React.ReactElement<Props> {
         items={itemsRef.current}
       />
       <Switch>
+        <Route path={`${basePath}/hash`}><Hash /></Route>
         <Route path={`${basePath}/verify`}><Verify /></Route>
         <Route><Sign /></Route>
       </Switch>

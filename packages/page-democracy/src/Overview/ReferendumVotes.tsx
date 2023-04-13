@@ -4,9 +4,9 @@
 import type { DeriveReferendumVote } from '@polkadot/api-derive/types';
 import type { BN } from '@polkadot/util';
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
-import { ExpanderScroll } from '@polkadot/react-components';
+import { Expander } from '@polkadot/react-components';
 import { FormatBalance } from '@polkadot/react-query';
 import { BN_TEN, formatNumber } from '@polkadot/util';
 
@@ -38,20 +38,9 @@ function ReferendumVotes ({ change, className, count, isAye, isWinning, total, v
     [votes]
   );
 
-  const renderVotes = useCallback(
-    () => sorted.map((vote) => (
-      <ReferendumVote
-        key={vote.accountId.toString()}
-        vote={vote}
-      />
-    )),
-    [sorted]
-  );
-
   return (
-    <ExpanderScroll
+    <Expander
       className={className}
-      empty={votes && t<string>('No voters')}
       help={change.gtn(0) && (
         <>
           <FormatBalance value={change} />
@@ -62,7 +51,6 @@ function ReferendumVotes ({ change, className, count, isAye, isWinning, total, v
         </>
       )}
       helpIcon={isWinning ? 'arrow-circle-down' : 'arrow-circle-up'}
-      renderChildren={votes.length ? renderVotes : undefined}
       summary={
         <>
           {isAye
@@ -72,7 +60,14 @@ function ReferendumVotes ({ change, className, count, isAye, isWinning, total, v
           <div><FormatBalance value={total} /></div>
         </>
       }
-    />
+    >
+      {sorted.map((vote) =>
+        <ReferendumVote
+          key={vote.accountId.toString()}
+          vote={vote}
+        />
+      )}
+    </Expander>
   );
 }
 

@@ -463,7 +463,8 @@ describe('Bounties', () => {
         {
           curator: alice,
           status: 'Active',
-          updateDue: mockBountyHooks.bountyApi.bestNumber?.toNumber()
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          updateDue: mockBountyHooks.bountyApi.bestNumber!.toNumber()
         }) });
 
       bountiesPage.renderOne(bounty);

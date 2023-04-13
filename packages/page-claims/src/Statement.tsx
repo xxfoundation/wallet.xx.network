@@ -16,7 +16,7 @@ export interface Props {
 }
 
 // Get the full hardcoded text for a statement
-function StatementFullText ({ statementUrl, systemChain }: { statementUrl?: string; systemChain: string }): React.ReactElement | null {
+function StatementFullText({ statementUrl, systemChain }: { statementUrl?: string; systemChain: string }): React.ReactElement | null {
   const { t } = useTranslation();
 
   switch (systemChain) {
@@ -31,7 +31,7 @@ function StatementFullText ({ statementUrl, systemChain }: { statementUrl?: stri
   }
 }
 
-function Statement ({ className, kind, systemChain }: Props): React.ReactElement<Props> | null {
+function Statement({ className, kind, systemChain }: Props): React.ReactElement<Props> | null {
   const { t } = useTranslation();
   const statementUrl = getStatement(systemChain, kind)?.url;
 

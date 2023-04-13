@@ -25,7 +25,7 @@ function ExpandButton ({ className = '', expanded, onClick }: Props): React.Reac
 }
 
 export default React.memo(styled(ExpandButton)`
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   width: 1.7rem;

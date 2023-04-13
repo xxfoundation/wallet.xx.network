@@ -3,7 +3,7 @@
 
 import type { Props } from '../types';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useRef } from 'react';
 
 import { Dropdown } from '@polkadot/react-components';
 import { GenericVote } from '@polkadot/types';
@@ -12,34 +12,21 @@ import { isBn } from '@polkadot/util';
 import { useTranslation } from '../translate';
 import Bare from './Bare';
 
-interface VoteParts {
-  aye: boolean;
-  conviction: number;
+function doChange (onChange?: (value: any) => void): (_: number) => void {
+  return function (value: number): void {
+    onChange && onChange({
+      isValid: true,
+      value
+    });
+  };
 }
-
-const EMPTY_VOTE: VoteParts = { aye: true, conviction: 0 };
 
 function Vote ({ className = '', defaultValue: { value }, isDisabled, isError, onChange, withLabel }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
-  const [vote, setVote] = useState(EMPTY_VOTE);
-
-  useEffect((): void => {
-    onChange && onChange({ isValid: true, value: vote });
-  }, [onChange, vote]);
-
-  const onChangeVote = useCallback(
-    (aye: boolean) => setVote(({ conviction }) => ({ aye, conviction })),
-    []
-  );
-
-  const onChangeConviction = useCallback(
-    (conviction: number) => setVote(({ aye }) => ({ aye, conviction })),
-    []
-  );
 
   const optAyeRef = useRef([
-    { text: t<string>('Nay'), value: false },
-    { text: t<string>('Aye'), value: true }
+    { text: t<string>('Nay'), value: 0 },
+    { text: t<string>('Aye'), value: -1 }
   ]);
 
   const optConvRef = useRef([
@@ -52,11 +39,11 @@ function Vote ({ className = '', defaultValue: { value }, isDisabled, isError, o
     { text: t<string>('Locked6x'), value: 6 }
   ]);
 
-  const defaultVote = isBn(value)
-    ? (value.toNumber() !== 0)
+  const defaultValue = isBn(value)
+    ? value.toNumber()
     : value instanceof GenericVote
-      ? value.isAye
-      : (value as number !== 0);
+      ? (value.isAye ? -1 : 0)
+      : value as number;
   const defaultConv = value instanceof GenericVote
     ? value.conviction.index
     : 0;
@@ -65,24 +52,25 @@ function Vote ({ className = '', defaultValue: { value }, isDisabled, isError, o
     <Bare className={className}>
       <Dropdown
         className='full'
-        defaultValue={defaultVote}
+        defaultValue={defaultValue}
         isDisabled={isDisabled}
         isError={isError}
         label={t<string>('aye: bool')}
-        onChange={onChangeVote}
+        onChange={doChange(onChange)}
         options={optAyeRef.current}
         withLabel={withLabel}
       />
-      <Dropdown
-        className='full'
-        defaultValue={defaultConv}
-        isDisabled={isDisabled}
-        isError={isError}
-        label={t<string>('conviction: Conviction')}
-        onChange={onChangeConviction}
-        options={optConvRef.current}
-        withLabel={withLabel}
-      />
+      {isDisabled && (
+        <Dropdown
+          className='full'
+          defaultValue={defaultConv}
+          isDisabled={isDisabled}
+          isError={isError}
+          label={t<string>('conviction: Conviction')}
+          options={optConvRef.current}
+          withLabel={withLabel}
+        />
+      )}
     </Bare>
   );
 }

@@ -2,25 +2,24 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { KeyedEvent } from '@polkadot/react-query/types';
-import type { Balance, DispatchInfo, SignedBlock } from '@polkadot/types/interfaces';
+import type { Balance, DispatchInfo, SignedBlock, Weight } from '@polkadot/types/interfaces';
 
 import React, { useMemo } from 'react';
 
 import { CardSummary, SummaryBox } from '@polkadot/react-components';
 import { useApi } from '@polkadot/react-hooks';
-import { convertWeight } from '@polkadot/react-hooks/useWeight';
 import { FormatBalance } from '@polkadot/react-query';
 import { BN, formatNumber } from '@polkadot/util';
 
 import { useTranslation } from '../translate';
 
 interface Props {
-  events?: KeyedEvent[] | null;
-  maxBlockWeight?: BN;
+  events?: KeyedEvent[];
+  maxBlockWeight?: Weight;
   signedBlock?: SignedBlock;
 }
 
-function extractEventDetails (events?: KeyedEvent[] | null): [BN?, BN?, BN?] {
+function extractEventDetails (events?: KeyedEvent[]): [BN?, BN?, BN?] {
   return events
     ? events.reduce(([deposits, transfers, weight], { record: { event: { data, method, section } } }) => [
       section === 'balances' && method === 'Deposit'
@@ -30,11 +29,7 @@ function extractEventDetails (events?: KeyedEvent[] | null): [BN?, BN?, BN?] {
         ? transfers.iadd(data[2] as Balance)
         : transfers,
       section === 'system' && ['ExtrinsicFailed', 'ExtrinsicSuccess'].includes(method)
-        ? weight.iadd(
-          convertWeight(
-            ((method === 'ExtrinsicSuccess' ? data[0] : data[1]) as DispatchInfo).weight
-          ).v1Weight
-        )
+        ? weight.iadd(((method === 'ExtrinsicSuccess' ? data[0] : data[1]) as DispatchInfo).weight)
         : weight
     ], [new BN(0), new BN(0), new BN(0)])
     : [];
@@ -61,10 +56,7 @@ function Summary ({ events, maxBlockWeight, signedBlock }: Props): React.ReactEl
             <CardSummary label={t<string>('deposits')}>
               <FormatBalance value={deposits} />
             </CardSummary>
-            <CardSummary
-              className='media--1000'
-              label={t<string>('transfers')}
-            >
+            <CardSummary label={t<string>('transfers')}>
               <FormatBalance value={transfers} />
             </CardSummary>
           </>
@@ -84,7 +76,7 @@ function Summary ({ events, maxBlockWeight, signedBlock }: Props): React.ReactEl
           </CardSummary>
         </section>
       )}
-      <section className='media--900'>
+      <section>
         <CardSummary label={t<string>('event count')}>
           {formatNumber(events.length)}
         </CardSummary>

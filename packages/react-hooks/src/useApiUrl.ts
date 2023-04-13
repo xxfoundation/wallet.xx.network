@@ -1,25 +1,21 @@
 // Copyright 2017-2022 @polkadot/react-hooks authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { ProviderInterface } from '@polkadot/rpc-provider/types';
-
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ApiPromise, WsProvider } from '@polkadot/api';
-import { typesBundle } from '@polkadot/apps-config';
+import { typesBundle, typesChain } from '@polkadot/apps-config';
 import { arrayShuffle, isString } from '@polkadot/util';
 
 import { createNamedHook } from './createNamedHook';
 import { useIsMountedRef } from './useIsMountedRef';
 
-function disconnect (provider: ProviderInterface | null): null {
-  provider && provider.disconnect().catch(console.error);
-
-  return null;
+function disconnect (api: ApiPromise | null): void {
+  api && api.disconnect().catch(console.error);
 }
 
 function useApiUrlImpl (url?: null | string | string[]): ApiPromise | null {
-  const providerRef = useRef<ProviderInterface | null>(null);
+  const apiRef = useRef<ApiPromise | null>(null);
   const mountedRef = useIsMountedRef();
   const [state, setState] = useState<ApiPromise | null>(null);
   const urls = useMemo(
@@ -33,23 +29,36 @@ function useApiUrlImpl (url?: null | string | string[]): ApiPromise | null {
 
   useEffect((): () => void => {
     return (): void => {
-      providerRef.current = disconnect(providerRef.current);
+      disconnect(apiRef.current);
+      apiRef.current = null;
     };
   }, []);
 
+  const _setApi = useCallback(
+    (api: ApiPromise | null): void => {
+      disconnect(apiRef.current);
+
+      if (mountedRef.current) {
+        apiRef.current = api;
+        setState(api);
+      }
+    },
+    [mountedRef]
+  );
+
   useEffect((): void => {
-    setState(null);
-    providerRef.current = disconnect(providerRef.current);
+    _setApi(null);
 
     urls.length &&
       ApiPromise
         .create({
-          provider: (providerRef.current = new WsProvider(urls)),
-          typesBundle
+          provider: new WsProvider(urls),
+          typesBundle,
+          typesChain
         })
-        .then((api) => mountedRef.current && setState(api))
+        .then(_setApi)
         .catch(console.error);
-  }, [mountedRef, providerRef, urls]);
+  }, [_setApi, urls]);
 
   return state;
 }

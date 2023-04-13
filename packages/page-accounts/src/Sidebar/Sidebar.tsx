@@ -23,7 +23,7 @@ interface Props {
 
 function FullSidebar ({ address, className = '', dataTestId, onClose, onUpdateName }: Props): React.ReactElement<Props> {
   const [inEditMode, setInEditMode] = useState<boolean>(false);
-  const { accountIndex, flags, identity, cmixId, meta } = useAccountInfo(address);
+  const { accountIndex, flags, identity, meta } = useAccountInfo(address);
 
   const ref = useRef<HTMLDivElement>(null);
 
@@ -42,7 +42,7 @@ function FullSidebar ({ address, className = '', dataTestId, onClose, onUpdateNa
         <SidebarEditableSection
           accountIndex={accountIndex}
           address={address}
-          cmixId={cmixId}
+          cmixId={identity?.cmixId}
           isBeingEdited={setInEditMode}
           onUpdateName={onUpdateName}
           sidebarRef={ref}
@@ -62,6 +62,7 @@ function FullSidebar ({ address, className = '', dataTestId, onClose, onUpdateNa
       <section className='ui--LinkSection'>
         <LinkExternal
           data={address}
+          isLogo
           isSidebar
           type='address'
         />
@@ -110,15 +111,6 @@ export default React.memo(styled(FullSidebar)`
         overflow: hidden;
       }
     }
-
-    .ui--AddressSection__CopyColumn {
-      margin-left: 1rem;
-
-      .ui--AccountName {
-        max-width: 10rem;
-        overflow: hidden;
-      }
-    }
   }
 
   .ui--AddressMenu-addr,
@@ -130,25 +122,10 @@ export default React.memo(styled(FullSidebar)`
 
   .ui--AddressMenu-addr {
     word-break: break-all;
-    width: 24ch;
+    width: 26ch;
     margin: 0.571rem 0;
     color: var(--color-label);
   }
-
-  .ui--AddressMenu-copyaddr,
-  .ui--AddressMenu-index {
-    font: var(--font-mono);
-    text-align: left;
-    font-size: 0.857rem;
-  }
-
-  .ui--AddressMenu-copyaaddr {
-    word-break: break-all;
-    width: 12ch;
-    margin: 0.371rem 0;
-    color: var(--color-label);
-  }
-
 
   .ui--AddressMenu-index {
     display: flex;

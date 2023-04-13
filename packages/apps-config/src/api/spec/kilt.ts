@@ -3,6 +3,6 @@
 
 import type { OverrideBundleDefinition } from '@polkadot/types/types';
 
-import { typesBundle } from '@kiltprotocol/type-definitions';
+import { typeBundleForPolkadot } from '@kiltprotocol/type-definitions';
 
-export default typesBundle.chain?.['KILT Spiritnet'] as OverrideBundleDefinition;
+export default typeBundleForPolkadot as unknown as OverrideBundleDefinition;

@@ -1,5 +1,4 @@
-// Copyright 2017-2022 @polkadot/apps authors & contributors
-// SPDX-License-Identifier: Apache-2.0
+/* eslint-disable header/header */
 import { useState } from 'react';
 
 import { CUSTOM_ENDPOINT_KEY } from '@polkadot/apps-config';

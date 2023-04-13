@@ -129,7 +129,7 @@ function ClaimsApp ({ basePath }: Props): React.ReactElement<Props> {
 
   const fetchClaimAmount = useCallback(() => {
     return api.query.claims
-      .claims<Option<BalanceOf>>(ethereumAddress ?? '');
+      .claims<Option<BalanceOf>>(ethereumAddress);
   }, [api.query.claims, ethereumAddress]);
 
   const [signMethod, setSignMethod] = useState<Step.SignManual | Step.SignMetamask>();
@@ -236,9 +236,7 @@ function ClaimsApp ({ basePath }: Props): React.ReactElement<Props> {
           <Columar.Column>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 0.5em' }}>
               <h1>
-                <Trans>
-                  Claim your <em>{TokenUnit.abbr}</em> tokens
-                </Trans>
+                <Trans>Claim your <em>{TokenUnit.abbr}</em> tokens</Trans>
               </h1>
               <div style={{ margin: 'auto 0 0', textAlign: 'end' }}>
                 <a
@@ -330,7 +328,7 @@ function ClaimsApp ({ basePath }: Props): React.ReactElement<Props> {
               (step >= Step.ValidateEthAddress && signMethod === Step.SignMetamask && !isOldClaimProcess) && (
                 <Card withBottomMargin>
                   <h3>{t<string>('3. Confirm ETH address from the sale.')}</h3>
-                  <MetamaskAddress onChangeEthAddress={setEthereumAddress} />
+                  <MetamaskAddress OnChangeEthAddress={setEthereumAddress} />
                   {(step === Step.ValidateEthAddress) && (
                     <Button.Group>
                       <Button

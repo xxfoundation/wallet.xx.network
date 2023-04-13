@@ -11,6 +11,7 @@ import { allNetworks } from '@polkadot/networks';
 import { Button, Dropdown, MarkWarning } from '@polkadot/react-components';
 import { useApi, useLedger } from '@polkadot/react-hooks';
 import { settings } from '@polkadot/ui-settings';
+import { isUndefined } from '@polkadot/util';
 
 import { useTranslation } from './translate';
 import { createIdenticon, createOption, save, saveAndReload } from './util';
@@ -23,8 +24,8 @@ const _ledgerConnOptions = settings.availableLedgerConn;
 
 function General ({ className = '' }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
-  const { chainSS58, isApiReady, isElectron } = useApi();
-  const { hasLedgerChain, hasWebUsb } = useLedger();
+  const { api, isApiReady, isElectron } = useApi();
+  const { isLedgerCapable } = useLedger();
   // tri-state: null = nothing changed, false = no reload, true = reload required
   const [changed, setChanged] = useState<boolean | null>(null);
   const [state, setSettings] = useState((): SettingsStruct => {
@@ -47,21 +48,27 @@ function General ({ className = '' }: Props): React.ReactElement<Props> {
 
   const prefixOptions = useMemo(
     (): (Option | React.ReactNode)[] => {
-      const network = allNetworks.find(({ prefix }) => prefix === chainSS58);
+      let ss58Format = api.registry.chainSS58;
+
+      if (isUndefined(ss58Format)) {
+        ss58Format = 42;
+      }
+
+      const network = allNetworks.find(({ prefix }) => prefix === ss58Format);
 
       return createSs58(t).map((o) =>
         createOption(o, ['default'], 'empty', (
           o.value === -1
             ? isApiReady
               ? network
-                ? ` (${network.displayName}, ${chainSS58 || 0})`
-                : ` (${chainSS58 || 0})`
+                ? ` (${network.displayName}, ${ss58Format || 0})`
+                : ` (${ss58Format || 0})`
               : undefined
             : ` (${o.value})`
         ))
       );
     },
-    [chainSS58, isApiReady, t]
+    [api, isApiReady, t]
   );
 
   const themeOptions = useMemo(
@@ -146,34 +153,22 @@ function General ({ className = '' }: Props): React.ReactElement<Props> {
           options={translateLanguages}
         />
       </div>
-      {hasLedgerChain && (
+      {isLedgerCapable && (
         <>
           <div className='ui--row'>
             <Dropdown
-              defaultValue={
-                hasWebUsb
-                  ? ledgerConn
-                  : ledgerConnOptions[0].value
-              }
+              defaultValue={ledgerConn}
               help={t<string>('Manage your connection to Ledger S')}
-              isDisabled={!hasWebUsb}
               label={t<string>('manage hardware connections')}
               onChange={_handleChange('ledgerConn')}
               options={ledgerConnOptions}
             />
           </div>
-          {hasWebUsb
-            ? state.ledgerConn !== 'none'
-              ? (
-                <div className='ui--row'>
-                  <MarkWarning content={t<string>('Ledger support is still experimental and some issues may remain. Trust, but verify the addresses on your devices before transferring large amounts. There are some features that will not work, including batch calls (used extensively in staking and democracy) as well as any identity operations.')} />
-                </div>
-              )
-              : null
-            : (
-              <MarkWarning content={t<string>('Ledger hardware device support is only available on Chromium-based browsers where WebUSB and WebHID support is available in the browser.')} />
-            )
-          }
+          {state.ledgerConn !== 'none' && (
+            <div className='ui--row'>
+              <MarkWarning content={t<string>('Ledger support is still experimental and some issues may remain. Trust, but verify the addresses on your devices before transferring large amounts. There are some features that will not work, including batch calls (used extensively in staking and democracy) as well as any identity operations.')} />
+            </div>
+          )}
         </>
       )}
       <Button.Group>

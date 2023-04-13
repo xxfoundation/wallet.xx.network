@@ -7,7 +7,7 @@ import { useApi } from '@polkadot/react-hooks';
 import { InputAddress, InputCmixAddress, MarkWarning, Modal, TxButton } from '@polkadot/react-components';
 
 import { useTranslation } from '../../translate';
-import { isHex } from '@polkadot/util';
+import InputValidateCmix from '../Account/InputValidateCmix';
 
 interface Props {
   onClose: () => void;
@@ -15,7 +15,7 @@ interface Props {
   controllerId: string;
 }
 
-function SetCmixId ({ onClose, stashId, controllerId }: Props): React.ReactElement<Props> {
+function SetCmixId({ onClose, stashId, controllerId }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
   const [cmixId, setCmixId] = useState<string | null>(null);
@@ -23,16 +23,14 @@ function SetCmixId ({ onClose, stashId, controllerId }: Props): React.ReactEleme
 
   const cmixHint = t<string>('The cMix ID is the identifier of your cMix Node in the xx network. Validators are required to have a cMix ID set on-chain. This can be found in your cmix-IDF.json file, under the field “hexNodeID”.');
 
-  const _validateCmixId = useCallback(
-    (value: string) => {
-      setCmixError(!isHex(value, 256));
-      setCmixId(value);
-    },
+  const _setCmixAddressError = useCallback(
+    (error: string | null) => setCmixError(!!error),
     []
   );
 
   return (
     <Modal
+      className='staking--BondExtra'
       header={t<string>('Set Cmix ID')}
       onClose={onClose}
       size='large'
@@ -55,8 +53,13 @@ function SetCmixId ({ onClose, stashId, controllerId }: Props): React.ReactEleme
             <InputCmixAddress
               cmixId={cmixId}
               isError={cmixError}
-              onChange={_validateCmixId}
+              onChange={setCmixId}
               includeToggle={false}
+            />
+            <InputValidateCmix
+              onError={_setCmixAddressError}
+              required={true}
+              value={cmixId}
             />
             <MarkWarning
               content={t<string>('Please make sure you set your cMix ID correctly. If you don’t, you will need to fully UNBOND your stash, and wait for the bonding duration specified above, before you can correct your cMix ID. Be aware you will NOT EARN any potential rewards during this unbonding period.')}

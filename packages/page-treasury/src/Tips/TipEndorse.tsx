@@ -21,7 +21,7 @@ interface Props {
   recipient: string;
 }
 
-const OPT = {
+const transformBalance = {
   transform: ({ freeBalance, reservedBalance }: DeriveBalancesAll): BN =>
     freeBalance.add(reservedBalance)
 };
@@ -32,7 +32,7 @@ function TipEndorse ({ defaultId, hash, isMember, isTipped, median, members, rec
   const [isOpen, toggleOpen] = useToggle();
   const [accountId, setAccountId] = useState<string | null>(defaultId);
   const [value, setValue] = useState<BN | undefined>();
-  const totalBalance = useCall<BN>(api.derive.balances?.all, [recipient], OPT);
+  const totalBalance = useCall<BN>(api.derive.balances?.all, [recipient], transformBalance);
 
   const tipTx = (api.tx.tips || api.tx.treasury).tip;
 

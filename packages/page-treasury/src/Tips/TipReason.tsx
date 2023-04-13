@@ -13,7 +13,7 @@ interface Props {
   hash: Hash;
 }
 
-const OPT = {
+const transformTip = {
   transform: (optBytes: Option<Bytes>) =>
     optBytes.isSome
       ? hexToString(optBytes.unwrap().toHex())
@@ -22,7 +22,7 @@ const OPT = {
 
 function TipReason ({ hash }: Props): React.ReactElement<Props> {
   const { api } = useApi();
-  const reasonText = useCall<string | null>((api.query.tips || api.query.treasury).reasons, [hash], OPT);
+  const reasonText = useCall<string | null>((api.query.tips || api.query.treasury).reasons, [hash], transformTip);
 
   return (
     <td className='start all'>{reasonText || hash.toHex()}</td>

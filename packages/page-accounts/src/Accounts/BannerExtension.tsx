@@ -22,7 +22,7 @@ const browserInfo = detect();
 const browserName: Browser | null = (browserInfo && (browserInfo.name as Browser)) || null;
 const isSupported = browserName && Object.keys(availableExtensions).includes(browserName);
 
-function BannerExtension (): React.ReactElement | null {
+function BannerExtension(): React.ReactElement | null {
   const { t } = useTranslation();
   const { hasInjectedAccounts } = useApi();
   const upgradableCount = useExtensionCounter();

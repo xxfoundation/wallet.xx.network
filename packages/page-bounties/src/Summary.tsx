@@ -1,24 +1,24 @@
 // Copyright 2017-2022 @polkadot/app-bounties authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { BountyApi } from './hooks/useBounties';
-
 import React, { useMemo } from 'react';
 
 import { CardSummary, SummaryBox } from '@polkadot/react-components';
 import { useTreasury } from '@polkadot/react-hooks';
 import { FormatBalance } from '@polkadot/react-query';
-import { BN, formatNumber } from '@polkadot/util';
+import { BN } from '@polkadot/util';
 
+import { useBounties } from './hooks';
 import { useTranslation } from './translate';
 
 interface Props {
+  activeBounties?: number;
   className?: string;
-  info: BountyApi;
 }
 
-function Summary ({ className = '', info: { bestNumber, bounties, bountyCount, childCount } }: Props): React.ReactElement<Props> {
+function Summary ({ activeBounties, className = '' }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
+  const { bestNumber, bounties, bountyIndex } = useBounties();
   const { spendPeriod } = useTreasury();
 
   const totalValue = useMemo(
@@ -29,19 +29,12 @@ function Summary ({ className = '', info: { bestNumber, bounties, bountyCount, c
   return (
     <SummaryBox className={`ui--BountySummary ${className}`}>
       <section>
-        {bounties && (
-          <CardSummary label={t<string>('active')}>
-            {formatNumber(bounties.length)}
-          </CardSummary>
-        )}
-        {bountyCount && bounties && (
+        <CardSummary label={t<string>('active')}>
+          {activeBounties}
+        </CardSummary>
+        {activeBounties !== undefined && (
           <CardSummary label={t<string>('past')}>
-            {formatNumber(bountyCount.subn(bounties.length))}
-          </CardSummary>
-        )}
-        {childCount && (
-          <CardSummary label={t<string>('children')}>
-            {formatNumber(childCount)}
+            {bountyIndex?.subn(activeBounties).toString()}
           </CardSummary>
         )}
       </section>
@@ -54,7 +47,7 @@ function Summary ({ className = '', info: { bestNumber, bounties, bountyCount, c
         </CardSummary>
       </section>
       <section>
-        {bestNumber && !spendPeriod.isZero() && (
+        {bestNumber && spendPeriod.gtn(0) && (
           <CardSummary
             label={t<string>('funding period')}
             progress={{

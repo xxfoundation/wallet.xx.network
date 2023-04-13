@@ -5,8 +5,6 @@ import type { Signer, SignerResult } from '@polkadot/api/types';
 import type { KeyringPair } from '@polkadot/keyring/types';
 import type { Registry, SignerPayloadJSON } from '@polkadot/types/types';
 
-import { objectSpread } from '@polkadot/util';
-
 import { lockAccount } from '../util';
 
 let id = 0;
@@ -25,9 +23,7 @@ export default class AccountSigner implements Signer {
       const signed = this.#registry.createType('ExtrinsicPayload', payload, { version: payload.version }).sign(this.#keyringPair);
 
       lockAccount(this.#keyringPair);
-      resolve(
-        objectSpread({ id: ++id }, signed)
-      );
+      resolve({ id: ++id, ...signed });
     });
   }
 }

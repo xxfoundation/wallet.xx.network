@@ -1,5 +1,4 @@
-// Copyright 2017-2022 @polkadot/apps authors & contributors
-// SPDX-License-Identifier: Apache-2.0
+/* eslint-disable header/header */
 
 import type { Option } from '@polkadot/types';
 import type { AccountId, StakingLedger } from '@polkadot/types/interfaces';
@@ -38,16 +37,14 @@ const useTeamMultipliers = () => {
   const custodyAccountControllers = useCall<Option<AccountId>[]>(custodyAccountIds && api.query.staking.bonded.multi, [custodyAccountIds]);
   const controllerIds = mapOptionals(custodyAccountControllers);
   const custodyAccountLedgerOptionals = useCall<Option<StakingLedger>[]>(controllerIds && api.query.staking.ledger.multi, [controllerIds]);
-  const ledgers = useMemo(
-    () => mapOptionals(custodyAccountLedgerOptionals),
-    [custodyAccountLedgerOptionals]
-  );
+  const ledgers = mapOptionals(custodyAccountLedgerOptionals);
 
   const extracted = useMemo(
     () => custodyAccounts && ledgers
       ? extractTeamNominationsInfo(custodyAccounts, ledgers)
       : undefined,
-    [custodyAccounts, ledgers]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [custodyAccounts?.join(''), JSON.stringify(ledgers)]
   );
 
   return extracted;

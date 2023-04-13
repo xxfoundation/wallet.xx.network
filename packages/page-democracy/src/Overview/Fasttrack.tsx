@@ -3,19 +3,18 @@
 
 import type { SubmittableExtrinsic } from '@polkadot/api/types';
 import type { Hash, VoteThreshold } from '@polkadot/types/interfaces';
-import type { HexString } from '@polkadot/util/types';
 
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { getFastTrackThreshold } from '@polkadot/apps-config';
 import { Button, Input, InputAddress, InputNumber, Modal, Toggle, TxButton } from '@polkadot/react-components';
 import { useApi, useCall, useCollectiveInstance, useToggle } from '@polkadot/react-hooks';
-import { BN, isString } from '@polkadot/util';
+import { BN } from '@polkadot/util';
 
 import { useTranslation } from '../translate';
 
 interface Props {
-  imageHash: Hash | HexString;
+  imageHash: Hash;
   members: string[];
   threshold: VoteThreshold;
 }
@@ -53,7 +52,7 @@ function Fasttrack ({ imageHash, members, threshold }: Props): React.ReactElemen
 
   const extrinsic = useMemo(
     (): SubmittableExtrinsic<'promise'> | null => {
-      if (!modLocation || !proposal || !proposalCount || !api.tx.utility) {
+      if (!modLocation || !proposal || !proposalCount) {
         return null;
       }
 
@@ -63,13 +62,13 @@ function Fasttrack ({ imageHash, members, threshold }: Props): React.ReactElemen
         // @ts-ignore Old-type
         : api.tx[modLocation].propose(memberThreshold, proposal);
 
-      return withVote && (members.length > 1)
+      return withVote
         ? api.tx.utility.batch([
           proposeTx,
           api.tx[modLocation].vote(proposal.method.hash, proposalCount, true)
         ])
         : proposeTx;
-    }, [api, members, memberThreshold, modLocation, proposal, proposalCount, proposalLength, withVote]
+    }, [api, memberThreshold, modLocation, proposal, proposalCount, proposalLength, withVote]
   );
 
   useEffect((): void => {
@@ -83,7 +82,7 @@ function Fasttrack ({ imageHash, members, threshold }: Props): React.ReactElemen
     });
   }, [api, delayBlocks, imageHash, members, votingBlocks]);
 
-  if (!modLocation || !api.tx.utility) {
+  if (!modLocation) {
     return null;
   }
 
@@ -109,7 +108,7 @@ function Fasttrack ({ imageHash, members, threshold }: Props): React.ReactElemen
               <Input
                 isDisabled
                 label={t<string>('preimage hash')}
-                value={isString(imageHash) ? imageHash : imageHash.toHex()}
+                value={imageHash.toHex()}
               />
             </Modal.Columns>
             <Modal.Columns hint={t<string>('The voting period and delay to apply to this proposal. The threshold is calculated from these values.')}>
@@ -134,21 +133,19 @@ function Fasttrack ({ imageHash, members, threshold }: Props): React.ReactElemen
                 label={t<string>('threshold')}
               />
             </Modal.Columns>
-            {(members.length > 1) && (
-              <Modal.Columns hint={t<string>('Submit an Aye vote alongside the proposal as part of a batch')}>
-                <Toggle
-                  label={t<string>('Submit Aye vote with proposal')}
-                  onChange={toggleVote}
-                  value={withVote}
-                />
-              </Modal.Columns>
-            )}
+            <Modal.Columns hint={t<string>('Submit an Aye vote alongside the proposal as part of a batch')}>
+              <Toggle
+                label={t<string>('Submit Aye vote with proposal')}
+                onChange={toggleVote}
+                value={withVote}
+              />
+            </Modal.Columns>
           </Modal.Content>
           <Modal.Actions>
             <TxButton
               accountId={accountId}
               extrinsic={extrinsic}
-              icon='forward'
+              icon='fast-forward'
               isDisabled={!accountId}
               label={t<string>('Fast track')}
               onStart={toggleFasttrack}
@@ -157,8 +154,8 @@ function Fasttrack ({ imageHash, members, threshold }: Props): React.ReactElemen
         </Modal>
       )}
       <Button
-        icon='forward'
-        isDisabled={threshold.isSuperMajorityApprove}
+        icon='fast-forward'
+        isDisabled={!threshold.isSimpleMajority}
         label={t<string>('Fast track')}
         onClick={toggleFasttrack}
       />

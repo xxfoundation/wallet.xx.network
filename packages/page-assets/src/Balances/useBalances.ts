@@ -1,17 +1,15 @@
 // Copyright 2017-2022 @polkadot/app-assets authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { PalletAssetsAssetAccount } from '@polkadot/types/lookup';
+import type { PalletAssetsAssetBalance } from '@polkadot/types/lookup';
 import type { Option } from '@polkadot/types-codec';
 import type { BN } from '@polkadot/util';
-
-import { useMemo } from 'react';
 
 import { createNamedHook, useAccounts, useApi, useCall } from '@polkadot/react-hooks';
 
 interface AccountResult {
   accountId: string;
-  account: PalletAssetsAssetAccount;
+  account: PalletAssetsAssetBalance;
 }
 
 interface Result {
@@ -19,12 +17,12 @@ interface Result {
   accounts: AccountResult[];
 }
 
-function isOptional (value: PalletAssetsAssetAccount | Option<PalletAssetsAssetAccount>): value is Option<PalletAssetsAssetAccount> {
-  return (value as Option<PalletAssetsAssetAccount>).isSome || (value as Option<PalletAssetsAssetAccount>).isNone;
+function isOptional (value: PalletAssetsAssetBalance | Option<PalletAssetsAssetBalance>): value is Option<PalletAssetsAssetBalance> {
+  return (value as Option<PalletAssetsAssetBalance>).isSome || (value as Option<PalletAssetsAssetBalance>).isNone;
 }
 
-const OPTS = {
-  transform: ([[params], accounts]: [[[BN, string][]], (PalletAssetsAssetAccount | Option<PalletAssetsAssetAccount>)[]]): Result => ({
+const queryOptions = {
+  transform: ([[params], accounts]: [[[BN, string][]], (PalletAssetsAssetBalance | Option<PalletAssetsAssetBalance>)[]]): Result => ({
     accounts: params
       .map(([, accountId], index) => {
         const o = accounts[index];
@@ -48,11 +46,7 @@ const OPTS = {
 function useBalancesImpl (id?: BN | null): AccountResult[] | null {
   const { api } = useApi();
   const { allAccounts } = useAccounts();
-  const keys = useMemo(
-    () => [allAccounts.map((a) => [id, a])],
-    [allAccounts, id]
-  );
-  const query = useCall(keys && api.query.assets.account.multi, keys, OPTS);
+  const query = useCall(id && api.query.assets.account.multi, id && [allAccounts.map((a) => [id, a])], queryOptions);
 
   return (query && id && (query.assetId === id) && query.accounts) || null;
 }

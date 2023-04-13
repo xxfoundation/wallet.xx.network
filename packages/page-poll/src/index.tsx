@@ -1,7 +1,6 @@
 // Copyright 2017-2022 @polkadot/app-poll authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { QueryableStorageEntry } from '@polkadot/api/types';
 import type { Approvals, Balance, BlockNumber } from '@polkadot/types/interfaces';
 import type { ITuple } from '@polkadot/types/types';
 
@@ -28,7 +27,7 @@ interface Turnout {
   voted: BN;
 }
 
-const OPT_MULTI = {
+const optMulti = {
   defaultValue: [undefined, undefined] as MultiResult
 };
 
@@ -36,11 +35,10 @@ function PollApp ({ basePath, className }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
   const bestNumber = useBestNumber();
-  const totalIssuanceQuery = api.query.balances?.totalIssuance as QueryableStorageEntry<'promise'>;
   const [totalIssuance, totals] = useCallMulti<MultiResult>([
-    totalIssuanceQuery,
+    api.query.balances?.totalIssuance,
     api.query.poll.totals
-  ], OPT_MULTI);
+  ], optMulti);
   const [accountId, setAccountId] = useState<string | null>(null);
   const [turnout, setTurnout] = useState<Turnout | null>(null);
   const [opt10m, setOpt10m] = useState(false);

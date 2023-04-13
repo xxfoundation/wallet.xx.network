@@ -10,7 +10,6 @@ import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { AddressRow, Button, Input, InputAddress, MarkError, Modal, Password, StatusContext } from '@polkadot/react-components';
 import { useApi, useDebounce, useToggle } from '@polkadot/react-hooks';
 import { keyring } from '@polkadot/ui-keyring';
-import { nextTick } from '@polkadot/util';
 import { keyExtractPath } from '@polkadot/util-crypto';
 
 import { useTranslation } from '../translate';
@@ -34,7 +33,7 @@ interface LockState {
   lockedError: string | null;
 }
 
-function deriveValidate (suri: string, pairType: KeypairType): string | null {
+function deriveValidate(suri: string, pairType: KeypairType): string | null {
   if (suri.includes('///')) {
     return 'Password paths are not supported on keys derived from others';
   }
@@ -55,7 +54,7 @@ function deriveValidate (suri: string, pairType: KeypairType): string | null {
   return null;
 }
 
-function createAccount (source: KeyringPair, suri: string, name: string, password: string, success: string, genesisHash?: string): ActionStatus {
+function createAccount(source: KeyringPair, suri: string, name: string, password: string, success: string, genesisHash?: string): ActionStatus {
   const commitAccount = () => {
     const derived = source.derive(suri);
 
@@ -67,7 +66,7 @@ function createAccount (source: KeyringPair, suri: string, name: string, passwor
   return tryCreateAccount(commitAccount, success);
 }
 
-function Derive ({ className = '', from, onClose }: Props): React.ReactElement {
+function Derive({ className = '', from, onClose }: Props): React.ReactElement {
   const { t } = useTranslation();
   const { api, isDevelopment } = useApi();
   const { queueAction } = useContext(StatusContext);
@@ -113,7 +112,7 @@ function Derive ({ className = '', from, onClose }: Props): React.ReactElement {
   const _onUnlock = useCallback(
     (): void => {
       setIsBusy(true);
-      nextTick((): void => {
+      setTimeout((): void => {
         try {
           source.decodePkcs8(rootPass);
           setIsLocked({ isLocked: source.isLocked, lockedError: null });
@@ -123,7 +122,7 @@ function Derive ({ className = '', from, onClose }: Props): React.ReactElement {
         }
 
         setIsBusy(false);
-      });
+      }, 0);
     },
     [rootPass, source]
   );
@@ -135,13 +134,13 @@ function Derive ({ className = '', from, onClose }: Props): React.ReactElement {
       }
 
       setIsBusy(true);
-      nextTick((): void => {
+      setTimeout((): void => {
         const status = createAccount(source, suri, name, password, t<string>('created account'), isDevelopment ? undefined : api.genesisHash.toString());
 
         queueAction(status);
         setIsBusy(false);
         onClose();
-      });
+      }, 0);
     },
     [api, isDevelopment, isValid, name, onClose, password, queueAction, source, suri, t]
   );
@@ -208,7 +207,7 @@ function Derive ({ className = '', from, onClose }: Props): React.ReactElement {
                   onCommit={_onCommit}
                   setName={setName}
                   setPassword={setPassword}
-                />;
+                />
               </AddressRow>
             )}
           </Modal.Content>

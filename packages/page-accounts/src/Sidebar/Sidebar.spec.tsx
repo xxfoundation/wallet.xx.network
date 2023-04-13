@@ -15,8 +15,7 @@ import { keyring } from '@polkadot/ui-keyring';
 
 import { AccountsPage } from '../../test/pages/accountsPage';
 
-// FIXME: these all need to be wrapped in waitFor ....
-describe.skip('Sidebar', () => {
+describe('Sidebar', () => {
   let accountsPage: AccountsPage;
   let sideBar: Sidebar;
 
@@ -41,14 +40,8 @@ describe.skip('Sidebar', () => {
 
     describe('changes name', () => {
       beforeEach(async () => {
-        // Cannot get this to work on React 18 ... the first one fails :(
-        // However... with a delay, it seems to get through the queue
         accountsPage.render([[alice, anAccountWithMeta({ isDevelopment: false, name: initialName })]]);
-
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
         sideBar = await accountsPage.openSidebarForRow(0);
-
         await sideBar.changeAccountName(newName);
       });
 

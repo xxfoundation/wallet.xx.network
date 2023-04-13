@@ -1,10 +1,10 @@
 // Copyright 2017-2022 @polkadot/apps-config authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { EndpointOption } from './types';
+import type { TFunction } from 'i18next';
+import type { LinkOption } from './types';
 
-export * from './productionRelayKusama';
-export * from './productionRelayPolkadot';
+import { expandEndpoints } from './util';
 
 /* eslint-disable sort-keys */
 
@@ -12,17 +12,18 @@ export * from './productionRelayPolkadot';
 // Polkadot) we try to keep this to live chains only, with RPCs hosted by the community/chain vendor
 //   info: The chain logo name as defined in ../ui/logos/index.ts in namedLogos (this also needs to align with @polkadot/networks)
 //   text: The text to display on the dropdown
+//   value: The actual hosted secure websocket endpoint
 
-//   providers: The actual hosted secure websocket endpoint
-//
-// IMPORTANT: Alphabetical based on text
-export const prodChains: EndpointOption[] = [
-  {
-    info: 'xxnetwork',
-    text: 'xx mainnet',
-    providers: {
-      'xx foundation': 'wss://rpc.xx.network',
-      Dwellir: 'wss://xxnetwork-rpc.dwellir.com'
+// alphabetical based on chain name
+export function createProduction (t: TFunction, firstOnly: boolean, withSort: boolean): LinkOption[] {
+  return expandEndpoints(t, [
+    {
+      info: 'xxnetwork',
+      text: t('rpc.prod.xx.mainnet', 'xx mainnet', { ns: 'apps-config' }),
+      providers: {
+        'xx foundation': 'wss://rpc.xx.network',
+        onFinality: 'wss://xx.api.onfinality.io/public-ws'
+      }
     }
-  }
-];
+  ], firstOnly, withSort);
+}

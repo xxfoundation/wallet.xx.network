@@ -3,7 +3,6 @@
 
 import type { BlockNumber, Votes } from '@polkadot/types/interfaces';
 import type { BN } from '@polkadot/util';
-import type { CollectiveType } from './types';
 
 import { useMemo } from 'react';
 
@@ -24,7 +23,7 @@ interface State {
 
 const DEFAULT_STATUS = { hasFailed: false, hasPassed: false, isCloseable: false, isVoteable: false, remainingBlocks: null };
 
-function getStatus (api: ApiPromise, bestNumber: BlockNumber, votes: Votes, numMembers: number, section: CollectiveType): State {
+function getStatus (api: ApiPromise, bestNumber: BlockNumber, votes: Votes, numMembers: number, section: 'council' | 'membership' | 'technicalCommittee'): State {
   const [instance] = api.registry.getModuleInstances(api.runtimeVersion.specName.toString(), section) || [section];
   const modLocation = isFunction(api.tx[instance as 'technicalCommittee']?.close)
     ? instance
@@ -57,7 +56,7 @@ function getStatus (api: ApiPromise, bestNumber: BlockNumber, votes: Votes, numM
   };
 }
 
-function useVotingStatusImpl (votes: Votes | null | undefined, numMembers: number, section: CollectiveType): State {
+function useVotingStatusImpl (votes: Votes | null | undefined, numMembers: number, section: 'council' | 'membership' | 'technicalCommittee'): State {
   const { api } = useApi();
   const bestNumber = useBestNumber();
 

@@ -24,25 +24,25 @@ interface ErrorState {
   isFatal: boolean;
 }
 
-const OPT_BOND = {
+const transformBonded = {
   transform: (value: Option<AccountId>): string | null =>
     value.isSome
       ? value.unwrap().toString()
       : null
 };
 
-const OPT_STASH = {
+const transformStash = {
   transform: (value: Option<StakingLedger>): string | null =>
     value.isSome
       ? value.unwrap().stash.toString()
       : null
 };
 
-function ValidateController ({ accountId, controllerId, defaultController, onError }: Props): React.ReactElement<Props> | null {
+function ValidateController({ accountId, controllerId, defaultController, onError }: Props): React.ReactElement<Props> | null {
   const { t } = useTranslation();
   const { api } = useApi();
-  const bondedId = useCall<string | null>(controllerId ? api.query.staking.bonded : null, [controllerId], OPT_BOND);
-  const stashId = useCall<string | null>(controllerId ? api.query.staking.ledger : null, [controllerId], OPT_STASH);
+  const bondedId = useCall<string | null>(controllerId ? api.query.staking.bonded : null, [controllerId], transformBonded);
+  const stashId = useCall<string | null>(controllerId ? api.query.staking.ledger : null, [controllerId], transformStash);
   const allBalances = useCall<DeriveBalancesAll>(controllerId ? api.derive.balances?.all : null, [controllerId]);
   const [{ error, isFatal }, setError] = useState<ErrorState>({ error: null, isFatal: false });
 
@@ -63,6 +63,9 @@ function ValidateController ({ accountId, controllerId, defaultController, onErr
         isFatal = true;
         newError = t('The controller does not have sufficient funds available to cover transaction fees. Ensure that a funded controller is used.');
       }
+      //  else if (controllerId === accountId) {
+      //   newError = t('Distinct stash and controller accounts are recommended to ensure fund security. You will be allowed to make the transaction, but take care to not tie up all funds, only use a portion of the available funds during this period.');
+      // }
 
       onError(newError, isFatal);
       setError((state) => state.error !== newError ? { error: newError, isFatal } : state);

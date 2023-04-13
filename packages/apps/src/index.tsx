@@ -8,7 +8,7 @@ import '@polkadot/react-components/i18n';
 import '@polkadot/api-augment/substrate';
 
 import React from 'react';
-import { createRoot } from 'react-dom/client';
+import ReactDOM from 'react-dom';
 
 import Root from './Root';
 
@@ -19,6 +19,7 @@ if (!rootElement) {
   throw new Error(`Unable to find element with id '${rootId}'`);
 }
 
-createRoot(rootElement).render(
-  <Root isElectron={false} />
+ReactDOM.render(
+  <Root isElectron={false} />,
+  rootElement
 );

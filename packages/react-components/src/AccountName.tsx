@@ -11,8 +11,7 @@ import styled from 'styled-components';
 import { AccountSidebarToggle } from '@polkadot/app-accounts/Sidebar';
 import registry from '@polkadot/react-api/typeRegistry';
 import { useDeriveAccountInfo, useSystemApi } from '@polkadot/react-hooks';
-import { formatNumber, isCodec, isFunction, stringToU8a, u8aEmpty, u8aEq, u8aToBn } from '@polkadot/util';
-import { decodeAddress } from '@polkadot/util-crypto';
+import { isFunction, stringToU8a } from '@polkadot/util';
 
 import Badge from './Badge';
 import { getAddressName } from './util';
@@ -30,49 +29,14 @@ interface Props {
   withSidebar?: boolean;
 }
 
-type AddrMatcher = (addr: unknown) => string | null;
-
-function createAllMatcher (prefix: string, name: string): AddrMatcher {
-  const test = registry.createType('AccountId', stringToU8a(prefix.padEnd(32, '\0')));
-
-  return (addr: unknown) =>
-    test.eq(addr)
-      ? name
-      : null;
-}
-
-function createNumMatcher (prefix: string, name: string, add?: string): AddrMatcher {
-  const test = stringToU8a(prefix);
-
-  // 4 bytes for u32 (more should not hurt, LE)
-  const minLength = test.length + 4;
-
-  return (addr: unknown): string | null => {
-    const u8a = isCodec(addr)
-      ? addr.toU8a()
-      : decodeAddress(addr as string);
-
-    return (u8a.length >= minLength) && u8aEq(test, u8a.subarray(0, test.length)) && u8aEmpty(u8a.subarray(minLength))
-      ? `${name} ${formatNumber(u8aToBn(u8a.subarray(test.length, minLength)))}${add ? ` (${add})` : ''}`
-      : null;
-  };
-}
-
-const MATCHERS: AddrMatcher[] = [
-  createAllMatcher('modlpy/socie', 'Society'),
-  createAllMatcher('modlpy/trsry', 'Treasury'),
-  createNumMatcher('modlpy/cfund', 'Crowdloan'),
-  // Substrate master
-  createNumMatcher('modlpy/npols\x00', 'Pool', 'Stash'),
-  createNumMatcher('modlpy/npols\x01', 'Pool', 'Reward'),
-  // Westend
-  createNumMatcher('modlpy/nopls\x00', 'Pool', 'Stash'),
-  createNumMatcher('modlpy/nopls\x01', 'Pool', 'Reward'),
-  createNumMatcher('para', 'Parachain')
+const KNOWN: [AccountId, string][] = [
+  [registry.createType('AccountId', stringToU8a('modlxx/trsry'.padEnd(32, '\0'))), 'Treasury'],
+  [registry.createType('AccountId', stringToU8a('modlxx/rwrds'.padEnd(32, '\0'))), 'Rewards'],
 ];
 
 const displayCache = new Map<string, React.ReactNode>();
 const indexCache = new Map<string, string>();
+
 const parentCache = new Map<string, string>();
 
 export function getParentAccount (value: string): string | undefined {
@@ -80,14 +44,10 @@ export function getParentAccount (value: string): string | undefined {
 }
 
 function defaultOrAddr (defaultName = '', _address: AccountId | AccountIndex | Address | string | Uint8Array, _accountIndex?: AccountIndex | null): [React.ReactNode, boolean, boolean, boolean] {
-  let known: string | null = null;
-
-  for (let i = 0; known === null && i < MATCHERS.length; i++) {
-    known = MATCHERS[i](_address);
-  }
+  const known = KNOWN.find(([known]) => known.eq(_address));
 
   if (known) {
-    return [known, false, false, true];
+    return [known[1], false, false, true];
   }
 
   const accountId = _address.toString();
@@ -185,7 +145,7 @@ function AccountName ({ children, className = '', defaultName, label, onClick, o
       parentCache.set(cacheAddr, identity.parent.toString());
     }
 
-    if (api && isFunction(api.query.identity?.identityOf)) {
+    if (isFunction(api.query.identity?.identityOf)) {
       setName(() =>
         identity?.display
           ? extractIdentity(cacheAddr, identity)

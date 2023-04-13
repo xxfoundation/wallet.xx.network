@@ -10,13 +10,12 @@ interface Props {
   children?: React.ReactNode;
   className?: string;
   content?: React.ReactNode;
-  withIcon?: boolean;
 }
 
-function MarkWarning ({ children, className = '', content, withIcon = true }: Props): React.ReactElement<Props> {
+function MarkWarning ({ children, className = '', content }: Props): React.ReactElement<Props> {
   return (
     <article className={`mark warning ${className}`}>
-      {withIcon && <Icon icon='exclamation-triangle' />}{content}{children}
+      <Icon icon='exclamation-triangle' />{content}{children}
     </article>
   );
 }

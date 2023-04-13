@@ -8,7 +8,7 @@ interface TabsSectionDelimiterProps {
   className?: string;
 }
 
-function TabsSectionDelimiter ({ className = '' }: TabsSectionDelimiterProps): React.ReactElement {
+function TabsSectionDelimiter({ className = '' }: TabsSectionDelimiterProps): React.ReactElement {
   return (
     <div className={className}>
       <svg

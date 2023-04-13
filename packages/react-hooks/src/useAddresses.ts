@@ -4,7 +4,6 @@
 import { useEffect, useState } from 'react';
 
 import { keyring } from '@polkadot/ui-keyring';
-import { nextTick } from '@polkadot/util';
 
 import { createNamedHook } from './createNamedHook';
 import { useIsMountedRef } from './useIsMountedRef';
@@ -31,7 +30,7 @@ function useAddressesImpl (): UseAddresses {
     });
 
     return (): void => {
-      nextTick(() => subscription.unsubscribe());
+      setTimeout(() => subscription.unsubscribe(), 0);
     };
   }, [mountedRef]);
 

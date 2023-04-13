@@ -7,7 +7,7 @@ import 'semantic-ui-css/semantic.min.css';
 import '@polkadot/react-components/i18n';
 
 import React from 'react';
-import { createRoot } from 'react-dom/client';
+import ReactDOM from 'react-dom';
 
 import Root from '@polkadot/apps/Root';
 
@@ -23,9 +23,10 @@ if (!rootElement) {
 
 const store = new RemoteElectronStore(electronMainApi.accountStore);
 
-createRoot(rootElement).render(
+ReactDOM.render(
   <Root
     isElectron
     store={store}
-  />
+  />,
+  rootElement
 );

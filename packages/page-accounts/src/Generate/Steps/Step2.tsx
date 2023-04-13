@@ -1,6 +1,3 @@
-// Copyright 2017-2022 @polkadot/app-accounts authors & contributors
-// SPDX-License-Identifier: Apache-2.0
-
 import React, { useMemo, useState } from 'react';
 import styled from 'styled-components';
 
@@ -93,12 +90,8 @@ const MnemonicGrid = ({ indexes, mnemonic, onValid }: MnemonicGridProps): React.
 function Step2 ({ className = '', mnemonics, onFinish }: Props): React.ReactElement {
   const { t } = useTranslation();
   const [step, nextStep] = useStepper();
-
-  const standard = useMemo(() => mnemonics[0].split(' ').map((elem) => elem), [mnemonics]);
-  const standardIndexes = useMemo(() => getRandomSet(Array.from(Array(standard.length).keys()), 5), [standard.length]);
-
-  const quantum = useMemo(() => mnemonics[1].split(' ').map((elem) => elem), [mnemonics]);
-  const quantumIndexes = useMemo(() => getRandomSet(Array.from(Array(quantum.length).keys()), 5), [quantum.length]);
+  const standard = mnemonics[0].split(' ').map((elem) => elem);
+  const quantum = mnemonics[1].split(' ').map((elem) => elem);
 
   return (
     <div
@@ -110,7 +103,7 @@ function Step2 ({ className = '', mnemonics, onFinish }: Props): React.ReactElem
       <div style={{ margin: '1.5em 0' }}>
         <p className='quantum'><b>QUANTUM</b> mnemonic</p>
         <MnemonicGrid
-          indexes={quantumIndexes}
+          indexes={getRandomSet(Array.from(Array(quantum.length).keys()), 5)}
           mnemonic={quantum}
           onValid={nextStep}
         />
@@ -120,7 +113,7 @@ function Step2 ({ className = '', mnemonics, onFinish }: Props): React.ReactElem
       <div style={{ margin: '1.5em 0' }}>
         <p className='standard'><b>STANDARD</b> mnemonic</p>
         <MnemonicGrid
-          indexes={standardIndexes}
+          indexes={getRandomSet(Array.from(Array(standard.length).keys()), 5)}
           mnemonic={standard}
           onValid={nextStep}
         />

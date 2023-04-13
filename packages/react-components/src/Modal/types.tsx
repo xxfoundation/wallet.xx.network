@@ -46,7 +46,7 @@ export interface RadioGroupProps {
   title: string;
   defaultValue: string;
   value: { header: string[], options: string[] };
-  onChangeOption: (option: string) => void;
+  OnChangeOption: (option: string) => void;
 }
 
 export type ModalType = React.FC<ModalProps> & {

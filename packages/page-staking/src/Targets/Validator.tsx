@@ -15,10 +15,10 @@ import { formatNumber } from '@polkadot/util';
 
 import MaxBadge from '../MaxBadge';
 import { NodeLocationContext } from '../NodeLocationContext/context';
+import Favorite from '../Overview/Address/Favorite';
 import { useTranslation } from '../translate';
-import Favorite from '../Validators/Address/Favorite';
-import CommissionHover from './CommissionHover';
 import HorizontalBarChart from './HorizontalBarChart';
+import CommissionHover from './CommissionHover';
 
 interface Props {
   allSlashes?: [BN, UnappliedSlash[]][];
@@ -32,67 +32,53 @@ interface Props {
   toggleSelected: (accountId: string) => void;
 }
 
-function queryAddress (address: string): void {
+function queryAddress(address: string): void {
   window.location.hash = `/staking/query/${address}`;
 }
 
-function Validator ({ allSlashes, canSelect, filterName, info, isNominated, isSelected, nominatedBy = [], toggleFavorite, toggleSelected }: Props): React.ReactElement<Props> | null {
-  const { accountId,
-    bondOther,
-    bondOwn,
-    bondTotalWithTM,
-    cmixId,
-    commissionPer,
-    isBlocking,
-    isCommissionReducing,
-    isElected,
-    isFavorite,
-    key,
-    numNominators,
-    pastAvgCommission,
-    predictedElected,
-    predictedStake,
-    rankOverall,
-    stakedReturnCmp,
-    teamMultiplier } = info;
+function Validator({ allSlashes, canSelect, filterName, info, isNominated, isSelected, nominatedBy = [], toggleFavorite, toggleSelected }: Props): React.ReactElement<Props> | null {
   const { t } = useTranslation();
   const { api } = useApi();
-  const accountInfo = useDeriveAccountInfo(accountId);
+
   const locationContext = useContext(NodeLocationContext);
   const location = useMemo(() => {
-    return (locationContext && locationContext.nodeLocations && cmixId)
-      ? locationContext.nodeLocations[cmixId]
+    return (locationContext && locationContext.nodeLocations && info && info.cmixId)
+      ? locationContext.nodeLocations[info.cmixId]
       : null;
-  }, [locationContext, cmixId]);
+  }, [locationContext, info]);
   const trimmedLocation =
     (location ?? '').split(',')
       .map((s) => s.trim())
       .filter((s) => !!s)
       .join(', ');
 
+  const accountInfo = useDeriveAccountInfo(info.accountId);
+
   const isVisible = useMemo(
     () => accountInfo
-      ? checkVisibility(api, key, accountInfo, filterName)
+      ? checkVisibility(api, info.key, accountInfo, filterName)
       : true,
-    [accountInfo, api, filterName, key]
+    [accountInfo, api, filterName, info]
   );
 
   const slashes = useMemo(
     () => (allSlashes || [])
-      .map(([era, all]) => ({ era, slashes: all.filter(({ validator }) => validator.eq(accountId)) }))
+      .map(([era, all]) => ({ era, slashes: all.filter(({ validator }) => validator.eq(info.accountId)) }))
       .filter(({ slashes }) => slashes.length),
-    [allSlashes, accountId]
+    [allSlashes, info]
   );
 
   const _onQueryStats = useCallback(
-    () => queryAddress(key),
-    [key]
+    () => queryAddress(info.key),
+    [info.key]
   );
 
   const _toggleSelected = useCallback(
-    () => toggleSelected(key),
-    [key, toggleSelected]
+    () => toggleSelected(info.key),
+    [info.key, toggleSelected]
   );
+
+  const { accountId, bondOther, bondOwn, bondTotalWithTM, predictedStake, predictedElected, cmixId, isCommissionReducing, pastAvgCommission, commissionPer, isBlocking, isElected, isFavorite, key, nominatingAccounts, numNominators, rankOverall, stakedReturnCmp, teamMultiplier } = info;
 
   const barchartItems = useMemo(() => [{
     label: t<string>('Team Multipler'),
@@ -117,10 +103,10 @@ function Validator ({ allSlashes, canSelect, filterName, info, isNominated, isSe
           isFavorite={isFavorite}
           toggleFavorite={toggleFavorite}
         />
-        {isNominated
+        {isNominated || nominatingAccounts.length > 0
           ? (
             <Badge
-              color='green'
+              color={nominatingAccounts.length > 0 ? 'green' : 'orange'}
               icon='hand-paper'
             />
           )
@@ -154,7 +140,7 @@ function Validator ({ allSlashes, canSelect, filterName, info, isNominated, isSe
           />
         )}
       </td>
-      <td className='number'>{rankOverall !== 0 && formatNumber(rankOverall)}</td>
+      <td className='number'>{formatNumber(rankOverall)}</td>
       <td className='address all'>
         <AddressSmall value={accountId} />
       </td>
@@ -169,15 +155,8 @@ function Validator ({ allSlashes, canSelect, filterName, info, isNominated, isSe
       <td>
         {trimmedLocation}
       </td>
-      <td
-        className='together'
-        colSpan={1}
-      >
-        <CommissionHover
-          avgCommission={pastAvgCommission}
-          commission={commissionPer}
-          isCommissionReducing={isCommissionReducing}
-        />
+      <td className='together' colSpan={1}>
+        <CommissionHover isCommissionReducing={isCommissionReducing} commission={commissionPer} avgCommission={pastAvgCommission}/>
       </td>
       <td
         className='together'
@@ -186,10 +165,7 @@ function Validator ({ allSlashes, canSelect, filterName, info, isNominated, isSe
         <HorizontalBarChart items={barchartItems} />
       </td>
       <td className='number together'>{!bondTotalWithTM.isZero() && <FormatBalance value={bondTotalWithTM} />}</td>
-      <td
-        className='number together'
-        style={{ color: predictedElected ? 'green' : 'red' }}
-      >{predictedElected !== undefined ? <FormatBalance value={predictedStake} /> : <Spinner noLabel />}</td>
+      <td className='number together' style={{color: predictedElected ? 'green' : 'red'}}>{predictedElected !== undefined ? <FormatBalance value={predictedStake}/> : <Spinner noLabel />}</td>
       <td className='number together'>{predictedElected !== undefined ? <>{stakedReturnCmp.toFixed(2)}%</> : <Spinner noLabel />}</td>
       <td className='middle'>
         {!isBlocking && (canSelect || isSelected) && (

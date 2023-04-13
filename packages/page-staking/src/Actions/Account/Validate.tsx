@@ -1,7 +1,6 @@
 // Copyright 2017-2022 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { BN } from '@polkadot/util';
 import type { ValidateInfo } from '../partials/types';
 
 import React, { useState } from 'react';
@@ -13,15 +12,13 @@ import ValidatePartial from '../partials/Validate';
 
 interface Props {
   controllerId: string;
-  minCommission?: BN;
   onClose: () => void;
   stashId: string;
 }
 
-function Validate ({ controllerId, minCommission, onClose, stashId }: Props): React.ReactElement<Props> {
+function Validate ({ controllerId, onClose, stashId }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const [{ validateTx }, setTx] = useState<ValidateInfo>({});
-  const [isCommissionValid, setIsCommissionValid] = useState(false);
 
   return (
     <Modal
@@ -32,10 +29,8 @@ function Validate ({ controllerId, minCommission, onClose, stashId }: Props): Re
       <Modal.Content>
         <ValidatePartial
           controllerId={controllerId}
-          minCommission={minCommission}
           onChange={setTx}
           stashId={stashId}
-          onChangeCommission={setIsCommissionValid}
           withSenders
         />
       </Modal.Content>
@@ -44,7 +39,7 @@ function Validate ({ controllerId, minCommission, onClose, stashId }: Props): Re
           accountId={controllerId}
           extrinsic={validateTx}
           icon='certificate'
-          isDisabled={!validateTx || !isCommissionValid}
+          isDisabled={!validateTx}
           label={t<string>('Validate')}
           onStart={onClose}
         />

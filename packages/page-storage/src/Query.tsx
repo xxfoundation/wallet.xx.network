@@ -27,8 +27,8 @@ interface Props {
 
 interface CacheInstance {
   Component: React.ComponentType<any>;
-  render: (value?: any) => React.ComponentType<any>;
-  refresh: (swallowErrors: boolean) => React.ComponentType<any>;
+  render: RenderFn;
+  refresh: (swallowErrors: boolean, contentShorten: boolean) => React.ComponentType<any>;
 }
 
 const cache: CacheInstance[] = [];
@@ -66,13 +66,13 @@ function queryTypeToString (registry: Registry, { creator: { meta: { modifier, t
     : _type;
 }
 
-function createComponent (type: string, Component: React.ComponentType<any>, defaultProps: DefaultProps, renderHelper: ComponentRenderer): { Component: React.ComponentType<any>; render: (createComponent: RenderFn) => React.ComponentType<any>; refresh: (swallowErrors: boolean) => React.ComponentType<any> } {
+function createComponent (type: string, Component: React.ComponentType<any>, defaultProps: DefaultProps, renderHelper: ComponentRenderer): { Component: React.ComponentType<any>; render: (createComponent: RenderFn) => React.ComponentType<any>; refresh: (swallowErrors: boolean, contentShorten: boolean) => React.ComponentType<any> } {
   return {
     Component,
     // In order to modify the parameters which are used to render the default component, we can use this method
-    refresh: (): React.ComponentType<any> =>
+    refresh: (contentShorten: boolean): React.ComponentType<any> =>
       renderHelper(
-        (value: unknown) => <pre>{valueToText(type, value as null)}</pre>,
+        (value: unknown) => <pre>{valueToText(type, value as null, contentShorten)}</pre>,
         defaultProps
       ),
     // In order to replace the default component during runtime we can provide a RenderFn to create a new 'plugged' component
@@ -117,7 +117,6 @@ function getCachedComponent (registry: Registry, query: QueryTypes): CacheInstan
           params: isEntries
             ? [key.entries, ...values]
             : blockHash
-              // eslint-disable-next-line deprecation/deprecation
               ? [key.at, blockHash, ...values]
               : [key, ...values],
           withIndicator: true
@@ -132,7 +131,7 @@ function getCachedComponent (registry: Registry, query: QueryTypes): CacheInstan
     const defaultProps = { className: 'ui--output' };
     const Component = renderHelper(
       // By default we render a simple div node component with the query results in it
-      (value: unknown) => <pre>{valueToText(type, value as null)}</pre>,
+      (value: unknown) => <pre>{valueToText(type, value as null, true)}</pre>,
       defaultProps
     );
 

@@ -144,9 +144,10 @@ function Address ({ address, className = '', filter, isFavorite, toggleFavorite 
     <Menu>
       <Menu.Item
         isDisabled={!isEditable}
-        label={t<string>('Forget this address')}
         onClick={_toggleForget}
-      />
+      >
+        {t<string>('Forget this address')}
+      </Menu.Item>
       {isEditable && !api.isDevelopment && (
         <>
           <Menu.Divider />
@@ -217,6 +218,7 @@ function Address ({ address, className = '', filter, isFavorite, toggleFavorite 
           <LinkExternal
             className='ui--AddressCard-exporer-link'
             data={address}
+            isLogo
             type='address'
           />
         </td>

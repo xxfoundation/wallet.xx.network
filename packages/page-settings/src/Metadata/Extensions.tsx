@@ -4,7 +4,6 @@
 import type { ChainInfo } from '../types';
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import styled from 'styled-components';
 
 import { emptyLogos, extensionLogos } from '@polkadot/apps-config';
 import { Button, Dropdown, Spinner, Table } from '@polkadot/react-components';
@@ -22,6 +21,7 @@ interface Props {
 function Extensions ({ chainInfo, className }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { extensions } = useExtensions();
+
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isBusy, toggleBusy] = useToggle();
   const options = useMemo(
@@ -51,9 +51,10 @@ function Extensions ({ chainInfo, className }: Props): React.ReactElement<Props>
   return (
     <Table
       className={className}
-      empty={t<string>('No Upgradable extensions')}
+      empty={t<string>('No upgradable extensions')}
       header={headerRef.current}
     >
+
       {extensions
         ? options.length !== 0 && (
           <>
@@ -67,7 +68,8 @@ function Extensions ({ chainInfo, className }: Props): React.ReactElement<Props>
                 />
               </td>
             </tr>
-            <tr className='isOdd'>
+
+            <tr className='hasOddRowColoring'>
               <td>
                 <Button.Group>
                   <Button
@@ -83,12 +85,9 @@ function Extensions ({ chainInfo, className }: Props): React.ReactElement<Props>
         )
         : <Spinner />
       }
+
     </Table>
   );
 }
 
-export default React.memo(styled(Extensions)`
-  table {
-    overflow: visible;
-  }
-`);
+export default React.memo(Extensions);

@@ -1,20 +1,22 @@
 // Copyright 2017-2022 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
+import '@xxnetwork/custom-types/interfaces/augment';
+
 import type { StakerState } from '@polkadot/react-hooks/types';
 import type { SortedTargets } from '../types';
 
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Button, ToggleGroup } from '@polkadot/react-components';
+import { Button, Table, ToggleGroup } from '@polkadot/react-components';
 import PaginationAdvanced from '@polkadot/react-components/Pagination/Advanced';
-import { useApi, useAvailableSlashes, usePagination } from '@polkadot/react-hooks';
+import { useAvailableSlashes, usePagination } from '@polkadot/react-hooks';
 import { FormatBalance } from '@polkadot/react-query';
 import { BN, BN_ZERO } from '@polkadot/util';
 
 import ElectionBanner from '../ElectionBanner';
 import { useTranslation } from '../translate';
-import Accounts from './Accounts';
+import Account from './Account';
 import NewNominator from './NewNominator';
 import NewStash from './NewStash';
 import NewValidator from './NewValidator';
@@ -22,7 +24,6 @@ import NewValidator from './NewValidator';
 interface Props {
   className?: string;
   isInElection?: boolean;
-  minCommission?: BN;
   ownStashes?: StakerState[];
   next?: string[];
   validators?: string[];
@@ -84,9 +85,9 @@ function extractState (ownStashes?: StakerState[]): State {
   };
 }
 
-function filterStashes (stashTypeIndex: number, stashes: StakerState[]): StakerState[] {
+function filterStashes (typeIndex: number, stashes: StakerState[]): StakerState[] {
   return stashes.filter(({ isStashNominating, isStashValidating }) => {
-    switch (stashTypeIndex) {
+    switch (typeIndex) {
       case 1: return isStashNominating;
       case 2: return isStashValidating;
       case 3: return !isStashNominating && !isStashValidating;
@@ -95,8 +96,8 @@ function filterStashes (stashTypeIndex: number, stashes: StakerState[]): StakerS
   });
 }
 
-function getValue (stashTypeIndex: number, { bondedNoms, bondedNone, bondedTotal, bondedVals }: State): BN | undefined {
-  switch (stashTypeIndex) {
+function getValue (typeIndex: number, { bondedNoms, bondedNone, bondedTotal, bondedVals }: State): BN | undefined {
+  switch (typeIndex) {
     case 0: return bondedTotal;
     case 1: return bondedNoms;
     case 2: return bondedVals;
@@ -105,26 +106,28 @@ function getValue (stashTypeIndex: number, { bondedNoms, bondedNone, bondedTotal
   }
 }
 
-function formatTotal (stashTypeIndex: number, state: State): React.ReactNode {
-  const value = getValue(stashTypeIndex, state);
+function formatTotal (typeIndex: number, state: State): React.ReactNode {
+  const value = getValue(typeIndex, state);
 
   return value && <FormatBalance value={value} />;
 }
 
-function Actions ({ className = '', isInElection, minCommission, ownStashes, targets }: Props): React.ReactElement<Props> {
+function Actions ({ className = '', isInElection, ownStashes, targets }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
-  const { api } = useApi();
   const allSlashes = useAvailableSlashes();
+  const [typeIndex, setTypeIndex] = useState(0);
   const stashPagination = usePagination(ownStashes);
-  const [accTypeIndex, setAccTypeIndex] = useState(0);
-  const [stashTypeIndex, setStashTypeIndex] = useState(0);
+  const [, setSelected] = useState<[string, string][]>([]);
 
-  const accTypes = useRef([
-    { text: t<string>('Stashed'), value: 'stash' },
-    { text: t<string>('Pooled'), value: 'pool' }
+  const headerRef = useRef([
+    [t('stashes'), 'start', 2],
+    [t('controller'), 'address'],
+    [t('rewards'), 'start media--1200'],
+    [t('bonded'), 'number'],
+    [undefined, undefined, 2]
   ]);
 
-  const stashTypes = useRef([
+  const typeRef = useRef([
     { text: t('All stashes'), value: 'all' },
     { text: t('Nominators'), value: 'noms' },
     { text: t('Validators'), value: 'vals' },
@@ -136,62 +139,72 @@ function Actions ({ className = '', isInElection, minCommission, ownStashes, tar
     [stashPagination.items]
   );
 
-  const [filtered, footer] = useMemo(
+  const [isSelectable, filtered, footer] = useMemo(
     () => [
-      state.foundStashes && filterStashes(stashTypeIndex, state.foundStashes),
+      false, // [1, 2].includes(typeIndex)
+      state.foundStashes && filterStashes(typeIndex, state.foundStashes),
       (
         <tr key='footer'>
-          <td colSpan={3} />
-          <td className='number'>{formatTotal(stashTypeIndex, state)}</td>
+          <td colSpan={4} />
+          <td className='number'>{formatTotal(typeIndex, state)}</td>
           <td colSpan={2} />
         </tr>
       )
     ],
-    [state, stashTypeIndex]
+    [state, typeIndex]
+  );
+
+  const onSelectStash = useCallback(
+    (stashId: string, controllerId: string, isSelected: boolean) =>
+      setSelected((prev) =>
+        isSelected
+          ? [...prev, [stashId, controllerId]]
+          : prev.filter(([s]) => s !== stashId)
+      ),
+    []
+  );
+
+  useEffect(
+    () => setSelected([]),
+    [typeIndex]
   );
 
   return (
     <div className={className}>
       <Button.Group>
-        {api.consts.nominationPools && (
-          <ToggleGroup
-            onChange={setAccTypeIndex}
-            options={accTypes.current}
-            value={accTypeIndex}
-          />
-        )}
-        {accTypeIndex === 0 && (
-          <>
-            <ToggleGroup
-              onChange={setStashTypeIndex}
-              options={stashTypes.current}
-              value={stashTypeIndex}
-            />
-            <NewNominator
-              isInElection={isInElection}
-              targets={targets}
-            />
-            <NewValidator
-              isInElection={isInElection}
-              minCommission={minCommission}
-              targets={targets}
-            />
-            <NewStash />
-          </>
-        )}
-      </Button.Group>
-      <ElectionBanner isInElection={isInElection} />
-      {accTypeIndex === 0 && (
-        <Accounts
-          allSlashes={allSlashes}
-          footer={footer}
+        <ToggleGroup
+          onChange={setTypeIndex}
+          options={typeRef.current}
+          value={typeIndex}
+        />
+        <NewNominator
           isInElection={isInElection}
-          list={filtered}
-          minCommission={minCommission}
           targets={targets}
         />
-      )
-      }
+        <NewValidator
+          isInElection={isInElection}
+          targets={targets}
+        />
+        <NewStash />
+      </Button.Group>
+      <ElectionBanner isInElection={isInElection} />
+      <Table
+        empty={filtered && t<string>('No funds staked yet. Bond funds to validate or nominate a validator')}
+        footer={footer}
+        header={headerRef.current}
+      >
+        {filtered?.map((info): React.ReactNode => (
+          <Account
+            allSlashes={allSlashes}
+            info={info}
+            isDisabled={isInElection}
+            isSelectable={isSelectable}
+            key={info.stashId}
+            onSelect={onSelectStash}
+            targets={targets}
+          />
+        ))}
+      </Table>
       <PaginationAdvanced {...stashPagination} />
     </div>
   );

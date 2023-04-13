@@ -11,21 +11,11 @@ import Spinner from '../Spinner';
 
 function Button ({ activeOnEnter, children, className = '', dataTestId = '', icon, isBasic, isBusy, isCircular, isDisabled, isFull, isIcon, isSelected, isToplevel, label, onClick, isReadOnly = !onClick, onMouseEnter, onMouseLeave, tabIndex, withoutLink }: ButtonProps): React.ReactElement<ButtonProps> {
   const _onClick = useCallback(
-    (): void => {
-      !(isBusy || isDisabled) && onClick && onClick();
-    },
+    () => !(isBusy || isDisabled) && onClick && onClick(),
     [isBusy, isDisabled, onClick]
   );
 
-  const _onMouseEnter = useCallback((): void => {
-    onMouseEnter && onMouseEnter();
-  }, [onMouseEnter]);
-
-  const _onMouseLeave = useCallback((): void => {
-    onMouseLeave && onMouseLeave();
-  }, [onMouseLeave]);
-
-  const listenKeyboard = useCallback((event: KeyboardEvent): void => {
+  const listenKeyboard = useCallback((event: KeyboardEvent) => {
     if (!isBusy && !isDisabled && event.key === 'Enter') {
       onClick && onClick();
     }
@@ -48,8 +38,8 @@ function Button ({ activeOnEnter, children, className = '', dataTestId = '', ico
       className={`ui--Button${label ? ' hasLabel' : ''}${isBasic ? ' isBasic' : ''}${isCircular ? ' isCircular' : ''}${isFull ? ' isFull' : ''}${isIcon ? ' isIcon' : ''}${(isBusy || isDisabled) ? ' isDisabled' : ''}${isBusy ? ' isBusy' : ''}${isReadOnly ? ' isReadOnly' : ''}${isSelected ? ' isSelected' : ''}${isToplevel ? ' isToplevel' : ''}${withoutLink ? ' withoutLink' : ''} ${className}`}
       data-testid={dataTestId}
       onClick={_onClick}
-      onMouseEnter={_onMouseEnter}
-      onMouseLeave={_onMouseLeave}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       tabIndex={tabIndex}
     >
       {icon && <Icon icon={icon} />}

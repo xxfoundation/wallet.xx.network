@@ -4,18 +4,9 @@
 // The list of Ethereum networks, for these the UI will default to Ethereum-only accounts
 
 export const ethereumChains = [
-  'jaz',
   'moonbase',
   'moonbeam',
   'moonriver',
   'moonshadow',
-  'altbeacon',
-  'alt-producer',
-  'flash-layer',
-  'armonia-eva',
-  'armonia-wall-e',
-  'root',
-  'Darwinia2',
-  'Crab2',
-  'Pangolin2'
+  'origintrail-parachain'
 ];

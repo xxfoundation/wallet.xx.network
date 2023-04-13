@@ -4,19 +4,14 @@
 import type { SubmittableExtrinsic } from '@polkadot/api/types';
 import type { Props, RawParam } from '@polkadot/react-params/types';
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 
 import { useApi } from '@polkadot/react-hooks';
 
-import { extractInitial } from './Call';
 import ExtrinsicDisplay from './Extrinsic';
 
-function OpaqueCall ({ className = '', defaultValue, isDisabled, isError, label, onChange, onEnter, onEscape, withLabel }: Props): React.ReactElement<Props> {
-  const { api, apiDefaultTxSudo } = useApi();
-
-  const [{ initialArgs, initialValue }] = useState(
-    () => extractInitial(api, apiDefaultTxSudo, defaultValue)
-  );
+function OpaqueCall ({ className = '', isDisabled, isError, label, onChange, onEnter, onEscape, withLabel }: Props): React.ReactElement<Props> {
+  const { apiDefaultTxSudo } = useApi();
 
   const _onChange = useCallback(
     ({ isValid, value }: RawParam): void => {
@@ -37,8 +32,7 @@ function OpaqueCall ({ className = '', defaultValue, isDisabled, isError, label,
   return (
     <ExtrinsicDisplay
       className={className}
-      defaultArgs={initialArgs}
-      defaultValue={initialValue}
+      defaultValue={apiDefaultTxSudo}
       isDisabled={isDisabled}
       isError={isError}
       isPrivate

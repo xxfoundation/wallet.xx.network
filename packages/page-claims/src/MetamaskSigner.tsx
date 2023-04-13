@@ -1,15 +1,13 @@
-// Copyright 2017-2022 @polkadot/app-claims authors & contributors
-// SPDX-License-Identifier: Apache-2.0
 /* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable object-curly-newline */
+/* eslint-disable header/header */
 
 import { useWeb3 } from '@chainsafe/web3-context';
 import React, { useCallback, useEffect, useState } from 'react';
-import styled from 'styled-components';
 
 import { Button, Spinner } from '@polkadot/react-components';
 
 import { useTranslation } from './translate';
+import styled from 'styled-components';
 
 const Payload = styled.pre`
   cursor: copy;
@@ -28,7 +26,7 @@ type Props = {
   onSignatureComplete: ({ address, signature }: { address: string, signature: string }) => void,
 }
 
-const MetamaskSigner: React.FC<Props> = ({ onSignatureComplete, payload }) => {
+const MetamaskSigner: React.FC<Props> = ({ payload, onSignatureComplete }) => {
   const { t } = useTranslation();
   const {
     address,

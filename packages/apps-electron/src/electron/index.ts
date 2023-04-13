@@ -11,7 +11,6 @@ import { createWindow } from './window';
 const ENV = process.env.NODE_ENV || 'production';
 
 app.on('web-contents-created', (_, webContents): void => {
-  // eslint-disable-next-line deprecation/deprecation
   webContents.on('new-window', (e, url): void => {
     e.preventDefault();
     shell.openExternal(url).catch(console.error);

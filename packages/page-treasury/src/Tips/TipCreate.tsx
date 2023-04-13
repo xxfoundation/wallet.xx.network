@@ -3,11 +3,10 @@
 
 import type { BN } from '@polkadot/util';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Button, Input, InputAddress, InputBalance, Modal, TxButton } from '@polkadot/react-components';
 import { useApi, useToggle } from '@polkadot/react-hooks';
-import { BN_ZERO } from '@polkadot/util';
 
 import { useTranslation } from '../translate';
 
@@ -15,34 +14,24 @@ interface Props {
   members: string[];
 }
 
-const MAX_REASON_LEN = 256;
+const MAX_REASON_LEN = 128;
 const MIN_REASON_LEN = 5;
 
-function TipCreate ({ members }: Props): React.ReactElement<Props> | null {
+function TipCreate ({ members }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
   const [isOpen, toggleOpen] = useToggle();
   const [accountId, setAccountId] = useState<string | null>(null);
   const [beneficiary, setBeneficiary] = useState<string | null>(null);
+  const [isMember, setIsMember] = useState(false);
   const [reason, setReason] = useState('');
   const [value, setValue] = useState<BN | undefined>();
-  const maxReasonLen = useMemo(
-    () => Math.min(MAX_REASON_LEN, (
-      (api.consts.tips || api.consts.treasury)?.maximumReasonLength?.toNumber() ||
-      MAX_REASON_LEN
-    )),
-    [api]
-  );
-  const isMember = useMemo(
-    () => !!accountId && members.includes(accountId),
-    [accountId, members]
-  );
-  const hasValue = !!value && value.gt(BN_ZERO);
-  const hasReason = !!reason && (reason.length >= MIN_REASON_LEN) && (reason.length <= maxReasonLen);
+  const hasValue = value?.gtn(0);
+  const hasReason = reason?.length >= MIN_REASON_LEN && reason?.length <= MAX_REASON_LEN;
 
-  if (!(api.tx.tips.tipNew || api.tx.treasury.tipNew)) {
-    return null;
-  }
+  useEffect((): void => {
+    setIsMember(members.includes(accountId || ''));
+  }, [accountId, members]);
 
   return (
     <>

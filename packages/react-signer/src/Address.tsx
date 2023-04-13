@@ -94,7 +94,7 @@ function filterProxies (allAccounts: string[], tx: Call | SubmittableExtrinsic<'
 
         case 'Governance':
           return checkNested(address) || (
-            ['convictionVoting', 'council', 'councilCollective', 'democracy', 'elections', 'electionsPhragmen', 'fellowshipCollective', 'fellowshipReferenda', 'phragmenElection', 'poll', 'referenda', 'society', 'technicalCommittee', 'tips', 'treasury', 'whitelist'].includes(section)
+            ['council', 'democracy', 'elections', 'electionsPhragmen', 'phragmenElection', 'poll', 'society', 'technicalCommittee', 'tips', 'treasury'].includes(section)
           );
 
         case 'IdentityJudgement':
@@ -118,7 +118,7 @@ function filterProxies (allAccounts: string[], tx: Call | SubmittableExtrinsic<'
 
         case 'Staking':
           return checkNested(address) || (
-            ['fastUnstake', 'staking'].includes(section)
+            section === 'staking'
           );
 
         case 'SudoBalances':

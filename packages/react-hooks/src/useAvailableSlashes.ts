@@ -8,7 +8,7 @@ import type { PalletStakingUnappliedSlash } from '@polkadot/types/lookup';
 
 import { useEffect, useState } from 'react';
 
-import { BN, BN_HUNDRED, BN_ONE, BN_ZERO } from '@polkadot/util';
+import { BN, BN_ONE } from '@polkadot/util';
 
 import { createNamedHook } from './createNamedHook';
 import { useApi } from './useApi';
@@ -26,17 +26,14 @@ function useAvailableSlashesImpl (): [BN, PalletStakingUnappliedSlash[]][] {
 
   useEffect((): Unsub => {
     let unsub: Unsub | undefined;
-    const [from, offset] = api.query.staking?.earliestUnappliedSlash
-      ? [earliestSlash && earliestSlash.unwrapOr(null), BN_ZERO]
-      // future depth (one more than activeEra for delay)
-      : [indexes?.activeEra, BN_ONE.add(api.consts.staking?.slashDeferDuration || BN_HUNDRED)];
 
-    if (mountedRef.current && indexes && from) {
+    if (mountedRef.current && indexes && earliestSlash && earliestSlash.isSome) {
+      const from = earliestSlash.unwrap();
       const range: BN[] = [];
-      const end = indexes.activeEra.add(offset);
       let start = new BN(from);
 
-      while (start.lte(end)) {
+      // any <= activeEra (we include activeEra since slashes are immediately reflected)
+      while (start.lte(indexes.activeEra)) {
         range.push(start);
         start = start.add(BN_ONE);
       }

@@ -5,8 +5,7 @@ import type { Slash } from './types';
 
 import React, { useCallback } from 'react';
 
-import { AddressMini, AddressSmall, Badge, Checkbox, ExpanderScroll } from '@polkadot/react-components';
-import { useApi } from '@polkadot/react-hooks';
+import { AddressMini, AddressSmall, Badge, Checkbox, Expander } from '@polkadot/react-components';
 import { FormatBalance } from '@polkadot/react-query';
 import { formatNumber } from '@polkadot/util';
 
@@ -19,25 +18,12 @@ interface Props {
   slash: Slash;
 }
 
-function Row ({ index, isSelected, onSelect, slash: { era, isMine, slash: { others, own, payout, reporters, validator }, total, totalOther } }: Props): React.ReactElement<Props> {
+function Row ({ index, isSelected, onSelect, slash: { isMine, slash: { others, own, payout, reporters, validator }, total, totalOther } }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
-  const { api } = useApi();
 
   const _onSelect = useCallback(
     () => onSelect && onSelect(index),
     [index, onSelect]
-  );
-
-  const renderOthers = useCallback(
-    () => others.map(([accountId, balance], index): React.ReactNode => (
-      <AddressMini
-        balance={balance}
-        key={index}
-        value={accountId}
-        withBalance
-      />
-    )),
-    [others]
   );
 
   return (
@@ -55,10 +41,16 @@ function Row ({ index, isSelected, onSelect, slash: { era, isMine, slash: { othe
       </td>
       <td className='expand all'>
         {!!others.length && (
-          <ExpanderScroll
-            renderChildren={renderOthers}
-            summary={t<string>('Nominators ({{count}})', { replace: { count: formatNumber(others.length) } })}
-          />
+          <Expander summary={t<string>('Nominators ({{count}})', { replace: { count: formatNumber(others.length) } })}>
+            {others.map(([accountId, balance], index): React.ReactNode => (
+              <AddressMini
+                balance={balance}
+                key={index}
+                value={accountId}
+                withBalance
+              />
+            ))}
+          </Expander>
         )}
       </td>
       <td className='address'>
@@ -81,11 +73,6 @@ function Row ({ index, isSelected, onSelect, slash: { era, isMine, slash: { othe
       <td className='number together'>
         <FormatBalance value={payout} />
       </td>
-      {!api.query.staking.earliestUnappliedSlash && !!api.consts.staking.slashDeferDuration && (
-        <td className='number together'>
-          {formatNumber(era)}
-        </td>
-      )}
       <td>
         <Checkbox
           isDisabled={!onSelect}

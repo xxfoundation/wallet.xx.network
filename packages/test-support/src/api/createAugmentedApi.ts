@@ -13,7 +13,6 @@ export function createAugmentedApi (): ApiPromise {
 
   const api = new ApiPromise({ provider: new WsProvider('ws://', false), registry });
 
-  // eslint-disable-next-line deprecation/deprecation
   api.injectMetadata(metadata, true);
 
   return api;

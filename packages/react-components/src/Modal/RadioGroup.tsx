@@ -1,20 +1,20 @@
 // Copyright 2017-2021 @polkadot/react-components authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback, useState } from 'react';
-import { Form, Radio } from 'semantic-ui-react';
-
 import { RadioGroupProps } from './types';
 
-function RadioGroup ({ defaultValue, onChangeOption, title, value: { header, options } }: RadioGroupProps): React.ReactElement<RadioGroupProps> {
+import React, { useCallback, useState } from 'react'
+import { Form, Radio } from 'semantic-ui-react'
+
+function RadioGroup({ title, defaultValue, value: { header, options }, OnChangeOption }: RadioGroupProps): React.ReactElement<RadioGroupProps> {
   const [selected, setSelected] = useState<string>(defaultValue);
 
-  const _onChange = useCallback(
-    (option: string) => () => {
-      setSelected(option);
-      onChangeOption(option);
+  const _OnChange = useCallback(
+    (option: string) => {
+      setSelected(option),
+        OnChangeOption(option)
     },
-    [onChangeOption]
+    []
   );
 
   return (
@@ -30,15 +30,14 @@ function RadioGroup ({ defaultValue, onChangeOption, title, value: { header, opt
           {options.map((option, index): React.ReactNode => (
             <div
               key={index}
-              style={{ margin: '1em', position: 'relative' }}
-            >
+              style={{ position: 'relative', margin: '1em' }}>
               <Form.Field>
                 <Radio
-                  checked={selected ? selected === option : defaultValue === option}
                   label={header[index]}
                   name='radioGroup'
-                  onChange={_onChange(option)}
                   value={option}
+                  checked={selected ? selected === option : defaultValue === option}
+                  onChange={() => _OnChange(option)}
                 />
               </Form.Field>
             </div>
@@ -46,7 +45,7 @@ function RadioGroup ({ defaultValue, onChangeOption, title, value: { header, opt
         </div>
       </div>
     </Form>
-  );
+  )
 }
 
-export default React.memo(RadioGroup);
+export default React.memo(RadioGroup)

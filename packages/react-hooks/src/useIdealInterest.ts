@@ -1,5 +1,4 @@
-// Copyright 2017-2022 @polkadot/apps authors & contributors
-// SPDX-License-Identifier: Apache-2.0
+/* eslint-disable header/header */
 
 import type { Compact, Struct, Vec } from '@polkadot/types';
 import type { BlockNumber } from '@polkadot/types/interfaces';

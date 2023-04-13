@@ -20,7 +20,7 @@ interface Props {
   maxLength?: number;
 }
 
-function TextArea ({ children, className, help, isError, isReadOnly, label, maxLength, noDropdown, onChange, seed, withLabel }: Props): React.ReactElement<Props> {
+function TextArea({ children, className, help, isError, isReadOnly, label, maxLength, noDropdown, onChange, seed, withLabel }: Props): React.ReactElement<Props> {
   const _onChange = useCallback(
     ({ target: { value } }: React.ChangeEvent<HTMLTextAreaElement>): void => {
       (!maxLength || value.length < maxLength) && onChange && onChange(value);

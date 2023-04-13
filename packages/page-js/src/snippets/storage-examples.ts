@@ -3,8 +3,8 @@
 
 import type { Snippet } from '@polkadot/app-js/types';
 
-const label: Snippet['label'] = {
-  children: () => 'Storage',
+const label = {
+  children: 'Storage',
   color: 'blue',
   size: 'tiny'
 };

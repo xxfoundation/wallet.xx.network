@@ -2,15 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { SubmittableExtrinsic } from '@polkadot/api/types';
-import type { HexString } from '@polkadot/util/types';
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import usePreimage from '@polkadot/app-preimages/usePreimage';
 import { getProposalThreshold } from '@polkadot/apps-config';
 import { Button, Input, InputAddress, Modal, TxButton } from '@polkadot/react-components';
 import { useApi, useCollectiveInstance, useToggle } from '@polkadot/react-hooks';
-import { isFunction, isHex } from '@polkadot/util';
+import { isHex } from '@polkadot/util';
 
 import { useTranslation } from '../translate';
 
@@ -21,7 +19,7 @@ interface Props {
 }
 
 interface HashState {
-  hash?: HexString | null;
+  hash?: string;
   isHashValid: boolean;
 }
 
@@ -36,42 +34,31 @@ function ProposeExternal ({ className = '', isMember, members }: Props): React.R
   const [isVisible, toggleVisible] = useToggle();
   const [accountId, setAcountId] = useState<string | null>(null);
   const [{ proposal, proposalLength }, setProposal] = useState<ProposalState>({ proposalLength: 0 });
-  const [{ hash, isHashValid }, setHash] = useState<HashState>({ isHashValid: false });
+  const [{ hash, isHashValid }, setHash] = useState<HashState>({ hash: '', isHashValid: false });
   const modLocation = useCollectiveInstance('council');
-  const preimage = usePreimage(hash);
 
-  const threshold = Math.min(members.length, Math.ceil((members.length || 0) * getProposalThreshold(api)));
+  const threshold = Math.ceil((members.length || 0) * getProposalThreshold(api));
 
   const _onChangeHash = useCallback(
-    (hash?: string): void =>
-      setHash({ hash: hash as HexString, isHashValid: isHex(hash, 256) }),
+    (hash?: string): void => setHash({ hash, isHashValid: isHex(hash, 256) }),
     []
   );
 
   useEffect((): void => {
     if (isHashValid && hash) {
-      const proposal = isFunction(api.tx.preimage?.notePreimage) && !isFunction(api.tx.democracy?.notePreimage)
-        ? preimage && api.tx.democracy.externalProposeMajority({
-          Lookup: {
-            hash: preimage.proposalHash,
-            len: preimage.proposalLength
-          }
-        })
-        : api.tx.democracy.externalProposeMajority(hash);
+      const proposal = api.tx.democracy.externalProposeMajority(hash);
 
-      if (proposal) {
-        return setProposal({
-          proposal,
-          proposalLength: proposal.encodedLength || 0
-        });
-      }
+      setProposal({
+        proposal,
+        proposalLength: proposal.encodedLength || 0
+      });
+    } else {
+      setProposal({
+        proposal: null,
+        proposalLength: 0
+      });
     }
-
-    setProposal({
-      proposal: null,
-      proposalLength: 0
-    });
-  }, [api, hash, isHashValid, preimage]);
+  }, [api, hash, isHashValid]);
 
   if (!modLocation) {
     return null;

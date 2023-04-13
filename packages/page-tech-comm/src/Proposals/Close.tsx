@@ -1,7 +1,6 @@
 // Copyright 2017-2022 @polkadot/app-tech-comm authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { CollectiveType } from '@polkadot/react-hooks/types';
 import type { Hash, Proposal, ProposalIndex } from '@polkadot/types/interfaces';
 
 import React, { useState } from 'react';
@@ -15,8 +14,8 @@ interface Props {
   hasFailed: boolean;
   hash: Hash;
   idNumber: ProposalIndex;
-  proposal: Proposal | null;
-  type: CollectiveType;
+  proposal: Proposal;
+  type: 'membership' | 'technicalCommittee';
 }
 
 function Close ({ hasFailed, hash, idNumber, proposal, type }: Props): React.ReactElement<Props> | null {
@@ -24,7 +23,7 @@ function Close ({ hasFailed, hash, idNumber, proposal, type }: Props): React.Rea
   const { api } = useApi();
   const [isOpen, toggleOpen] = useToggle();
   const [accountId, setAccountId] = useState<string | null>(null);
-  const { encodedCallLength, weight } = useWeight(proposal);
+  const [proposalWeight, proposalLength] = useWeight(proposal);
   const modLocation = useCollectiveInstance(type);
 
   if (!modLocation) {
@@ -58,13 +57,13 @@ function Close ({ hasFailed, hash, idNumber, proposal, type }: Props): React.Rea
           <Modal.Actions>
             <TxButton
               accountId={accountId}
-              isDisabled={!hasFailed && !encodedCallLength}
+              isDisabled={!hasFailed && !proposalLength}
               onStart={toggleOpen}
               params={
                 api.tx[modLocation].close.meta.args.length === 4
                   ? hasFailed
                     ? [hash, idNumber, 0, 0]
-                    : [hash, idNumber, weight, encodedCallLength]
+                    : [hash, idNumber, proposalWeight, proposalLength]
                   : [hash, idNumber]
               }
               tx={api.tx[modLocation].closeOperational || api.tx[modLocation].close}

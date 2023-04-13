@@ -17,7 +17,6 @@ import SelectSection from './SelectSection';
 interface Props {
   className?: string;
   defaultValue: SubmittableExtrinsicFunction<'promise'>;
-  filter?: (section: string, method?: string) => boolean;
   help?: React.ReactNode;
   isDisabled?: boolean;
   isError?: boolean;
@@ -27,12 +26,11 @@ interface Props {
   withLabel?: boolean;
 }
 
-function InputExtrinsic ({ className = '', defaultValue, filter, help, isDisabled, label, onChange, withLabel }: Props): React.ReactElement<Props> {
+function InputExtrinsic ({ className = '', defaultValue, help, isDisabled, label, onChange, withLabel }: Props): React.ReactElement<Props> {
   const { api } = useApi();
-  const [optionsMethod, setOptionsMethod] = useState<DropdownOptions>(() => methodOptions(api, defaultValue.section, filter));
-  const [optionsSection] = useState<DropdownOptions>(() => sectionOptions(api, filter));
+  const [optionsMethod, setOptionsMethod] = useState<DropdownOptions>(() => methodOptions(api, defaultValue.section));
+  const [optionsSection] = useState<DropdownOptions>(() => sectionOptions(api));
   const [value, setValue] = useState<SubmittableExtrinsicFunction<'promise'>>((): SubmittableExtrinsicFunction<'promise'> => defaultValue);
-  const [{ defaultMethod, defaultSection }] = useState(() => ({ defaultMethod: defaultValue.method, defaultSection: defaultValue.section }));
 
   const _onKeyChange = useCallback(
     (newValue: SubmittableExtrinsicFunction<'promise'>): void => {
@@ -48,13 +46,13 @@ function InputExtrinsic ({ className = '', defaultValue, filter, help, isDisable
   const _onSectionChange = useCallback(
     (newSection: string): void => {
       if (newSection !== value.section) {
-        const optionsMethod = methodOptions(api, newSection, filter);
+        const optionsMethod = methodOptions(api, newSection);
 
         setOptionsMethod(optionsMethod);
         _onKeyChange(api.tx[newSection][optionsMethod[0].value]);
       }
     },
-    [_onKeyChange, api, filter, value]
+    [_onKeyChange, api, value]
   );
 
   return (
@@ -66,7 +64,7 @@ function InputExtrinsic ({ className = '', defaultValue, filter, help, isDisable
     >
       <SelectSection
         className='small'
-        defaultValue={defaultSection}
+        defaultValue={isDisabled ? value.section : undefined}
         isDisabled={isDisabled}
         onChange={isDisabled ? undefined : _onSectionChange}
         options={optionsSection}
@@ -75,7 +73,7 @@ function InputExtrinsic ({ className = '', defaultValue, filter, help, isDisable
       <SelectMethod
         api={api}
         className='large'
-        defaultValue={defaultMethod}
+        defaultValue={isDisabled ? value.method : undefined}
         isDisabled={isDisabled}
         onChange={isDisabled ? undefined : _onKeyChange}
         options={optionsMethod}

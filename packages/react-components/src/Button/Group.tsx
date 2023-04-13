@@ -6,11 +6,10 @@ import type { GroupProps } from './types';
 import React from 'react';
 import styled from 'styled-components';
 
-function ButtonGroup ({ children, className = '', isCentered }: GroupProps): React.ReactElement<GroupProps> {
+function ButtonGroup({ children, className = '', isCentered }: GroupProps): React.ReactElement<GroupProps> {
   return (
     <div className={`ui--Button-Group${isCentered ? ' isCentered' : ''} ${className}`}>
       {children}
-      <div className='clear' />
     </div>
   );
 }
@@ -18,10 +17,6 @@ function ButtonGroup ({ children, className = '', isCentered }: GroupProps): Rea
 export default React.memo(styled(ButtonGroup)`
   margin: 1rem 0;
   text-align: right;
-
-  & .clear {
-    clear: both;
-  }
 
   &.isCentered {
     margin-bottom: 0.5rem;
@@ -40,7 +35,7 @@ export default React.memo(styled(ButtonGroup)`
     display: inline-block;
   }
 
-  .ui--ToggleGroup, .ui--Dropdown {
+  .ui--ToggleGroup {
     float: left;
   }
 `);

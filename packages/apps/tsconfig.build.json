@@ -1,5 +1,8 @@
 {
   "extends": "../../tsconfig.base.json",
+  "types": [
+    "webpack-env"
+  ],
   "compilerOptions": {
     "baseUrl": "..",
     "outDir": "./build",

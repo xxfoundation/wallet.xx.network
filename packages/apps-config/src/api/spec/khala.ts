@@ -3,6 +3,6 @@
 
 import type { OverrideBundleDefinition } from '@polkadot/types/types';
 
-import { typesBundle } from '@phala/typedefs';
+import { versionedKhala } from '@phala/typedefs';
 
-export default typesBundle as OverrideBundleDefinition;
+export default versionedKhala as OverrideBundleDefinition;

@@ -21,6 +21,7 @@ interface Props {
   className?: string;
   defaultValue: DefinitionRpcExt;
   help?: React.ReactNode;
+  isError?: boolean;
   label: React.ReactNode;
   onChange?: (value: DefinitionRpcExt) => void;
   withLabel?: boolean;

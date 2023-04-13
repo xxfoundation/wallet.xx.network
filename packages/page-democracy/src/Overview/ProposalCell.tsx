@@ -3,11 +3,9 @@
 
 import type { Compact } from '@polkadot/types';
 import type { Hash, Proposal, ProposalIndex } from '@polkadot/types/interfaces';
-import type { HexString } from '@polkadot/util/types';
 
 import React from 'react';
 
-import usePreimage from '@polkadot/app-preimages/usePreimage';
 import { CallExpander } from '@polkadot/react-components';
 
 import { useTranslation } from '../translate';
@@ -16,7 +14,7 @@ import TreasuryCell from './TreasuryCell';
 
 interface Props {
   className?: string;
-  imageHash: Hash | HexString;
+  imageHash: Hash | string;
   proposal?: Proposal | null;
 }
 
@@ -25,15 +23,8 @@ const METHOD_TREA = ['approveProposal', 'rejectProposal'];
 
 function ProposalCell ({ className = '', imageHash, proposal }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
-  const preimage = usePreimage(imageHash);
 
-  const details = proposal
-    ? [proposal, proposal.registry.findMetaCall(proposal.callIndex)]
-    : preimage?.proposal
-      ? [preimage.proposal, preimage.registry.findMetaCall(preimage.proposal.callIndex)]
-      : null;
-
-  if (!details) {
+  if (!proposal) {
     const textHash = imageHash.toString();
 
     return (
@@ -43,7 +34,7 @@ function ProposalCell ({ className = '', imageHash, proposal }: Props): React.Re
     );
   }
 
-  const { method, section } = details[1];
+  const { method, section } = proposal.registry.findMetaCall(proposal.callIndex);
   const isTreasury = section === 'treasury' && METHOD_TREA.includes(method);
   const isExternal = section === 'democracy' && METHOD_EXTE.includes(method);
 
@@ -55,10 +46,10 @@ function ProposalCell ({ className = '', imageHash, proposal }: Props): React.Re
         withHash={!isTreasury && !isExternal}
       >
         {isExternal && (
-          <ExternalCell value={details[0].args[0] as Hash} />
+          <ExternalCell value={proposal.args[0] as Hash} />
         )}
         {isTreasury && (
-          <TreasuryCell value={details[0].args[0] as Compact<ProposalIndex>} />
+          <TreasuryCell value={proposal.args[0] as Compact<ProposalIndex>} />
         )}
       </CallExpander>
     </td>

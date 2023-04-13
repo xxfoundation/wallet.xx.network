@@ -54,6 +54,7 @@ function BondExtra ({ controllerId, onClose, stakingInfo, stashId }: Props): Rea
 
   return (
     <Modal
+      className='staking--BondExtra'
       header={t<string>('Bond more funds')}
       onClose={onClose}
       size='large'
@@ -72,8 +73,8 @@ function BondExtra ({ controllerId, onClose, stakingInfo, stashId }: Props): Rea
               autoFocus
               defaultValue={startBalance}
               help={t<string>('Amount to add to the currently bonded funds. This is adjusted using the available funds on the account.')}
-              isError={!!amountError?.error || !maxAdditional || maxAdditional.isZero()}
-              label={t<string>('additional funds to bond')}
+              isError={!!amountError?.error || !maxAdditional || maxAdditional.eqn(0)}
+              label={t<string>('additional bonded funds')}
               labelExtra={
                 <BalanceCustomized
                   balance={startBalance}

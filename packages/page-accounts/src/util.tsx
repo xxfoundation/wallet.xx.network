@@ -16,25 +16,20 @@ import { getAccountCryptoType, getAddressMeta } from '@polkadot/react-components
 import { BN_ZERO } from '@polkadot/util';
 
 export function createMenuGroup (key: string, items: (React.ReactNode | false | undefined | null)[], header?: string): React.ReactNode | null {
-  const filtered = items.filter((e): e is React.ReactNode => !!e);
+  const filtered = items.filter((item): item is React.ReactNode => !!item);
 
   return filtered.length
-    ? (
-      <React.Fragment key={key}>
-        <Menu.Divider />
-        {header && (
-          <Menu.Header>{header}</Menu.Header>
-        )}
-        {filtered}
-      </React.Fragment>
-    )
+    ? <React.Fragment key={key}>
+      <Menu.Divider />
+      {header ? <Menu.Header>{header}</Menu.Header> : null}
+      {filtered}
+    </React.Fragment>
     : null;
 }
 
 export type AccountIdIsh = AccountId | AccountIndex | Address | string | Uint8Array | null;
 
 export function downloadAccount ({ json, pair }: CreateResult): void {
-  // eslint-disable-next-line deprecation/deprecation
   FileSaver.saveAs(
     new Blob([JSON.stringify(json)], { type: 'application/json; charset=utf-8' }),
     `${pair.address}.json`

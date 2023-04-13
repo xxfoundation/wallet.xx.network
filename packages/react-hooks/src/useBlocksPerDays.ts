@@ -6,15 +6,15 @@ import { useMemo } from 'react';
 import { BN, bnToBn } from '@polkadot/util';
 
 import { createNamedHook } from './createNamedHook';
-import { useBlockInterval } from './useBlockInterval';
+import { useBlockTime } from './useBlockTime';
 
-export const A_DAY = new BN(24 * 60 * 60 * 1000);
+const A_DAY = new BN(24 * 60 * 60 * 1000);
 
 function useBlocksPerDaysImpl (days: BN | number = 1): BN {
-  const blockTime = useBlockInterval();
+  const [blockTime] = useBlockTime();
 
   return useMemo(
-    () => A_DAY.mul(bnToBn(days)).div(blockTime),
+    () => A_DAY.mul(bnToBn(days)).divn(blockTime),
     [blockTime, days]
   );
 }

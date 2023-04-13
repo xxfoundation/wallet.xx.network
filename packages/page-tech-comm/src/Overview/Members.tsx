@@ -1,6 +1,8 @@
 // Copyright 2017-2022 @polkadot/app-tech-comm authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
+import type { AccountId } from '@polkadot/types/interfaces';
+
 import React, { useRef } from 'react';
 
 import { AddressSmall, Table, Tag } from '@polkadot/react-components';
@@ -10,7 +12,7 @@ import { useTranslation } from '../translate';
 interface Props {
   className?: string;
   members?: string[];
-  prime?: string | null;
+  prime?: AccountId | null;
 }
 
 function Members ({ className = '', members, prime }: Props): React.ReactElement<Props> {
@@ -27,12 +29,12 @@ function Members ({ className = '', members, prime }: Props): React.ReactElement
       header={headerRef.current}
     >
       {members?.map((accountId): React.ReactNode => (
-        <tr key={accountId}>
+        <tr key={accountId.toString()}>
           <td className='address'>
             <AddressSmall value={accountId} />
           </td>
           <td>
-            {prime === accountId && (
+            {prime?.eq(accountId) && (
               <Tag
                 color='green'
                 hover={t<string>('Committee prime member, default voting')}

@@ -150,31 +150,27 @@ function Playground ({ basePath, className = '' }: Props): React.ReactElement<Pr
   );
 
   const _runJs = useCallback(
-    (): void => {
-      async function run () {
-        setIsRunning(true);
-        _clearConsole();
+    async (): Promise<void> => {
+      setIsRunning(true);
+      _clearConsole();
 
-        injectedRef.current = setupInjected(apiProps, setIsRunning, _hookConsole);
+      injectedRef.current = setupInjected(apiProps, setIsRunning, _hookConsole);
 
-        await injectedRef.current.api.isReady;
+      await injectedRef.current.api.isReady;
 
-        try {
-          // squash into a single line so exceptions (with line numbers) maps to the
-          // same line/origin as we have in the editor view
-          // TODO: Make the console.error here actually return the full stack
-          const exec = `(async ({${Object.keys(injectedRef.current).sort().join(',')}}) => { try { ${code} \n } catch (error) { console.error(error); setIsRunning(false); } })(injected);`;
+      try {
+        // squash into a single line so exceptions (with line numbers) maps to the
+        // same line/origin as we have in the editor view
+        // TODO: Make the console.error here actually return the full stack
+        const exec = `(async ({${Object.keys(injectedRef.current).sort().join(',')}}) => { try { ${code} \n } catch (error) { console.error(error); setIsRunning(false); } })(injected);`;
 
-          // eslint-disable-next-line no-new-func,@typescript-eslint/no-unsafe-call,@typescript-eslint/no-implied-eval
-          new Function('injected', exec).bind({}, injectedRef.current)();
-        } catch (error) {
-          injectedRef.current.console.error(error);
-        }
-
-        setIsRunning(false);
+        // eslint-disable-next-line no-new-func,@typescript-eslint/no-unsafe-call,@typescript-eslint/no-implied-eval
+        new Function('injected', exec).bind({}, injectedRef.current)();
+      } catch (error) {
+        injectedRef.current.console.error(error);
       }
 
-      run().catch(console.error);
+      setIsRunning(false);
     },
     [_clearConsole, _hookConsole, apiProps, code]
   );
@@ -218,7 +214,7 @@ function Playground ({ basePath, className = '' }: Props): React.ReactElement<Pr
       // camelCase keys, that's why 'custom' is passed as a string here
       const snapshot: Snippet = {
         code,
-        label: () => CUSTOM_LABEL,
+        label: CUSTOM_LABEL,
         text: snippetName,
         type: 'custom',
         value: `custom-${Date.now()}`

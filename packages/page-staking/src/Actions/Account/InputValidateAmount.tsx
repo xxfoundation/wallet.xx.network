@@ -24,7 +24,7 @@ interface Props {
   value?: BN | null;
 }
 
-function formatExistential (value: BN): string {
+function formatExistential(value: BN): string {
   let fmt = (
     value
       .mul(BN_THOUSAND)
@@ -35,7 +35,7 @@ function formatExistential (value: BN): string {
   while (fmt.length !== 1 && ['.', '0'].includes(fmt[fmt.length - 1])) {
     const isLast = fmt.endsWith('.');
 
-    fmt = fmt.substring(0, fmt.length - 1);
+    fmt = fmt.substr(0, fmt.length - 1);
 
     if (isLast) {
       break;
@@ -45,7 +45,7 @@ function formatExistential (value: BN): string {
   return fmt;
 }
 
-function ValidateAmount ({ currentAmount, isNominating, minNominated, minNominatorBond, minValidatorBond, onError, stashId, value }: Props): React.ReactElement<Props> | null {
+function ValidateAmount({ currentAmount, isNominating, minNominated, minNominatorBond, minValidatorBond, onError, stashId, value }: Props): React.ReactElement<Props> | null {
   const { t } = useTranslation();
   const { api } = useApi();
   const stashBalance = useCall<DeriveBalancesAll>(api.derive.balances?.all, [stashId]);
@@ -71,10 +71,6 @@ function ValidateAmount ({ currentAmount, isNominating, minNominated, minNominat
           newError = t('The bonded amount is less than the minimum threshold of {{minBond}} for nominators', {
             replace: { minBond: formatBalance(minNominatorBond) }
           });
-        } else if (minNominated && check.lt(minNominated)) {
-          newWarning = t('The bonded amount is less than the current active minimum nominated amount of {{minNomination}} and depending on the network state, may not be selected to participate', {
-            replace: { minNomination: formatBalance(minNominated) }
-          });
         }
       } else {
         if (minValidatorBond && check.lt(minValidatorBond)) {
@@ -97,7 +93,7 @@ function ValidateAmount ({ currentAmount, isNominating, minNominated, minNominat
         return { error, warning };
       });
     }
-  }, [api, currentAmount, isNominating, minNominated, minNominatorBond, minValidatorBond, onError, stashBalance, t, value]);
+  }, [api, currentAmount, isNominating, minNominated, minNominatorBond, minValidatorBond, onError, stashBalance, t, value, setResult]);
 
   if (error) {
     return <MarkError content={error} />;

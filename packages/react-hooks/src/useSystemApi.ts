@@ -8,7 +8,7 @@ import { useMemo } from 'react';
 import { createNamedHook } from './createNamedHook';
 import { useApi } from './useApi';
 
-function useSystemApiImpl (): ApiPromise | undefined {
+function useSystemApiImpl (): ApiPromise {
   const { api, apiRelay } = useApi();
 
   return useMemo(() => apiRelay || api, [apiRelay, api]);

@@ -1,5 +1,4 @@
-// Copyright 2017-2022 @polkadot/apps authors & contributors
-// SPDX-License-Identifier: Apache-2.0
+/* eslint-disable header/header */
 
 import range from 'lodash.range';
 import React, { useCallback, useMemo } from 'react';
@@ -58,7 +57,6 @@ const pageRangeWithEllipsis = (currentPage: number, maxPage: number) => {
 type Props = {
   currentPage: number;
   goTo: (page: number) => void;
-  enabled?: boolean;
   next?: () => void;
   previous?: () => void;
   maxPage: number;

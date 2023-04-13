@@ -9,7 +9,6 @@ import { HashRouter } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
 
 import { Api } from '@polkadot/react-api';
-import { ApiStats } from '@polkadot/react-components';
 import Queue from '@polkadot/react-components/Status/Queue';
 import { BlockAuthors, Events } from '@polkadot/react-query';
 import { settings } from '@polkadot/ui-settings';
@@ -50,17 +49,15 @@ function Root ({ isElectron, store }: Props): React.ReactElement<Props> {
             isElectron={isElectron}
             store={store}
           >
-            <ApiStats>
-              <BlockAuthors>
-                <Events>
-                  <HashRouter>
-                    <WindowDimensions>
-                      <Apps />
-                    </WindowDimensions>
-                  </HashRouter>
-                </Events>
-              </BlockAuthors>
-            </ApiStats>
+            <BlockAuthors>
+              <Events>
+                <HashRouter>
+                  <WindowDimensions>
+                    <Apps />
+                  </WindowDimensions>
+                </HashRouter>
+              </Events>
+            </BlockAuthors>
           </Api>
         </Queue>
       </ThemeProvider>

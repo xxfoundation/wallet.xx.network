@@ -16,7 +16,6 @@ function UserIcon (): React.ReactElement {
       <circle
         cx='20'
         cy='20'
-        // eslint-disable-next-line react/no-unknown-property
         fill='url(#pattern0)'
         r='20'
       />

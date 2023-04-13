@@ -9,11 +9,13 @@ import type { PayoutStash, PayoutValidator } from './types';
 import React, { useMemo, useRef, useState } from 'react';
 import styled from 'styled-components';
 
-import { Button, MarkWarning, Table, ToggleGroup } from '@polkadot/react-components';
-import { useApi, useBlockInterval, useCall, useOwnEraRewards } from '@polkadot/react-hooks';
+import { ApiPromise } from '@polkadot/api';
+import { Button, Table, ToggleGroup } from '@polkadot/react-components';
+import { useApi, useCall, useOwnEraRewards } from '@polkadot/react-hooks';
 import { FormatBalance } from '@polkadot/react-query';
 import { BN, BN_THREE } from '@polkadot/util';
 
+import ElectionBanner from '../ElectionBanner';
 import { useTranslation } from '../translate';
 import PayButton from './PayButton';
 import Stash from './Stash';
@@ -21,7 +23,7 @@ import Validator from './Validator';
 
 interface Props {
   className?: string;
-  historyDepth?: BN;
+  isInElection?: boolean;
   ownValidators: StakerState[];
 }
 
@@ -122,12 +124,16 @@ function getAvailable (allRewards: Record<string, DeriveStakerReward[]> | null |
   return {};
 }
 
-function getOptions (blockTime: BN, eraLength: BN | undefined, historyDepth: BN | undefined, t: TFunction): EraSelection[] {
+function getOptions (api: ApiPromise, eraLength: BN | undefined, historyDepth: BN | undefined, t: TFunction): EraSelection[] {
   if (!eraLength || !historyDepth) {
     return [{ text: '', value: 0 }];
   }
 
-  const blocksPerDay = DAY_SECS.div(blockTime);
+  const blocksPerDay = DAY_SECS.div(
+    api.consts.babe?.expectedBlockTime ||
+    api.consts.timestamp?.minimumPeriod.muln(2) ||
+    new BN(6000)
+  );
   const maxBlocks = eraLength.mul(historyDepth);
   const eraSelection: EraSelection[] = [];
   const days = new BN(2);
@@ -155,18 +161,18 @@ function getOptions (blockTime: BN, eraLength: BN | undefined, historyDepth: BN 
   return eraSelection;
 }
 
-function Payouts ({ className = '', historyDepth, ownValidators }: Props): React.ReactElement<Props> {
+function Payouts ({ className = '', isInElection, ownValidators }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
   const [hasOwnValidators] = useState(() => ownValidators.length !== 0);
   const [myStashesIndex, setMyStashesIndex] = useState(() => hasOwnValidators ? 0 : 1);
   const [eraSelectionIndex, setEraSelectionIndex] = useState(0);
   const eraLength = useCall<BN>(api.derive.session.eraLength);
-  const blockTime = useBlockInterval();
+  const historyDepth = useCall<BN>(api.query.staking.historyDepth);
 
   const eraSelection = useMemo(
-    () => getOptions(blockTime, eraLength, historyDepth, t),
-    [blockTime, eraLength, historyDepth, t]
+    () => getOptions(api, eraLength, historyDepth, t),
+    [api, eraLength, historyDepth, t]
   );
 
   const { allRewards, isLoadingRewards } = useOwnEraRewards(eraSelection[eraSelectionIndex].value, myStashesIndex ? undefined : ownValidators);
@@ -232,17 +238,16 @@ function Payouts ({ className = '', historyDepth, ownValidators }: Props): React
         />
         <PayButton
           isAll
+          isDisabled={isInElection}
           payout={validators}
         />
       </Button.Group>
+      <ElectionBanner isInElection={isInElection} />
       {!isLoadingRewards && !stashes?.length && (
-        <MarkWarning
-          className='warning centered'
-          withIcon={false}
-        >
+        <article className='warning centered'>
           <p>{t('Payouts of rewards for a validator can be initiated by any account. This means that as soon as a validator or nominator requests a payout for an era, all the nominators for that validator will be rewarded. Each user does not need to claim individually and the suggestion is that validators should claim rewards for everybody as soon as an era ends.')}</p>
           <p>{t('If you have not claimed rewards straight after the end of the era, the validator is in the active set and you are seeing no rewards, this would mean that the reward payout transaction was made by another account on your behalf. Always check your favorite explorer to see any historic payouts made to your accounts.')}</p>
-        </MarkWarning>
+        </article>
       )}
       {!isLoadingRewards && !!stashes?.length && myStashesIndex === 0 && (
         <article className='warning centered'>
@@ -262,7 +267,6 @@ function Payouts ({ className = '', historyDepth, ownValidators }: Props): React
       >
         {!isLoadingRewards && stashes?.map((payout): React.ReactNode => (
           <Stash
-            historyDepth={historyDepth}
             key={payout.stashId}
             payout={payout}
           />
@@ -276,7 +280,7 @@ function Payouts ({ className = '', historyDepth, ownValidators }: Props): React
         >
           {!isLoadingRewards && validators.filter(({ available }) => !available.isZero()).map((payout): React.ReactNode => (
             <Validator
-              historyDepth={historyDepth}
+              isDisabled={isInElection}
               key={payout.validatorId}
               payout={payout}
             />

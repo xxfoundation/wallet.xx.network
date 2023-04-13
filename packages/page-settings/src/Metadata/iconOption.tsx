@@ -9,6 +9,8 @@ interface Option {
 }
 
 export default function itemOption (label: string, value: string | number, img: unknown): Option {
+  console.log(label, value, img);
+
   return {
     text: (
       <div

@@ -8,12 +8,10 @@ import React from 'react';
 
 import { Call, Static } from '@polkadot/react-components';
 
-import { useTranslation } from '../translate';
 import Bare from './Bare';
 import Unknown from './Unknown';
 
 function CallDisplay (props: Props): React.ReactElement<Props> {
-  const { t } = useTranslation();
   const { className = '', defaultValue: { value }, isDisabled, label, withLabel } = props;
 
   if (!isDisabled) {
@@ -34,12 +32,7 @@ function CallDisplay (props: Props): React.ReactElement<Props> {
       >
         {section}.{method}
       </Static>
-      <Call
-        labelHash={t<string>('call hash / {{section}}.{{method}}', { replace: { method, section } })}
-        noIndent
-        value={call}
-        withHash
-      />
+      <Call value={call} />
     </Bare>
   );
 }

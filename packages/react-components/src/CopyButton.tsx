@@ -23,7 +23,7 @@ interface Props {
 
 const NOOP = () => undefined;
 
-function CopyButton ({ children, className = '', icon = 'copy', label, type, value }: Props): React.ReactElement<Props> {
+function CopyButton({ children, className = '', icon = 'copy', label, type, value }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { queueAction } = useContext(StatusContext);
 

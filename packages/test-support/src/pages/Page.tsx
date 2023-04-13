@@ -120,77 +120,69 @@ export abstract class Page {
     });
 
     const noop = () => Promise.resolve(() => { /**/ });
-    const registry = new TypeRegistry();
-    const api = {
-      consts: {
-        babe: {
-          expectedBlockTime: new BN(1)
-        },
-        democracy: {
-          enactmentPeriod: new BN(1)
-        },
-        proxy: {
-          proxyDepositBase: new BN(1),
-          proxyDepositFactor: new BN(1)
-        }
-      },
-      createType: () => ({
-        defKeys: []
-      }),
-      derive: {
-        accounts: {
-          info: noop
-        },
-        balances: {
-          all: noop
-        },
-        chain: {
-          bestNumber: noop
-        },
-        democracy: {
-          locks: noop
-        },
-        staking: {
-          account: noop
-        }
-      },
-      genesisHash: registry.createType('Hash', POLKADOT_GENESIS),
-      query: {
-        democracy: {
-          votingOf: noop
-        },
-        identity: {
-          identityOf: noop
-        }
-      },
-      registry: {
-        chainDecimals: [12],
-        chainTokens: ['Unit'],
-        createType: (...args: Parameters<typeof registry.createType>) =>
-          registry.createType(...args),
-        lookup: {
-          names: []
-        }
-      },
-      tx: {
-        council: {},
-        democracy: {
-          delegate: noop
-        },
-        multisig: {
-          approveAsMulti: Object.assign(noop, { meta: { args: [] } })
-        },
-        proxy: {
-          removeProxies: noop
-        },
-        utility: noop
-      }
-    };
     const mockApi: ApiProps = {
-      api,
-      apiSystem: {
-        ...api,
-        isReady: Promise.resolve(api)
+      api: {
+        consts: {
+          babe: {
+            expectedBlockTime: new BN(1)
+          },
+          democracy: {
+            enactmentPeriod: new BN(1)
+          },
+          proxy: {
+            proxyDepositBase: new BN(1),
+            proxyDepositFactor: new BN(1)
+          }
+        },
+        createType: () => ({
+          defKeys: []
+        }),
+        derive: {
+          accounts: {
+            info: noop
+          },
+          balances: {
+            all: noop
+          },
+          chain: {
+            bestNumber: noop
+          },
+          democracy: {
+            locks: noop
+          },
+          staking: {
+            account: noop
+          }
+        },
+        genesisHash: new TypeRegistry().createType('Hash', POLKADOT_GENESIS),
+        query: {
+          democracy: {
+            votingOf: noop
+          },
+          identity: {
+            identityOf: noop
+          }
+        },
+        registry: {
+          chainDecimals: [12],
+          chainTokens: ['Unit'],
+          lookup: {
+            names: []
+          }
+        },
+        tx: {
+          council: {},
+          democracy: {
+            delegate: noop
+          },
+          multisig: {
+            approveAsMulti: Object.assign(noop, { meta: { args: [] } })
+          },
+          proxy: {
+            removeProxies: noop
+          },
+          utility: noop
+        }
       },
       systemName: 'substrate'
     } as unknown as ApiProps;

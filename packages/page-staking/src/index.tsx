@@ -16,7 +16,6 @@ import { BN, isFunction } from '@polkadot/util';
 import basicMd from './md/basic.md';
 import NodeLocationsProvider from './NodeLocationContext/Provider';
 import Actions from './Actions';
-//import Bags from './Bags';
 import { STORE_FAVS_BASE } from './constants';
 import Nominators from './Nominators';
 import Payouts from './Payouts';
@@ -32,7 +31,6 @@ const HIDDEN_ACC = ['actions', 'payout'];
 
 function createPathRef (basePath: string): Record<string, string | string[]> {
   return {
-    bags: `${basePath}/bags`,
     nominators: `${basePath}/nominators`,
     payout: `${basePath}/payout`,
     pools: `${basePath}/pools`,
@@ -107,10 +105,6 @@ function StakingApp ({ basePath, className = '' }: Props): React.ReactElement<Pr
       name: 'nominators',
       text: t<string>('Nominators')
     },
-    hasStashes && isFunction((api.query.voterBagsList || api.query.bagsList || api.query.voterList)?.counterForListNodes) && {
-      name: 'bags',
-      text: t<string>('Bags')
-    },
     {
       count: slashes.reduce((count, [, unapplied]) => count + unapplied.length, 0),
       name: 'slashes',
@@ -137,9 +131,6 @@ function StakingApp ({ basePath, className = '' }: Props): React.ReactElement<Pr
           items={items}
         />
         <Switch>
-        {/* <Route path={pathRef.current.bags}>
-          <Bags ownStashes={ownStashes} />
-        </Route> */}
           <Route path={pathRef.current.payout}>
             <Payouts
               historyDepth={targets.historyDepth}

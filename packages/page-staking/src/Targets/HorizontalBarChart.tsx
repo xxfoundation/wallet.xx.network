@@ -92,7 +92,7 @@ const toFixed = (percent: number) => (Math.floor(percent * 10) / 10).toFixed(1);
 const HorizontalBarChart: React.FC<Props> = ({ items }) => {
   const [hovered, setHovered] = useState<number>();
   const total = items.reduce((acc, { value }) => acc.add(value), BN_ZERO);
-  const percents = items.map(({ value }) => (value.toNumber() / total.toNumber()) * 100);
+  const percents = items.map(({ value }) => (value.muln(100).div(total)).toNumber());
 
   const _setHovered = useCallback((index?: number) => () => setHovered(index), [setHovered]);
 

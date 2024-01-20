@@ -22,7 +22,7 @@ export const prodChains: EndpointOption[] = [
     text: 'xx mainnet',
     providers: {
       'xx foundation': 'wss://rpc.xx.network',
-      onFinality: 'wss://xx.api.onfinality.io/public-ws'
+      'dwellir': 'wss://xxnetwork-rpc.dwellir.com',
     }
   }
 ];

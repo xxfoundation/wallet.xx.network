@@ -49,10 +49,12 @@ function getProgressInfo (value?: BN, total?: BN): ProgressInfo | undefined {
     : undefined;
 }
 
-function Summary ({ avgStaked, custodyRewardsActive, lastEra, lowStaked, minNominated, minNominatorBond, stakedReturn, totalIssuance, totalStaked }: Props): React.ReactElement<Props> {
+function Summary ({ avgStaked, custodyRewardsActive, lastEra, lowStaked, minNominated, minNominatorBond, stakedReturn, totalStaked }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
+  console.log('lastEra', lastEra)
   const lastReward = useCall<BN>(lastEra && api.query.staking.erasValidatorReward, [lastEra], OPT_REWARD);
+  console.log('lastReward', lastReward)
   const totalStakeableIssuance = useTotalStakeableIssuance();
 
   const helpReturns = t('Network overall staking return. This is calculated from the current staked ratio, current ideal interest and inflation parameters.');

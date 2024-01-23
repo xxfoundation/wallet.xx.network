@@ -336,7 +336,7 @@ function extractBaseInfo (api: ApiPromise, allAccounts: string[], custodyRewards
     avgStakedWithTM,
     electedAvgStaked,
     electedLowStaked: electedTotals[0] || BN_ZERO,
-    lastEra: lastEraInfo.activeEra,
+    lastEra: lastEraInfo.activeEra.isZero() ? BN_ZERO : lastEraInfo.activeEra.subn(1),
     lowStaked: activeTotals[0] || BN_ZERO,
     medianComm,
     minNominated,

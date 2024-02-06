@@ -3,8 +3,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable object-curly-newline */
 
-import { useWeb3 } from '@chainsafe/web3-context';
-import React, { useCallback, useEffect, useState } from 'react';
+import { useAccount, useSignMessage } from 'wagmi'
+import React, { useCallback, useEffect } from 'react';
 import styled from 'styled-components';
 
 import { Button, Spinner } from '@polkadot/react-components';
@@ -30,75 +30,51 @@ type Props = {
 
 const MetamaskSigner: React.FC<Props> = ({ onSignatureComplete, payload }) => {
   const { t } = useTranslation();
+  const { address, isConnecting } = useAccount();
+
   const {
-    address,
-    checkIsReady,
-    isReady,
-    onboard,
-    signMessage,
-    wallet
-  } = useWeb3();
-
-  const [walletConnecting, setWalletConnecting] = useState(false);
-  const [isSigning, setIsSigning] = useState(false);
-  const [isSigned, setIsSigned] = useState(false);
-
-  const handleConnect = useCallback(async () => {
-    setWalletConnecting(true);
-    !wallet && (await onboard?.walletSelect());
-    wallet && (await checkIsReady());
-    setWalletConnecting(false);
-  }, [setWalletConnecting, wallet, onboard, checkIsReady]);
+    data,
+    isLoading,
+    signMessage
+  } = useSignMessage()
 
   const handleConfirm = useCallback(() => {
     if (!address) {
       return;
     }
-
-    setIsSigning(true);
-    signMessage(payload).then((signature) => {
-      onSignatureComplete({ address, signature });
-    }).catch((e) => {
-      console.error(e);
-    }).finally(() => {
-      setIsSigning(false);
-      setIsSigned(true);
-    });
+    signMessage({ message: payload})
   }, [signMessage, payload, address]);
 
+  // Call on completion
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    handleConnect();
-  }, [handleConnect]);
-
-  if (isSigning || walletConnecting || !isReady) {
-    const message = isSigning
-      ? t<string>('Waiting on Metamask signature')
-      : t<string>('Connecting Metamask');
-
-    return (
-      <div className='connecting'>
-        <Spinner label={message} />
-      </div>
-    );
-  }
+    if (address && data) {
+      onSignatureComplete({ address, signature: data });
+    }
+  }, [address, data]);
 
   return (
     <>
-      <Payload
-        data-for='tx-payload'
-        data-tip
-      >
-        {payload}
-      </Payload>
-      <Button.Group>
-        <Button
-          icon='sign-in-alt'
-          isDisabled={isSigned}
-          label={t<string>('Confirm Payload')}
-          onClick={handleConfirm}
-        />
-      </Button.Group>
+      {!isLoading && !isConnecting && (<>
+        <Payload
+          data-for='tx-payload'
+          data-tip
+        >
+          {payload}
+        </Payload>
+        <Button.Group>
+          <Button
+            icon='sign-in-alt'
+            isDisabled={data !== undefined}
+            label={t<string>('Sign message')}
+            onClick={handleConfirm}
+          />
+        </Button.Group>
+      </>)}
+      {(isLoading || isConnecting) &&
+        <div className='connecting'>
+          <Spinner label={isLoading ? t<string>('Waiting on Metamask signature') : t<string>('Connecting Metamask')} />
+        </div>
+      }
     </>
   );
 };

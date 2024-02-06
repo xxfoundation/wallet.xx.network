@@ -21,6 +21,7 @@ function StatementFullText ({ statementUrl, systemChain }: { statementUrl?: stri
 
   switch (systemChain) {
     case 'xx network':
+    case 'xx network Development':
     case 'phoenixx testnet':
       return statementUrl
         ? <iframe src={statementUrl} />

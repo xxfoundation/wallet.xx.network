@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 /* eslint-disable react-hooks/exhaustive-deps */
 
-import { useWeb3 } from '@chainsafe/web3-context';
-import React, { useCallback, useEffect, useState } from 'react';
+import { useAccount, useConnect } from 'wagmi';
+import React, { useCallback, useEffect } from 'react';
 
 import { Input, Spinner } from '@polkadot/react-components';
 
@@ -16,24 +16,30 @@ interface Props {
 const MetamaskAddress: React.FC<Props> = ({ onChangeEthAddress: OnChangeEthAddress }) => {
   const { t } = useTranslation();
 
-  const { address, checkIsReady, onboard, wallet } = useWeb3();
-
-  const [walletConnecting, setWalletConnecting] = useState(false);
+  const { address, isConnected } = useAccount();
+  const { connectors, connect } = useConnect();
 
   const handleConnect = useCallback(async () => {
-    setWalletConnecting(true);
-    !wallet && (await onboard?.walletSelect());
-    wallet && (await checkIsReady());
-    setWalletConnecting(false);
-  }, [setWalletConnecting, wallet, onboard, checkIsReady]);
+    try {
+      connectors.map((connector) => {
+        connect({ connector })
+      })
+      OnChangeEthAddress(address || '');
+    } catch (error) {
+      console.warn(`failed to connect..`, error);
+    }
+  }, [connectors, connect]);
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    handleConnect();
-    address && OnChangeEthAddress(address);
-  }, [address, handleConnect]);
+    if (address === undefined || !isConnected) {
+      handleConnect();
+    } else {
+      OnChangeEthAddress(address);
+    }
+  }, [address, isConnected, handleConnect]);
 
-  if (walletConnecting /* || !isReady */) {
+  if (!isConnected) {
     const message = t<string>('Connecting Metamask');
 
     return (

@@ -63,10 +63,6 @@
     "test:one": "polkadot-dev-run-test",
     "test:skipped": "echo 'tests skipped'"
   },
-  "dependencies": {
-    "@chainsafe/web3-context": "^1.3.2",
-    "bnc-onboard": "^1.39.1"
-  },
   "devDependencies": {
     "@babel/core": "^7.20.5",
     "@babel/register": "^7.18.9",

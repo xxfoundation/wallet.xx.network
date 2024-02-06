@@ -136,6 +136,7 @@ function getXxnetwork (kind?: StatementKind | null): Statement | undefined {
 export function getStatement (network: string, kind?: StatementKind | null): Statement | undefined {
   switch (network) {
     case 'xx network':
+    case 'xx network Development':
     case 'phoenixx testnet':
       return getXxnetwork(kind);
 

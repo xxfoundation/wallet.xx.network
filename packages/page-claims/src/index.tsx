@@ -5,8 +5,7 @@ import type { AppProps as Props } from '@polkadot/react-components/types';
 import type { Option } from '@polkadot/types';
 import type { BalanceOf, EcdsaSignature, EthereumAddress, StatementKind } from '@polkadot/types/interfaces';
 
-import { Web3Provider } from '@chainsafe/web3-context';
-import { utils } from 'ethers';
+import { WagmiConfig } from 'wagmi';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import CopyToClipboard from 'react-copy-to-clipboard';
 import { Trans } from 'react-i18next';
@@ -26,6 +25,7 @@ import Statement from './Statement';
 import { useTranslation } from './translate';
 import { getStatement, recoverFromJSON } from './util';
 import Warning from './Warning';
+import { config } from './wagmi_config';
 
 export { default as useCounter } from './useCounter';
 
@@ -73,6 +73,14 @@ const Signature = styled.textarea`
     color: rgba(0, 0, 0, 0.5);
   }
 `;
+
+const validateAddress = (input: string): boolean => {
+  // Validate Ethereum address
+  if (/^0x[a-fA-F0-9]{40}$/.test(input)) {
+    return true
+  }
+  return false
+}
 
 const transformStatement = {
   transform: (option: Option<StatementKind>) => option.unwrapOr(null)
@@ -216,16 +224,7 @@ function ClaimsApp ({ basePath }: Props): React.ReactElement<Props> {
     : '';
 
   return (
-    <Web3Provider
-      onboardConfig={{
-        dappId: process.env.REACT_APP_BLOCKNATIVE_DAPP_ID,
-        walletSelect: {
-          wallets: [
-            { preferred: true, walletName: 'metamask' }
-          ]
-        }
-      }}
-    >
+    <WagmiConfig config={config}>
       <main>
         <Tabs
           basePath={basePath}
@@ -307,7 +306,7 @@ function ClaimsApp ({ basePath }: Props): React.ReactElement<Props> {
                     autoFocus
                     className='full'
                     help={t<string>('The ethereum address you used during the pre-sale')}
-                    isError={touchedEthAddress && (!ethereumAddress || !utils.isAddress(ethereumAddress))}
+                    isError={touchedEthAddress && (!ethereumAddress || !validateAddress(ethereumAddress))}
                     label={t<string>('Pre-sale ethereum address')}
                     onChange={onChangeEthereumAddress}
                     value={ethereumAddress || ''}
@@ -316,7 +315,7 @@ function ClaimsApp ({ basePath }: Props): React.ReactElement<Props> {
                     <Button.Group>
                       <Button
                         icon='sign-in-alt'
-                        isDisabled={!ethereumAddress || !utils.isAddress(ethereumAddress)}
+                        isDisabled={!ethereumAddress || !validateAddress(ethereumAddress)}
                         label={t<string>('Continue')}
                         onClick={validEthAddress}
                       />
@@ -335,7 +334,7 @@ function ClaimsApp ({ basePath }: Props): React.ReactElement<Props> {
                     <Button.Group>
                       <Button
                         icon='sign-in-alt'
-                        isDisabled={!ethereumAddress || !utils.isAddress(ethereumAddress)}
+                        isDisabled={!ethereumAddress || !validateAddress(ethereumAddress)}
                         label={t<string>('Confirm Address')}
                         onClick={validEthAddress}
                       />
@@ -350,13 +349,13 @@ function ClaimsApp ({ basePath }: Props): React.ReactElement<Props> {
             )}
             {(step >= Step.SignMetamask && signMethod === Step.SignMetamask) && (
               <Card withBottomMargin>
-                <h3>{t<string>('{{step}}. Sign with your metamask extension the following payload', { replace: { step: '4' } })}</h3>
                 {!isOldClaimProcess && (
                   <Statement
                     kind={statementKind}
                     systemChain={systemChain}
                   />
                 )}
+                <h3>{t<string>('{{step}}. Sign with your metamask extension the following message', { replace: { step: '4' } })}</h3>
                 <MetamaskSigner
                   onSignatureComplete={onSignatureComplete}
                   payload={payload}
@@ -418,7 +417,7 @@ function ClaimsApp ({ basePath }: Props): React.ReactElement<Props> {
           </Columar.Column>
         </Columar>
       </main>
-    </Web3Provider>
+    </WagmiConfig>
   );
 }
 

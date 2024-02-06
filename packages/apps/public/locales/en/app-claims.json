@@ -20,6 +20,7 @@
   "Please read these terms and conditions carefully. By submitting this statement, you are deemed to have accepted these Terms and Conditions. If you do not agree to these terms, please refrain from accessing or proceeding. You can also find them at:": "Please read these terms and conditions carefully. By submitting this statement, you are deemed to have accepted these Terms and Conditions. If you do not agree to these terms, please refrain from accessing or proceeding. You can also find them at:",
   "Pre-sale ethereum address": "Pre-sale ethereum address",
   "Public key of this account": "Public key of this account",
+  "Sign message": "Sign message",
   "The Ethereum address you used during the pre-sale (starting by \"0x\")": "The Ethereum address you used during the pre-sale (starting by \"0x\")",
   "The account you want to claim to.": "The account you want to claim to.",
   "The ethereum address from your Metamask": "The ethereum address from your Metamask",
@@ -42,5 +43,6 @@
   "has a valid claim for": "has a valid claim for",
   "{{step}}. Choose how to sign": "{{step}}. Choose how to sign",
   "{{step}}. Sign with your ETH address": "{{step}}. Sign with your ETH address",
+  "{{step}}. Sign with your metamask extension the following message": "{{step}}. Sign with your metamask extension the following message",
   "{{step}}. Sign with your metamask extension the following payload": "{{step}}. Sign with your metamask extension the following payload"
 }

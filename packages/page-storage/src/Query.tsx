@@ -15,7 +15,7 @@ import { Button, Labelled, styled } from '@polkadot/react-components';
 import { useApi } from '@polkadot/react-hooks';
 import valueToText from '@polkadot/react-params/valueToText';
 import { getSiName } from '@polkadot/types/metadata/util';
-import { unwrapStorageType } from '@polkadot/types/primitive/StorageKey';
+import { unwrapStorageType } from '@polkadot/types/util';
 import { compactStripLength, isU8a, u8aToHex, u8aToString } from '@polkadot/util';
 
 interface Props {
@@ -123,7 +123,7 @@ function getCachedComponent (registry: Registry, query: QueryTypes): CacheInstan
         });
       }
 
-      type = key.creator && key.creator.meta
+      type = key.creator?.meta
         ? queryTypeToString(registry, key)
         : 'Raw';
     }

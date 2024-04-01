@@ -15,7 +15,7 @@ interface Props {
   offset: number;
   onCreateToggle: (seed: string) => void;
   onRemove: (address: string) => void;
-  seed: Uint8Array;
+  seed?: Uint8Array;
 }
 
 function Match ({ address, className = '', count, offset, onCreateToggle, onRemove, seed }: Props): React.ReactElement<Props> {
@@ -56,7 +56,7 @@ function Match ({ address, className = '', count, offset, onCreateToggle, onRemo
       <td className='button'>
         <Button
           icon='plus'
-          label={t<string>('Save')}
+          label={t('Save')}
           onClick={_onCreate}
         />
         <Button

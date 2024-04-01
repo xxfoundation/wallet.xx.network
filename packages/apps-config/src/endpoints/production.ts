@@ -3,8 +3,8 @@
 
 import type { EndpointOption } from './types.js';
 
-import { chains3dpassPNG, chainsAlephSVG, chainsBittensorPNG, chainsCreditcoinPNG, chainsDebioSVG, chainsEquilibriumSVG, chainsFragnovaPNG, chainsGenshiroSVG, chainsLogionPNG, chainsMyriadPNG, chainsSpannerPNG } from '../ui/logos/chains/index.js';
-import { nodesAresOdysseySVG, nodesAutomataPNG, nodesCentrifugePNG, nodesChainxSVG, nodesCompetitorsClubPNG, nodesCrownSterlingPNG, nodesCrustSVG, nodesDarwiniaSVG, nodesDatahighwayPNG, nodesDockPNG, nodesEdgewareWhitePNG, nodesEfinitySVG, nodesHanyonycashPNG, nodesHumanodePNG, nodesJoystreamSVG, nodesKulupuSVG, nodesKusariSVG, nodesMathSVG, nodesMinixPNG, nodesNftmartPNG, nodesNodleSVG, nodesPolkadexSVG, nodesPolymeshSVG, nodesRiochainSVG, nodesRobonomicsSVG, nodesSherpaxPNG, nodesSoraSubstrateSVG, nodesStafiPNG, nodesSubgameSVG, nodesSubsocialSVG, nodesSwapdexSVG, nodesTernoaSVG, nodesThebifrostPNG, nodesUniartsPNG, nodesUnitnetworkPNG } from '../ui/logos/nodes/index.js';
+import { chains3dpassSVG, chainsAlephSVG, chainsBittensorPNG, chainsCreditcoinPNG, chainsDebioSVG, chainsEquilibriumSVG, chainsFragnovaPNG, chainsGenshiroSVG, chainsJurPNG, chainsLogionPNG, chainsMyriadPNG, chainsSpannerPNG, chainsVaraSVG } from '../ui/logos/chains/index.js';
+import { nodesAresOdysseySVG, nodesAutomataPNG, nodesCentrifugePNG, nodesCereSVG, nodesChainxSVG, nodesCompetitorsClubPNG, nodesCrownSterlingPNG, nodesCrustSVG, nodesDatahighwayPNG, nodesDockPNG, nodesEdgewareWhitePNG, nodesEfinitySVG, nodesHanyonycashPNG, nodesHumanodePNG, nodesJoystreamSVG, nodesKulupuSVG, nodesKusariSVG, nodesMathSVG, nodesMinixPNG, nodesNftmartPNG, nodesNodleSVG, nodesPolkadexSVG, nodesPolymeshSVG, nodesRiochainSVG, nodesRobonomicsSVG, nodesSherpaxPNG, nodesSoraSubstrateSVG, nodesStafiPNG, nodesSubgameSVG, nodesSubsocialSVG, nodesSwapdexSVG, nodesTernoaSVG, nodesThebifrostPNG, nodesUniartsPNG, nodesUnitnetworkPNG } from '../ui/logos/nodes/index.js';
 
 export * from './productionRelayKusama.js';
 export * from './productionRelayPolkadot.js';
@@ -16,7 +16,7 @@ export * from './productionRelayPolkadot.js';
 //   providers: The actual hosted secure websocket endpoint
 //
 // IMPORTANT: Alphabetical based on text
-export const prodChains: EndpointOption[] = [
+export const prodChains: Omit<EndpointOption, 'teleport'>[] = [
   {
     info: '3dpass',
     providers: {
@@ -25,13 +25,15 @@ export const prodChains: EndpointOption[] = [
     text: '3DPass',
     ui: {
       color: '#323232',
-      logo: chains3dpassPNG
+      logo: chains3dpassSVG
     }
   },
   {
     info: 'aleph',
     providers: {
-      'Aleph Zero Foundation': 'wss://ws.azero.dev'
+      'Aleph Zero Foundation': 'wss://ws.azero.dev',
+      Dwellir: 'wss://aleph-zero-rpc.dwellir.com',
+      OnFinality: 'wss://aleph-zero.api.onfinality.io/public-ws'
     },
     text: 'Aleph Zero',
     ui: {
@@ -65,7 +67,7 @@ export const prodChains: EndpointOption[] = [
   {
     info: 'bittensor',
     providers: {
-      'Opentensor Fdn (Archive)': 'wss://archivelb.nakamoto.opentensor.ai:9943'
+      'Opentensor Fdn (Archive)': 'wss://entrypoint-finney.opentensor.ai:443'
     },
     text: 'Bittensor',
     ui: {
@@ -82,6 +84,18 @@ export const prodChains: EndpointOption[] = [
     ui: {
       color: '#fcc367',
       logo: nodesCentrifugePNG
+    }
+  },
+  {
+    info: 'cere',
+    providers: {
+      'Cere Network': 'wss://archive.mainnet.cere.network/ws'
+      // 'Republic Crypto | Runtime': 'wss://mainnet.cere-archive.republiccrypto-runtime.com:444' // https://github.com/polkadot-js/apps/issues/9828
+    },
+    text: 'Cere Network',
+    ui: {
+      color: '#B7AEFF',
+      logo: nodesCereSVG
     }
   },
   {
@@ -109,7 +123,7 @@ export const prodChains: EndpointOption[] = [
   {
     info: 'creditcoin',
     providers: {
-      'Creditcoin Foundation': 'wss://rpc.mainnet.creditcoin.network/ws'
+      'Creditcoin Foundation': 'wss://mainnet.creditcoin.network/ws'
     },
     text: 'Creditcoin',
     ui: {
@@ -141,18 +155,6 @@ export const prodChains: EndpointOption[] = [
     }
   },
   {
-    info: 'darwinia',
-    providers: {
-      'Darwinia Network': 'wss://rpc.darwinia.network',
-      Dwellir: 'wss://darwinia-rpc.dwellir.com'
-    },
-    text: 'Darwinia',
-    ui: {
-      color: '#FF0083',
-      logo: nodesDarwiniaSVG
-    }
-  },
-  {
     info: 'debio',
     providers: {
       DeBio: 'wss://ws-rpc.debio.network'
@@ -177,8 +179,8 @@ export const prodChains: EndpointOption[] = [
     info: 'edgeware',
     providers: {
       'Commonwealth Labs': 'wss://mainnet2.edgewa.re',
-      JelliedOwl: 'wss://edgeware.jelliedowl.net',
-      OnFinality: 'wss://edgeware.api.onfinality.io/public-ws' // https://github.com/polkadot-js/apps/issues/8768
+      JelliedOwl: 'wss://edgeware.jelliedowl.net'
+      // OnFinality: 'wss://edgeware.api.onfinality.io/public-ws' // https://github.com/polkadot-js/apps/issues/9795
     },
     text: 'Edgeware',
     ui: {
@@ -222,7 +224,7 @@ export const prodChains: EndpointOption[] = [
   {
     info: 'genshiro',
     providers: {
-      Equilibrium: 'wss://node.genshiro.io'
+      // Equilibrium: 'wss://node.genshiro.io' // https://github.com/polkadot-js/apps/issues/9266
     },
     text: 'Genshiro',
     ui: {
@@ -263,6 +265,18 @@ export const prodChains: EndpointOption[] = [
     }
   },
   {
+    info: 'jur',
+    providers: {
+      'Iceberg Nodes': 'wss://jur-mainnet-archive-rpc-1.icebergnodes.io',
+      'Simply Staking': 'wss://jur-archive-mainnet-1.simplystaking.xyz/VX68C07AR4K2/ws'
+    },
+    text: 'Jur',
+    ui: {
+      color: '#203050',
+      logo: chainsJurPNG
+    }
+  },
+  {
     info: 'kulupu',
     providers: {
       Kulupu: 'wss://rpc.kulupu.corepaper.org/ws'
@@ -276,7 +290,7 @@ export const prodChains: EndpointOption[] = [
   {
     info: 'kusari',
     providers: {
-      Swapdex: 'wss://ws.kusari.network'
+      // Swapdex: 'wss://ws.kusari.network' // https://github.com/polkadot-js/apps/issues/9712
     },
     text: 'Kusari',
     ui: {
@@ -349,7 +363,6 @@ export const prodChains: EndpointOption[] = [
   },
   {
     info: 'nodle',
-    isUnreachable: true,
     providers: {
       // Nodle: 'wss://main3.nodleprotocol.io', // https://github.com/polkadot-js/apps/issues/7652
       // OnFinality: 'wss://nodle.api.onfinality.io/public-ws' // https://github.com/polkadot-js/apps/issues/8013
@@ -364,7 +377,7 @@ export const prodChains: EndpointOption[] = [
     info: 'polkadex',
     providers: {
       OnFinality: 'wss://polkadex.api.onfinality.io/public-ws',
-      'Polkadex Team': 'wss://mainnet.polkadex.trade'
+      RadiumBlock: 'wss://polkadex.public.curie.radiumblock.co/ws'
     },
     text: 'Polkadex',
     ui: {
@@ -408,7 +421,7 @@ export const prodChains: EndpointOption[] = [
   {
     info: 'sherpax',
     providers: {
-      ChainX: 'wss://mainnet.sherpax.io'
+      // ChainX: 'wss://mainnet.sherpax.io' // https://github.com/polkadot-js/apps/issues/9712
     },
     text: 'SherpaX',
     ui: {
@@ -444,7 +457,7 @@ export const prodChains: EndpointOption[] = [
   {
     info: 'stafi',
     providers: {
-      // 'Stafi Foundation': 'wss://mainnet-rpc.stafi.io' // isDisabled: true, // Cannot find type ChainId
+      // 'Stafi Foundation': 'wss://mainnet-rpc.stafi.io' // Cannot find type ChainId
     },
     text: 'Stafi',
     ui: {
@@ -499,12 +512,12 @@ export const prodChains: EndpointOption[] = [
   {
     info: 'thebifrost-mainnet',
     providers: {
-      'Pilab #1': 'wss://public-01.mainnet.thebifrost.io/wss',
-      'Pilab #2': 'wss://public-02.mainnet.thebifrost.io/wss'
+      'Pilab #1': 'wss://public-01.mainnet.bifrostnetwork.com/wss',
+      'Pilab #2': 'wss://public-02.mainnet.bifrostnetwork.com/wss'
     },
     text: 'The Bifrost Mainnet',
     ui: {
-      color: '#5a25f0',
+      color: '#FF474C',
       logo: nodesThebifrostPNG
     }
   },
@@ -522,12 +535,23 @@ export const prodChains: EndpointOption[] = [
   {
     info: 'unitnetwork',
     providers: {
-      // UnitNetwork: 'wss://www.unitnode3.info:443'
+      // UnitNetwork: 'wss://www.unitnode3.info:443' // Duplicated in Rococo
     },
     text: 'UnitNetwork',
     ui: {
       color: '#a351ef',
       logo: nodesUnitnetworkPNG
+    }
+  },
+  {
+    info: 'vara',
+    providers: {
+      'Gear Tech': 'wss://rpc.vara-network.io'
+    },
+    text: 'Vara',
+    ui: {
+      color: '#00a87a',
+      logo: chainsVaraSVG
     }
   },
   {

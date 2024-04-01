@@ -174,7 +174,7 @@ class InputAddress extends React.PureComponent<Props, State> {
         ? defaultValue
         : this.hasValue(lastValue)
           ? lastValue
-          : (lastOption && lastOption.value)
+          : lastOption?.value
     );
     const actualOptions: Option[] = options
       ? dedupe(
@@ -206,7 +206,12 @@ class InputAddress extends React.PureComponent<Props, State> {
             : this.onChange
         }
         onSearch={this.onSearch}
-        options={actualOptions}
+        options={
+          // FIXME: this is a "bit" of a HACK - the issue is that the "null"
+          // value from Option is not correct for the supplied type. (This
+          // originates in the ui repo for the KeyringOption)
+          actualOptions as unknown as React.ReactNode[]
+        }
         placeholder={placeholder}
         renderLabel={
           isMultiple
@@ -249,7 +254,7 @@ class InputAddress extends React.PureComponent<Props, State> {
   }
 
   private hasValue (test?: Uint8Array | string | null): boolean {
-    const address = test && test.toString();
+    const address = test?.toString();
 
     return this.getFiltered().some(({ value }) => value === address);
   }
@@ -289,7 +294,7 @@ class InputAddress extends React.PureComponent<Props, State> {
       onChangeMulti(
         addresses
           .map(transformToAccountId)
-          .filter((address) => address as string) as string[]
+          .filter((address): address is string => !!address)
       );
     }
   };
@@ -325,7 +330,7 @@ class InputAddress extends React.PureComponent<Props, State> {
     return matches.filter((item, index): boolean => {
       const isLast = index === matches.length - 1;
       const nextItem = matches[index + 1];
-      const hasNext = nextItem && nextItem.value;
+      const hasNext = nextItem?.value;
 
       return !(isNull(item.value) || isUndefined(item.value)) || (!isLast && !!hasNext);
     }) as DropdownItemProps[];

@@ -203,8 +203,7 @@ const StyledTr = styled.tr`
 
     div {
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      overflow: auto;
     }
   }
 

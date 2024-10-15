@@ -199,8 +199,7 @@ export default React.memo(styled(Bounty)`
 
     div {
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      overflow: auto;
     }
   }
 

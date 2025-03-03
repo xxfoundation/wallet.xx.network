@@ -3390,7 +3390,7 @@ __metadata:
   dependencies:
     "@babel/runtime": ^7.20.6
     "@polkadot/react-components": ^0.122.3-120-x
-    secp256k1: ^3.8.0
+    secp256k1: ^3.8.1
     viem: ^1.21.4
     wagmi: ^1.4.13
   languageName: unknown
@@ -3679,7 +3679,7 @@ __metadata:
     babel-loader: ^8.3.0
     copy-webpack-plugin: ^11.0.0
     electron-log: ^4.4.8
-    electron-updater: ^5.3.0
+    electron-updater: ^6.3.0
     html-webpack-plugin: ^5.5.0
     react: ^18.2.0
     react-dom: ^18.2.0
@@ -5846,7 +5846,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/semver@npm:^7.3.12, @types/semver@npm:^7.3.6":
+"@types/semver@npm:^7.3.12":
   version: 7.3.13
   resolution: "@types/semver@npm:7.3.13"
   checksum: 00c0724d54757c2f4bc60b5032fe91cda6410e48689633d5f35ece8a0a66445e3e57fa1d6e07eb780f792e82ac542948ec4d0b76eb3484297b79bd18b8cf1cb0
@@ -8565,6 +8565,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"builder-util-runtime@npm:9.3.1":
+  version: 9.3.1
+  resolution: "builder-util-runtime@npm:9.3.1"
+  dependencies:
+    debug: ^4.3.4
+    sax: ^1.2.4
+  checksum: 00a6cc472977d7e97ea18fafbb5861659b92207b6841bbc3b172dc310e59abcfe89302397e9c7989a1afa2669f6b253fcb3adf28096d5e14ff0acc2f4337e7b2
+  languageName: node
+  linkType: hard
+
 "builder-util@npm:23.6.0":
   version: 23.6.0
   resolution: "builder-util@npm:23.6.0"
@@ -10861,20 +10871,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron-updater@npm:^5.3.0":
-  version: 5.3.0
-  resolution: "electron-updater@npm:5.3.0"
+"electron-updater@npm:^6.3.0":
+  version: 6.6.1
+  resolution: "electron-updater@npm:6.6.1"
   dependencies:
-    "@types/semver": ^7.3.6
-    builder-util-runtime: 9.1.1
-    fs-extra: ^10.0.0
+    builder-util-runtime: 9.3.1
+    fs-extra: ^10.1.0
     js-yaml: ^4.1.0
     lazy-val: ^1.0.5
     lodash.escaperegexp: ^4.1.2
     lodash.isequal: ^4.5.0
-    semver: ^7.3.5
-    typed-emitter: ^2.1.0
-  checksum: 975381ffb0d9e17686f7f0b90739320922ca52d06ee548e89ceeb3b56bfc23180c20e7049e5c33ef789b228eb4c960c9886986e1332577866dca2437c315ed4e
+    semver: ^7.6.3
+    tiny-typed-emitter: ^2.1.0
+  checksum: 1f278b4fdf136272fc978e9579b57b1df34981b07ed91d20b973c1fb12a6ce47f59d1cf48b65ae3a2cc381eeb339ee50d66cc16916219aa8af5bb56b3293ea91
   languageName: node
   linkType: hard
 
@@ -10891,7 +10900,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"elliptic@npm:6.5.4, elliptic@npm:^6.4.0, elliptic@npm:^6.4.1, elliptic@npm:^6.5.2, elliptic@npm:^6.5.3, elliptic@npm:^6.5.4":
+"elliptic@npm:6.5.4, elliptic@npm:^6.4.0, elliptic@npm:^6.4.1, elliptic@npm:^6.5.3, elliptic@npm:^6.5.4":
   version: 6.5.4
   resolution: "elliptic@npm:6.5.4"
   dependencies:
@@ -10903,6 +10912,21 @@ __metadata:
     minimalistic-assert: ^1.0.1
     minimalistic-crypto-utils: ^1.0.1
   checksum: d56d21fd04e97869f7ffcc92e18903b9f67f2d4637a23c860492fbbff5a3155fd9ca0184ce0c865dd6eb2487d234ce9551335c021c376cd2d3b7cb749c7d10f4
+  languageName: node
+  linkType: hard
+
+"elliptic@npm:^6.5.7":
+  version: 6.6.1
+  resolution: "elliptic@npm:6.6.1"
+  dependencies:
+    bn.js: ^4.11.9
+    brorand: ^1.1.0
+    hash.js: ^1.0.0
+    hmac-drbg: ^1.0.1
+    inherits: ^2.0.4
+    minimalistic-assert: ^1.0.1
+    minimalistic-crypto-utils: ^1.0.1
+  checksum: 27b14a52f68bbbc0720da259f712cb73e953f6d2047958cd02fb0d0ade2e83849dc39fb4af630889c67df8817e24237428cf59c4f4c07700f755b401149a7375
   languageName: node
   linkType: hard
 
@@ -20291,21 +20315,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rxjs@npm:*, rxjs@npm:^7.0.0, rxjs@npm:^7.5.5, rxjs@npm:^7.5.7, rxjs@npm:^7.6.0":
-  version: 7.6.0
-  resolution: "rxjs@npm:7.6.0"
-  dependencies:
-    tslib: ^2.1.0
-  checksum: b3abbbfe1ddfd06fca9314b83cbd13bcddc3320429218136f75c79a4802ac430dd13873364aac1ded54fd457f8c77df332d205a92d8a1c61656565bb718c50af
-  languageName: node
-  linkType: hard
-
 "rxjs@npm:6":
   version: 6.6.7
   resolution: "rxjs@npm:6.6.7"
   dependencies:
     tslib: ^1.9.0
   checksum: bc334edef1bb8bbf56590b0b25734ba0deaf8825b703256a93714308ea36dff8a11d25533671adf8e104e5e8f256aa6fdfe39b2e248cdbd7a5f90c260acbbd1b
+  languageName: node
+  linkType: hard
+
+"rxjs@npm:^7.0.0, rxjs@npm:^7.5.5, rxjs@npm:^7.5.7, rxjs@npm:^7.6.0":
+  version: 7.6.0
+  resolution: "rxjs@npm:7.6.0"
+  dependencies:
+    tslib: ^2.1.0
+  checksum: b3abbbfe1ddfd06fca9314b83cbd13bcddc3320429218136f75c79a4802ac430dd13873364aac1ded54fd457f8c77df332d205a92d8a1c61656565bb718c50af
   languageName: node
   linkType: hard
 
@@ -20459,20 +20483,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"secp256k1@npm:^3.8.0":
-  version: 3.8.0
-  resolution: "secp256k1@npm:3.8.0"
+"secp256k1@npm:^3.8.1":
+  version: 3.8.1
+  resolution: "secp256k1@npm:3.8.1"
   dependencies:
     bindings: ^1.5.0
     bip66: ^1.1.5
     bn.js: ^4.11.8
     create-hash: ^1.2.0
     drbg.js: ^1.0.1
-    elliptic: ^6.5.2
+    elliptic: ^6.5.7
     nan: ^2.14.0
     node-gyp: latest
     safe-buffer: ^5.1.2
-  checksum: 37aaae687a8de9b7bc733ab26bc89c4302b9c681d69d71d531842d99d3af9301a4e30dbe40122793ec64b7a08b8fee8d2330397b7b2dd3a7e404ed259a458089
+  checksum: 6e06fd1a362cd42add8780f352c666b393c4b8e6d316f3527d50d354ac43bb9bfe089a434a61a9e96b03729d3f2f026be8f6dd6c6094c914305ac7da34d65c09
   languageName: node
   linkType: hard
 
@@ -20590,6 +20614,15 @@ __metadata:
   bin:
     semver: bin/semver.js
   checksum: 7427f05b70786c696640edc29fdd4bc33b2acf3bbe1740b955029044f80575fc664e1a512e4113c3af21e767154a94b4aa214bf6cd6e42a1f6dba5914e0b208c
+  languageName: node
+  linkType: hard
+
+"semver@npm:^7.6.3":
+  version: 7.7.1
+  resolution: "semver@npm:7.7.1"
+  bin:
+    semver: bin/semver.js
+  checksum: 586b825d36874007c9382d9e1ad8f93888d8670040add24a28e06a910aeebd673a2eb9e3bf169c6679d9245e66efb9057e0852e70d9daa6c27372aab1dda7104
   languageName: node
   linkType: hard
 
@@ -21873,6 +21906,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tiny-typed-emitter@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "tiny-typed-emitter@npm:2.1.0"
+  checksum: 709bca410054e08df4dc29d5ea0916328bb2900d60245c6a743068ea223887d9fd2c945b6070eb20336275a557a36c2808e5c87d2ed4b60633458632be4a3e10
+  languageName: node
+  linkType: hard
+
 "tiny-warning@npm:^1.0.0":
   version: 1.0.3
   resolution: "tiny-warning@npm:1.0.3"
@@ -22236,18 +22276,6 @@ __metadata:
   version: 1.0.9
   resolution: "typed-assert@npm:1.0.9"
   checksum: 79351bd3ea184a552bf55a77bd3012f128741c841ed718d054c5abbbc8925362aa033ae2cdcc79e1f445a15112447c8a95a08ddf7ff8aeb04f805e92187f77c1
-  languageName: node
-  linkType: hard
-
-"typed-emitter@npm:^2.1.0":
-  version: 2.1.0
-  resolution: "typed-emitter@npm:2.1.0"
-  dependencies:
-    rxjs: "*"
-  dependenciesMeta:
-    rxjs:
-      optional: true
-  checksum: 95821a9e05784b972cc9d152891fd12a56cb4b1a7c57e768c02bea6a8984da7aff8f19404a7b69eea11fae2a3b6c0c510a4c510f575f50162c759ae9059f2520
   languageName: node
   linkType: hard
 

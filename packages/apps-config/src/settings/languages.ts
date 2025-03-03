@@ -55,6 +55,10 @@ export function createLanguages (t: TFunction): Option[] {
     {
       text: '汉语',
       value: 'zh'
+    },
+    {
+      text: 'Türkçe',
+      value: 'tr'
     }
   ];
 }

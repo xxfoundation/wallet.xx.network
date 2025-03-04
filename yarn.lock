@@ -3679,7 +3679,7 @@ __metadata:
     babel-loader: ^8.3.0
     copy-webpack-plugin: ^11.0.0
     electron-log: ^4.4.8
-    electron-updater: ^6.3.0
+    electron-updater: ^6.3.9
     html-webpack-plugin: ^5.5.0
     react: ^18.2.0
     react-dom: ^18.2.0
@@ -10871,7 +10871,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron-updater@npm:^6.3.0":
+"electron-updater@npm:^6.3.9":
   version: 6.6.1
   resolution: "electron-updater@npm:6.6.1"
   dependencies:

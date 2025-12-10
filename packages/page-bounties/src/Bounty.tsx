@@ -8,7 +8,7 @@ import type { BN } from '@polkadot/util';
 
 import React, { useMemo } from 'react';
 
-import { AddressSmall, Columar, ExpandButton, LinkExternal, styled, Table } from '@polkadot/react-components';
+import { AddressSmall, Columar, ExpandButton, ForumLink, LinkExternal, styled, Table } from '@polkadot/react-components';
 import { useToggle } from '@polkadot/react-hooks';
 import { FormatBalance } from '@polkadot/react-query';
 
@@ -64,7 +64,7 @@ function Bounty ({ bestNumber, bounty, className = '', description, index, propo
           data-testid='description'
         >
           <div title={description}>
-            {description}
+            <ForumLink value={description} />
           </div>
         </td>
         <td>
@@ -200,12 +200,11 @@ function Bounty ({ bestNumber, bounty, className = '', description, index, propo
 
 const StyledTr = styled.tr`
   .description-column {
-    max-width: 200px;
+    max-width: 300px;
 
     div {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      white-space: normal;
+      word-wrap: break-word;
     }
   }
 

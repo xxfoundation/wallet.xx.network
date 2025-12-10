@@ -41,6 +41,7 @@ export { default as FilterInput } from './FilterInput.js';
 export { default as FilterOverlay } from './FilterOverlay.js';
 export { default as Flag } from './Flag.js';
 export { default as Forget } from './Forget.js';
+export { default as ForumLink } from './ForumLink.js';
 export { default as HelpOverlay } from './HelpOverlay.js';
 export { default as Icon } from './Icon.js';
 export { default as IconLink } from './IconLink.js';

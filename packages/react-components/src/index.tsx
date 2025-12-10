@@ -45,6 +45,7 @@ export { default as Extrinsic } from './Extrinsic';
 export { default as FilterOverlay } from './FilterOverlay';
 export { default as Flag } from './Flag';
 export { default as Forget } from './Forget';
+export { default as ForumLink } from './ForumLink';
 export { default as HelpOverlay } from './HelpOverlay';
 export { default as Icon } from './Icon';
 export { default as IconLink } from './IconLink';

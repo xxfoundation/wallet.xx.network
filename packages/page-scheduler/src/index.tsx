@@ -1,4 +1,4 @@
-// Copyright 2017-2023 @polkadot/app-scheduler authors & contributors
+// Copyright 2017-2025 @polkadot/app-scheduler authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useMemo } from 'react';
@@ -6,9 +6,9 @@ import React, { useMemo } from 'react';
 import { Tabs } from '@polkadot/react-components';
 import { useApi } from '@polkadot/react-hooks';
 
-import DispatchQueue from './DispatchQueue';
-import Scheduler from './Scheduler';
-import { useTranslation } from './translate';
+import DispatchQueue from './DispatchQueue.js';
+import Scheduler from './Scheduler.js';
+import { useTranslation } from './translate.js';
 
 interface Props {
   basePath: string;
@@ -24,7 +24,7 @@ function App ({ basePath, className }: Props): React.ReactElement<Props> {
       {
         isRoot: true,
         name: 'overview',
-        text: t<string>('Overview')
+        text: t('Overview')
       }
     ],
     [t]

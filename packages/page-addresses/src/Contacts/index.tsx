@@ -1,47 +1,45 @@
-// Copyright 2017-2023 @polkadot/app-addresses authors & contributors
+// Copyright 2017-2025 @polkadot/app-addresses authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { ActionStatus } from '@polkadot/react-components/Status/types';
-import type { ComponentProps as Props } from '../types';
+import type { SortedAddress } from './types.js';
 
-import { saveAs } from 'file-saver';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import styled from 'styled-components';
 
-import { Button, FilterInput, SummaryBox, Table } from '@polkadot/react-components';
-import { useAddresses, useFavorites, useLoadingDelay, useToggle } from '@polkadot/react-hooks';
-import { keyring } from '@polkadot/ui-keyring';
+import { Button, FilterInput, styled, SummaryBox, Table } from '@polkadot/react-components';
+import { useAddresses, useFavorites, useNextTick, useToggle } from '@polkadot/react-hooks';
 
-import CreateModal from '../modals/Create';
-import { useTranslation } from '../translate';
-import Address from './Address';
-import FileInputButton from './FileInputButton';
+import CreateModal from '../modals/Create.js';
+import { useTranslation } from '../translate.js';
+import Address from './Address.js';
+import Export from './Export.js';
+import Import from './Import.js';
 
-type SortedAddress = { address: string; isFavorite: boolean };
+interface Props {
+  className?: string;
+  onStatusChange: (status: ActionStatus) => void;
+}
 
 const STORE_FAVS = 'accounts:favorites';
 
 function Overview ({ className = '', onStatusChange }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
+
   const { allAddresses } = useAddresses();
   const [isCreateOpen, toggleCreate] = useToggle(false);
   const [favorites, toggleFavorite] = useFavorites(STORE_FAVS);
   const [sortedAddresses, setSortedAddresses] = useState<SortedAddress[] | undefined>();
   const [filterOn, setFilter] = useState<string>('');
-  const isLoading = useLoadingDelay();
+  const isNextTick = useNextTick();
 
-  const headerRef = useRef([
-    [t('contacts'), 'start', 2],
-    [t('transactions'), 'number media--1500'],
-    [t('balances'), 'balances'],
-    [undefined, 'media--1400'],
-    []
+  const headerRef = useRef<([React.ReactNode?, string?, number?] | false)[]>([
+    [t('contacts'), 'start', 4]
   ]);
 
   useEffect((): void => {
     setSortedAddresses(
       allAddresses
-        .map((address): SortedAddress => ({ address, isFavorite: favorites.includes(address) }))
+        .map((address): SortedAddress => ({ address, isFavorite: favorites.includes(address), isVisible: true }))
         .sort((a, b): number =>
           a.isFavorite === b.isFavorite
             ? 0
@@ -52,66 +50,15 @@ function Overview ({ className = '', onStatusChange }: Props): React.ReactElemen
     );
   }, [allAddresses, favorites]);
 
-  const importAddresses = useCallback((json: unknown) => {
-    let success = false;
-
-    if (typeof json === 'object' && json !== null) {
-      success = Object.entries(json).every(([address, name]) => {
-        let result = true;
-
-        if (typeof name === 'string') {
-          try {
-            keyring.decodeAddress(address); // acts as a test to see if its valid
-            keyring.saveAddress(address, { genesisHash: keyring.genesisHash, name: name, tags: [] });
-          } catch (err) {
-            result = false;
-          }
-        } else {
-          result = false;
-        }
-
-        return result;
-      });
-    }
-
-    const count = success ? Object.keys(json as Record<string, unknown>).length : 0;
-    const status: ActionStatus = {
-      action: 'import',
-      message: success
-        ? t<string>('Successfully imported {{count}} addresses', { count })
-        : t<string>('Importing contacts has failed'),
-      status: success ? 'success' : 'error'
-    };
-
-    onStatusChange(status);
-  }, [onStatusChange, t]);
-
-  const exportAddresses = useCallback(
-    (): void => {
-      const addressInfos = allAddresses.map(
-        (addr) => keyring.getAddress(addr)
-      );
-
-      const json = addressInfos.reduce((acc: Record<string, string>, cur) => ({
-        ...(cur !== undefined && { [cur?.address]: cur?.meta.name || '' }),
-        ...acc
-      }), {});
-
-      const blob = new Blob([JSON.stringify(json)], { type: 'application/json; charset=utf-8' });
-
-      saveAs(blob, `exported_contacts_${Date.now()}.json`);
-
-      onStatusChange({
-        action: 'export',
-        message: t<string>('{{count}} contacts successfully exported', { count: Object.keys(json).length }),
-        status: 'success'
-      });
-    },
-    [allAddresses, onStatusChange, t]
-  );
+  const toggleVisible = useCallback((address: string, isVisible: boolean) => {
+    setSortedAddresses((account) => account
+      ?.map((e) => e.address === address ? { ...e, isVisible } : e)
+      .sort((a, b) => a.isVisible === b.isVisible ? 0 : b.isVisible ? 1 : -1)
+    );
+  }, []);
 
   return (
-    <div className={className}>
+    <StyledDiv className={className}>
       {isCreateOpen && (
         <CreateModal
           onClose={toggleCreate}
@@ -121,48 +68,51 @@ function Overview ({ className = '', onStatusChange }: Props): React.ReactElemen
       <SummaryBox className='summary-box-contacts'>
         <section>
           <FilterInput
+            className='media--1000'
             filterOn={filterOn}
-            label={t<string>('filter by name or tags')}
+            label={t('filter by name or tags')}
             setFilter={setFilter}
           />
         </section>
         <Button.Group>
+          <Import
+            favorites={favorites}
+            onStatusChange={onStatusChange}
+            toggleFavorite={toggleFavorite}
+          />
+          <Export sortedAddresses={sortedAddresses} />
           <Button
             icon='plus'
-            label={t<string>('Add contact')}
+            label={t('Add contact')}
             onClick={toggleCreate}
-          />
-          <FileInputButton
-            onChange={importAddresses}
-          />
-          <Button
-            icon='share-square'
-            label={t<string>('Export')}
-            onClick={exportAddresses}
           />
         </Button.Group>
       </SummaryBox>
       <Table
-        empty={!isLoading && sortedAddresses && t<string>('no addresses saved yet, add any existing address')}
+        empty={isNextTick && sortedAddresses && t('no addresses saved yet, add any existing address')}
         header={headerRef.current}
-        withCollapsibleRows
+        isSplit
       >
-        {!isLoading && sortedAddresses?.map(({ address, isFavorite }): React.ReactNode => (
+        {isNextTick && sortedAddresses?.map(({ address, isFavorite, isVisible }): React.ReactNode => (
           <Address
             address={address}
             filter={filterOn}
             isFavorite={isFavorite}
+            isVisible={isVisible}
             key={address}
             toggleFavorite={toggleFavorite}
+            toggleVisible={toggleVisible}
           />
         ))}
       </Table>
-    </div>
+    </StyledDiv>
   );
 }
 
-export default React.memo(styled(Overview)`
+const StyledDiv = styled.div`
   .summary-box-contacts {
     align-items: center;
   }
-`);
+`;
+
+export default React.memo(Overview);

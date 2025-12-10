@@ -1,20 +1,24 @@
-// Copyright 2017-2023 @polkadot/react-hooks authors & contributors
+// Copyright 2017-2025 @polkadot/react-hooks authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
+import type { Dispatch, SetStateAction } from 'react';
 import type { ApiPromise } from '@polkadot/api';
 import type { DeriveEraPoints, DeriveEraRewards, DeriveStakerReward } from '@polkadot/api-derive/types';
+import type { u32, Vec } from '@polkadot/types';
 import type { EraIndex } from '@polkadot/types/interfaces';
-import type { StakerState } from './types';
+import type { PalletStakingStakingLedger } from '@polkadot/types/lookup';
+import type { StakerState } from './types.js';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { BN_ZERO } from '@polkadot/util';
 
-import { createNamedHook } from './createNamedHook';
-import { useApi } from './useApi';
-import { useCall } from './useCall';
-import { useIsMountedRef } from './useIsMountedRef';
-import { useOwnStashIds } from './useOwnStashes';
+import { createNamedHook } from './createNamedHook.js';
+import { useApi } from './useApi.js';
+import { useCall } from './useCall.js';
+import { useEventTrigger } from './useEventTrigger.js';
+import { useIsMountedRef } from './useIsMountedRef.js';
+import { useOwnStashIds } from './useOwnStashes.js';
 
 interface State {
   allRewards?: Record<string, DeriveStakerReward[]> | null;
@@ -42,9 +46,13 @@ const EMPTY_STATE: State = {
   rewardCount: 0
 };
 
-const OPT_REWARDS = { withParams: true };
+function getLegacyRewards (ledger: PalletStakingStakingLedger, claimedRewardsEras?: Vec<u32>): u32[] {
+  const legacyRewards = ledger.legacyClaimedRewards || (ledger as unknown as { claimedRewards: u32[] }).claimedRewards || [];
 
-function getRewards ([[stashIds], available]: [[string[]], DeriveStakerReward[][]]): State {
+  return legacyRewards.concat(claimedRewardsEras?.toArray() || []);
+}
+
+function getRewards ([[stashIds], available]: [[string[], EraIndex[]], DeriveStakerReward[][]]): State {
   const allRewards: Record<string, DeriveStakerReward[]> = {};
 
   stashIds.forEach((stashId, index): void => {
@@ -79,6 +87,7 @@ function getValRewards (api: ApiPromise, validatorEras: ValidatorWithEras[], era
           allRewards[stashId].push({
             era,
             eraReward: eraRewards.eraReward,
+            isClaimed: false,
             isEmpty: false,
             isValidator: true,
             nominating: [],
@@ -101,14 +110,45 @@ function getValRewards (api: ApiPromise, validatorEras: ValidatorWithEras[], era
   };
 }
 
+function useStakerRewards (filteredEras: EraIndex[], setState: Dispatch<SetStateAction<State>>, ownValidators?: StakerState[], additional?: string[]) {
+  const { api } = useApi();
+
+  const stashIds = useOwnStashIds(additional);
+  const trigger = useEventTrigger([api.events.staking?.PayoutStarted, api.events.staking?.Rewarded]);
+  const [stakerRewards, setStakerRewards] = useState<[[string[], EraIndex[]], DeriveStakerReward[][]]>();
+
+  const onFetchStakeRewards = useCallback(async () => {
+    if (!ownValidators?.length && !!filteredEras.length && stashIds) {
+      setState((e) => ({ ...e, isLoadingRewards: true }));
+
+      const stakerRewards = await api.derive.staking?.stakerRewardsMultiEras(stashIds, filteredEras);
+
+      setStakerRewards([[stashIds, filteredEras], stakerRewards]);
+    }
+  }, [api.derive.staking, filteredEras, ownValidators?.length, setState, stashIds]);
+
+  useEffect(() => {
+    onFetchStakeRewards().catch(console.error);
+  }, [onFetchStakeRewards]);
+
+  useEffect(() => {
+    if (trigger.blockHash) {
+      onFetchStakeRewards().catch(console.error);
+    }
+  }, [onFetchStakeRewards, trigger.blockHash]);
+
+  return stakerRewards;
+}
+
 function useOwnEraRewardsImpl (maxEras?: number, ownValidators?: StakerState[], additional?: string[]): State {
   const { api } = useApi();
   const mountedRef = useIsMountedRef();
-  const stashIds = useOwnStashIds(additional);
+
   const allEras = useCall<EraIndex[]>(api.derive.staking?.erasHistoric);
   const [{ filteredEras, validatorEras }, setFiltered] = useState<Filtered>(EMPTY_FILTERED);
   const [state, setState] = useState<State>(EMPTY_STATE);
-  const stakerRewards = useCall<[[string[]], DeriveStakerReward[][]]>(!ownValidators?.length && !!filteredEras.length && stashIds && api.derive.staking?.stakerRewardsMultiEras, [stashIds, filteredEras], OPT_REWARDS);
+
+  const stakerRewards = useStakerRewards(filteredEras, setState, ownValidators, additional);
   const erasPoints = useCall<DeriveEraPoints[]>(!!validatorEras.length && !!filteredEras.length && api.derive.staking._erasPoints, [filteredEras, false]);
   const erasRewards = useCall<DeriveEraRewards[]>(!!validatorEras.length && !!filteredEras.length && api.derive.staking._erasRewards, [filteredEras, false]);
 
@@ -129,9 +169,9 @@ function useOwnEraRewardsImpl (maxEras?: number, ownValidators?: StakerState[], 
         });
         setFiltered({ filteredEras, validatorEras });
       } else if (ownValidators?.length) {
-        ownValidators.forEach(({ stakingLedger, stashId }): void => {
+        ownValidators.forEach(({ claimedRewardsEras, stakingLedger, stashId }): void => {
           if (stakingLedger) {
-            const eras = filteredEras.filter((era) => !stakingLedger.claimedRewards.some((c) => era.eq(c)));
+            const eras = filteredEras.filter((era) => !getLegacyRewards(stakingLedger, claimedRewardsEras).some((c) => era.eq(c)));
 
             if (eras.length) {
               validatorEras.push({ eras, stashId });

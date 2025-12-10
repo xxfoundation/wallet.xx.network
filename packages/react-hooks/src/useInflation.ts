@@ -1,56 +1,68 @@
-// Copyright 2017-2023 @polkadot/react-hooks authors & contributors
+// Copyright 2017-2025 @polkadot/react-hooks authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
+import type { ApiPromise } from '@polkadot/api';
 import type { BN } from '@polkadot/util';
-import type { Inflation } from './types';
+import type { Inflation } from './types.js';
 
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 
-import { BN_MILLION } from '@polkadot/util';
+import { getInflationParams } from '@polkadot/apps-config';
+import { BN_MILLION, BN_ZERO } from '@polkadot/util';
 
-import { createNamedHook } from './createNamedHook';
-import { useApi } from './useApi';
-import { useIdealInterest } from './useIdealInterest';
-import { InflationParams, useInflationParams } from './useInflationParams';
-import { useTotalStakeableIssuance } from './useTotalStakeableIssuance';
+import { createNamedHook } from './createNamedHook.js';
+import { useApi } from './useApi.js';
+import { useCall } from './useCall.js';
 
-function calcInflation (inflationParams: InflationParams, totalStaked: BN, totalStakeableIssuance: BN, idealInterest: BN, totalTeamMultipliers: BN) {
-  const { falloff, idealStake, minInflation } = inflationParams;
-  const stakedFraction = totalStaked.isZero() || totalStakeableIssuance.isZero()
+const EMPTY: Inflation = { idealInterest: 0, idealStake: 0, inflation: 0, stakedFraction: 0, stakedReturn: 0 };
+
+function calcInflation (api: ApiPromise, totalStaked: BN, totalIssuance: BN, numAuctions: BN): Inflation {
+  const { auctionAdjust, auctionMax, falloff, maxInflation, minInflation, stakeTarget } = getInflationParams(api);
+  const stakedFraction = totalStaked.isZero() || totalIssuance.isZero()
     ? 0
-    : totalStaked.mul(BN_MILLION).div(totalStakeableIssuance).toNumber() / BN_MILLION.toNumber();
-  const idealInterestNumber = idealInterest.toNumber() / 1e9;
-
+    : totalStaked.mul(BN_MILLION).div(totalIssuance).toNumber() / BN_MILLION.toNumber();
+  // Ideal is less based on the actual auctions, see
+  // https://github.com/paritytech/polkadot/blob/816cb64ea16102c6c79f6be2a917d832d98df757/runtime/kusama/src/lib.rs#L531
+  const idealStake = stakeTarget - (Math.min(auctionMax, numAuctions.toNumber()) * auctionAdjust);
+  const idealInterest = idealStake === 0
+    ? 0
+    : maxInflation / idealStake;
+  // inflation calculations, see
+  // https://github.com/paritytech/substrate/blob/0ba251c9388452c879bfcca425ada66f1f9bc802/frame/staking/reward-fn/src/lib.rs#L28-L54
   const inflation = 100 * (minInflation + (
     stakedFraction <= idealStake
-      ? (stakedFraction * (idealInterestNumber - (minInflation / idealStake)))
-      : (((idealInterestNumber * idealStake) - minInflation) * Math.pow(2, (idealStake - stakedFraction) / falloff))
+      ? (stakedFraction * (idealInterest - (minInflation / idealStake)))
+      : ((maxInflation - minInflation) * Math.pow(2, (idealStake - stakedFraction) / falloff))
   ));
 
-  const multiplierImpact = totalTeamMultipliers.isZero() ? 1.0 : totalStaked.mul(BN_MILLION).div(totalStaked.add(totalTeamMultipliers)).toNumber() / 1e6;
-
   return {
+    idealInterest,
+    idealStake,
     inflation,
+    stakedFraction,
     stakedReturn: stakedFraction
-      ? (inflation * multiplierImpact / stakedFraction)
+      ? (inflation / stakedFraction)
       : 0
   };
 }
 
-const DEFAULTS: Inflation = { idealInterest: 0, idealStake: 0, inflation: 0, stakedFraction: 0, stakedReturn: 0 };
-
-export function useInflationImpl (totalStaked?: BN, totalTeamMultipliers?: BN) {
+function useInflationImpl (totalStaked?: BN): Inflation {
   const { api } = useApi();
-  const inflationParams = useInflationParams(api);
-  const totalStakeableIssuance = useTotalStakeableIssuance();
-  const idealInterest = useIdealInterest();
+  const totalIssuance = useCall<BN>(api.query.balances?.totalIssuance);
+  const auctionCounter = useCall<BN>(api.query.auctions?.auctionCounter);
+  const [state, setState] = useState<Inflation>(EMPTY);
 
-  const inflation = useMemo(() => {
-    return totalStaked && totalStakeableIssuance && idealInterest && inflationParams && totalTeamMultipliers &&
-      calcInflation(inflationParams, totalStaked, totalStakeableIssuance, idealInterest, totalTeamMultipliers);
-  }, [inflationParams, totalStakeableIssuance, idealInterest, totalStaked, totalTeamMultipliers]);
+  useEffect((): void => {
+    const numAuctions = api.query.auctions
+      ? auctionCounter
+      : BN_ZERO;
 
-  return { ...DEFAULTS, ...inflation };
+    numAuctions && totalIssuance && totalStaked && setState(
+      calcInflation(api, totalStaked, totalIssuance, numAuctions)
+    );
+  }, [api, auctionCounter, totalIssuance, totalStaked]);
+
+  return state;
 }
 
 export const useInflation = createNamedHook('useInflation', useInflationImpl);

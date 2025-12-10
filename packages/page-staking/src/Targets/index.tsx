@@ -5,7 +5,7 @@ import type { DeriveHasIdentity, DeriveStakingOverview } from '@polkadot/api-der
 import type { StakerState } from '@polkadot/react-hooks/types';
 import type { u32 } from '@polkadot/types-codec';
 import type { BN } from '@polkadot/util';
-import type { NominatedByMap, SortedTargets, TargetSortBy, ValidatorInfo } from '../types';
+import type { NominatedByMap, SortedTargets, TargetSortBy, ValidatorInfo } from '../types.js';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styled from 'styled-components';
@@ -14,18 +14,18 @@ import { Button, Icon, PaginationAdvanced, Table, Toggle } from '@polkadot/react
 import { useApi, useAvailableSlashes, useBlocksPerDays, usePagination, useSavedFlags } from '@polkadot/react-hooks';
 import { BN_HUNDRED, BN_ZERO } from '@polkadot/util';
 
-import { MAX_NOMINATIONS } from '../constants';
-import ElectionBanner from '../ElectionBanner';
-import Filtering from '../Filtering';
-import Legend from '../Legend';
-import { useTranslation } from '../translate';
-import useElectionPrediction from '../useElectionPrediction';
-import useIdentities from '../useIdentities';
-import Nominate from './Nominate';
-import StashFilters from './StashFilters';
-import Summary from './Summary';
-import useOwnNominators from './useOwnNominators';
-import Validator from './Validator';
+import { MAX_NOMINATIONS } from '../constants.js';
+import ElectionBanner from '../ElectionBanner.js';
+import Filtering from '../Filtering.js';
+import Legend from '../Legend.js';
+import { useTranslation } from '../translate.js';
+import useElectionPrediction from '../useElectionPrediction.js';
+import useIdentities from '../useIdentities.js';
+import Nominate from './Nominate.js';
+import StashFilters from './StashFilters.js';
+import Summary from './Summary.js';
+import useOwnNominators from './useOwnNominators.js';
+import Validator from './Validator.js';
 
 interface Props {
   className?: string;

@@ -1,15 +1,16 @@
-// Copyright 2017-2023 @polkadot/app-staking authors & contributors
+// Copyright 2017-2025 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { SessionInfo } from './types';
+import type { SessionInfo } from './types.js';
 
 import React, { useEffect, useState } from 'react';
 
-import { Input, InputAddress, Modal } from '@polkadot/react-components';
-import { useApi } from '@polkadot/react-hooks';
+import { Input, MarkWarning, Modal } from '@polkadot/react-components';
+import { useApi, useStakingAsyncApis } from '@polkadot/react-hooks';
 import { isHex } from '@polkadot/util';
 
-import { useTranslation } from '../../translate';
+import { useTranslation } from '../../translate.js';
+import SenderInfo from './SenderInfo.js';
 
 interface Props {
   className?: string;
@@ -25,43 +26,37 @@ const EMPTY_PROOF = new Uint8Array();
 function SessionKey ({ className = '', controllerId, onChange, stashId, withFocus, withSenders }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
+  const { isStakingAsync, rcApi } = useStakingAsyncApis();
   const [keys, setKeys] = useState<string | null>(null);
 
   useEffect((): void => {
     try {
       onChange({
         sessionTx: isHex(keys)
-          ? api.tx.session.setKeys(keys, EMPTY_PROOF)
+          ? (isStakingAsync ? rcApi : api)?.tx.session.setKeys(keys, EMPTY_PROOF)
           : null
       });
     } catch {
       onChange({ sessionTx: null });
     }
-  }, [api, keys, onChange]);
+  }, [api, isStakingAsync, keys, onChange, rcApi]);
 
   return (
     <div className={className}>
+      <Modal.Columns>
+        <MarkWarning content={t('This operation will be performed on the relay chain.')} />
+      </Modal.Columns>
       {withSenders && (
-        <Modal.Columns hint={t<string>('The stash and controller pair. This transaction, setting the session keys, will be sent from the controller.')}>
-          <InputAddress
-            defaultValue={stashId}
-            isDisabled
-            label={t<string>('stash account')}
-          />
-          <InputAddress
-            className='medium'
-            defaultValue={controllerId}
-            isDisabled
-            label={t<string>('controller account')}
-          />
-        </Modal.Columns>
+        <SenderInfo
+          controllerId={controllerId}
+          stashId={stashId}
+        />
       )}
-      <Modal.Columns hint={t<string>('The hex output from author_rotateKeys, as executed on the validator node. The keys will show as pending until applied at the start of a new session.')}>
+      <Modal.Columns hint={t('The hex output from author_rotateKeys, as executed on the validator node. The keys will show as pending until applied at the start of a new session.')}>
         <Input
           autoFocus={withFocus}
-          help={t<string>('Changing the key only takes effect at the start of the next session. The input here is generated from the author_rotateKeys command')}
           isError={!keys}
-          label={t<string>('Keys from rotateKeys')}
+          label={t('Keys from rotateKeys')}
           onChange={setKeys}
           placeholder='0x...'
         />

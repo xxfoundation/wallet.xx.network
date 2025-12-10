@@ -1,16 +1,16 @@
-// Copyright 2017-2023 @polkadot/react-hooks authors & contributors
+// Copyright 2017-2025 @polkadot/react-hooks authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Option } from '@polkadot/types';
 import type { RegistrarInfo } from '@polkadot/types/interfaces';
-import type { Registrar } from './types';
+import type { Registrar } from './types.js';
 
 import { useMemo } from 'react';
 
-import { createNamedHook } from './createNamedHook';
-import { useAccounts } from './useAccounts';
-import { useApi } from './useApi';
-import { useCall } from './useCall';
+import { createNamedHook } from './createNamedHook.js';
+import { useAccounts } from './useAccounts.js';
+import { useApi } from './useApi.js';
+import { useCall } from './useCall.js';
 
 interface RegistrarNull {
   address: string | null;
@@ -24,9 +24,9 @@ interface State {
 }
 
 function useRegistrarsImpl (skipQuery?: boolean): State {
-  const { api } = useApi();
+  const { apiIdentity } = useApi();
   const { allAccounts, hasAccounts } = useAccounts();
-  const query = useCall<Option<RegistrarInfo>[]>(!skipQuery && api.query.identity?.registrars);
+  const query = useCall<Option<RegistrarInfo>[]>(!skipQuery && apiIdentity.query.identity?.registrars);
 
   // determine if we have a registrar or not - registrars are allowed to approve
   return useMemo(

@@ -1,4 +1,4 @@
-// Copyright 2017-2023 @polkadot/app-democracy authors & contributors
+// Copyright 2017-2025 @polkadot/app-democracy authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Hash } from '@polkadot/types/interfaces';
@@ -9,8 +9,8 @@ import React from 'react';
 import { Button } from '@polkadot/react-components';
 import { useApi, useToggle } from '@polkadot/react-hooks';
 
-import { useTranslation } from '../translate';
-import PreImage from './PreImage';
+import { useTranslation } from '../translate.js';
+import PreImage from './PreImage.js';
 
 interface Props {
   imageHash: Hash | HexString;
@@ -28,7 +28,7 @@ function PreImageButton ({ imageHash, isImminent }: Props): React.ReactElement<P
         <>
           <Button
             icon='plus'
-            label={t<string>('Image')}
+            label={t('Image')}
             onClick={togglePreimage}
           />
           {isPreimageOpen && (

@@ -1,11 +1,11 @@
-// Copyright 2017-2023 @polkadot/app-explorer authors & contributors
+// Copyright 2017-2025 @polkadot/app-explorer authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { ApiPromise } from '@polkadot/api';
 import type { SignedBlockExtended } from '@polkadot/api-derive/types';
 import type { GenericExtrinsic, u32 } from '@polkadot/types';
 import type { Block } from '@polkadot/types/interfaces';
-import type { Detail, Result } from './types';
+import type { Detail, Result } from './types.js';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -15,6 +15,8 @@ const INITIAL_ITEMS = 50;
 const MAX_ITEMS = INITIAL_ITEMS;
 const EMPTY: Result = {
   details: [],
+  isLoaded: false,
+  maxItems: MAX_ITEMS,
   stdDev: 0,
   timeAvg: 0,
   timeMax: 0,
@@ -28,6 +30,10 @@ function getSetter ({ extrinsics }: Block): GenericExtrinsic | undefined {
   );
 }
 
+/**
+ * Calculates the delay for each block, correctly handling elastic scaling
+ * by distributing the time difference across all blocks produced between two differing slots.
+ */
 function calcDelay (details: Detail[]): Detail[] {
   const filtered = details
     .sort((a, b) => a.block.number - b.block.number)
@@ -40,8 +46,44 @@ function calcDelay (details: Detail[]): Detail[] {
     const a = filtered[i];
     const b = filtered[i + 1];
 
-    if ((b.block.number - a.block.number) === 1 && b.delay === 0) {
-      b.delay = b.now - a.now;
+    // Check if the current block 'a' and the next block 'b' share the same timestamp.
+    // If they do, 'a' cannot be the slot anchor for 'b', so we skip 'a' and let the loop continue
+    // to find the true anchor later when 'b' or a subsequent block is processed.
+    if (a.now === b.now) {
+      continue;
+    }
+
+    // At this point, 'a' is the last block of the previous slot
+    // and 'b' is the first block of the new slot.
+
+    const delta = b.now - a.now;
+
+    if (delta < 0) {
+      b.delay = 0;
+      continue;
+    }
+
+    let k = i + 1;
+
+    // Find the end of the current slot
+    while (k < filtered.length && filtered[k].now === b.now) {
+      k++;
+    }
+
+    const lastBlockInSlot = filtered[k - 1];
+    const blocksInWindow = lastBlockInSlot.block.number - a.block.number;
+
+    if (blocksInWindow <= 0) {
+      b.delay = delta;
+      continue;
+    }
+
+    // Calculate the distributed delay (Delta t / N)
+    const distributedDelay = delta / blocksInWindow;
+
+    // Apply the distributed delay to ALL blocks in the current slot/window
+    for (let m = i + 1; m < k; m++) {
+      filtered[m].delay = distributedDelay;
     }
   }
 
@@ -117,7 +159,7 @@ async function getNext (api: ApiPromise, { block: { number: start } }: Detail, {
 function useLatencyImpl (): Result {
   const { api } = useApi();
   const [details, setDetails] = useState<Detail[]>([]);
-  const signedBlock = useCall<SignedBlockExtended>(api.derive.chain.subscribeNewBlocks, []);
+  const signedBlock = useCall<SignedBlockExtended>(api.derive.chain.subscribeNewBlocks);
   const hasHistoric = useRef(false);
 
   useEffect((): void => {
@@ -171,6 +213,8 @@ function useLatencyImpl (): Result {
 
     return {
       details,
+      isLoaded: details.length === MAX_ITEMS,
+      maxItems: MAX_ITEMS,
       stdDev,
       timeAvg,
       timeMax: Math.max(...delays),

@@ -1,7 +1,7 @@
-// Copyright 2017-2023 @polkadot/app-js authors & contributors
+// Copyright 2017-2025 @polkadot/app-js authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Snippet } from '@polkadot/app-js/types';
+import type { Snippet } from '../types.js';
 
 // We must fix this :(
 /* eslint-disable sort-keys */
@@ -9,7 +9,7 @@ import type { Snippet } from '@polkadot/app-js/types';
 export const rpcNetworkAuthoring: Snippet = {
   value: 'rpcNetworkAuthoring',
   text: 'Get authoring information',
-  label: { color: 'pink', children: () => 'RPC', size: 'tiny' },
+  label: { color: 'pink', children: 'RPC', size: 'tiny' },
   code: `// Returns all pending extrinsics, potentially grouped by sender
 const unsub = await api.rpc.author.pendingExtrinsics((extrinsics) => {
   if(extrinsics.length === 0){
@@ -23,7 +23,7 @@ const unsub = await api.rpc.author.pendingExtrinsics((extrinsics) => {
 export const rpcNewHead: Snippet = {
   value: 'rpcListenToHead',
   text: 'Listen to new Head',
-  label: { color: 'pink', children: () => 'RPC', size: 'tiny' },
+  label: { color: 'pink', children: 'RPC', size: 'tiny' },
   code: `// subscribe to new headers, printing the full info for 5 Blocks
 let count = 0;
 const unsub = await api.rpc.chain.subscribeNewHeads((header) => {
@@ -39,7 +39,7 @@ const unsub = await api.rpc.chain.subscribeNewHeads((header) => {
 export const rpcQueryState: Snippet = {
   value: 'rpcQueryState',
   text: 'Get state metadata',
-  label: { color: 'pink', children: () => 'RPC', size: 'tiny' },
+  label: { color: 'pink', children: 'RPC', size: 'tiny' },
   code: `// retrieve and log the complete metadata of your node
 const metadata = await api.rpc.state.getMetadata();
 
@@ -48,11 +48,11 @@ console.log('formatted: ' + JSON.stringify(metadata.asLatest.toHuman(), null, 2)
 `
 };
 
-export const rpcSysthemInfo: Snippet = {
+export const rpcSystemInfo: Snippet = {
   value: 'rpcSystemInfo',
   text: 'Get system information',
-  label: { color: 'pink', children: () => 'RPC', size: 'tiny' },
-  code: `// Retrieve the chain & node information information via rpc calls
+  label: { color: 'pink', children: 'RPC', size: 'tiny' },
+  code: `// Retrieve the chain & node information via rpc calls
 const [chain, nodeName, nodeVersion, properties] = await Promise.all([
   api.rpc.system.chain(),
   api.rpc.system.name(),

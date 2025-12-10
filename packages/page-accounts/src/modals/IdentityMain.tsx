@@ -13,8 +13,8 @@ import { getAddressMeta } from '@polkadot/react-components/util';
 import { useApi, useCall } from '@polkadot/react-hooks';
 import { u8aToString } from '@polkadot/util';
 
-import { BLURB_MAX_SIZE, decodeBlurbData, encodeBlurb } from '../blurbs';
-import { useTranslation } from '../translate';
+import { BLURB_MAX_SIZE, decodeBlurbData, encodeBlurb } from '../blurbs.js';
+import { useTranslation } from '../translate.js';
 
 interface Props {
   address: string;

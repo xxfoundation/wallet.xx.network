@@ -1,4 +1,4 @@
-// Copyright 2017-2023 @polkadot/react-query authors & contributors
+// Copyright 2017-2025 @polkadot/react-query authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Compact } from '@polkadot/types';
@@ -6,22 +6,23 @@ import type { Registry } from '@polkadot/types/types';
 import type { BN } from '@polkadot/util';
 
 import React, { useMemo } from 'react';
-import styled from 'styled-components';
 
+import { styled } from '@polkadot/react-components/styled';
 import { useApi } from '@polkadot/react-hooks';
 import { formatBalance, isString } from '@polkadot/util';
 
-import { useTranslation } from './translate';
+import { useTranslation } from './translate.js';
 
 interface Props {
   children?: React.ReactNode;
   className?: string;
-  format?: [number, string];
+  format?: [decimals: number, unit: string];
   formatIndex?: number;
   isShort?: boolean;
   label?: React.ReactNode;
   labelPost?: LabelPost;
-  value?: Compact<any> | BN | string | null | 'all';
+  useTicker?: boolean;
+  value?: Compact<any> | BN | string | number | null;
   valueFormatted?: string;
   withCurrency?: boolean;
   withSi?: boolean;
@@ -47,8 +48,12 @@ function getFormat (registry: Registry, formatIndex = 0): [number, string] {
   ];
 }
 
-function createElement (prefix: string, postfix: string, unit: string, label: LabelPost = '', isShort = false): React.ReactNode {
-  return <>{`${prefix}${isShort ? '' : '.'}`}{!isShort && <span className='ui--FormatBalance-postfix'>{`0000${postfix || ''}`.slice(-4)}</span>}<span className='ui--FormatBalance-unit'> {unit}</span>{label}</>;
+function createElement (prefix: string, postfix: string, unit: string, label: LabelPost = '', isShort = false, ticker?: string): React.ReactNode {
+  if (ticker) {
+    return <>{`${prefix}${isShort ? '' : '.'}`}{!isShort && <span className='ui--FormatBalance-postfix'>{`${postfix || ''}`.slice(-4)}</span>}<span className='ui--FormatBalance-unit'> {ticker}</span>{label}</>;
+  } else {
+    return <>{`${prefix}${isShort ? '' : '.'}`}{!isShort && <span className='ui--FormatBalance-postfix'>{`0000${postfix || ''}`.slice(-4)}</span>}<span className='ui--FormatBalance-unit'> {unit}</span>{label}</>;
+  }
 }
 
 function splitFormat (value: string, label?: LabelPost, isShort?: boolean): React.ReactNode {
@@ -58,8 +63,8 @@ function splitFormat (value: string, label?: LabelPost, isShort?: boolean): Reac
   return createElement(prefix, postfix, unit, label, isShort);
 }
 
-function applyFormat (value: Compact<any> | BN | string, [decimals, token]: [number, string], withCurrency = true, withSi?: boolean, _isShort?: boolean, labelPost?: LabelPost): React.ReactNode {
-  const [prefix, postfix] = formatBalance(value, { decimals, forceUnit: '-', withSi: false }).split('.');
+function applyFormat (value: Compact<any> | BN | string | number, [decimals, token]: [number, string], withCurrency = true, withSi?: boolean, _isShort?: boolean, labelPost?: LabelPost, useTicker?: boolean): React.ReactNode {
+  const [prefix, postfix, ticker] = formatBalance(value, { decimals, forceUnit: '-', withSi: false }).split('.');
   const isShort = _isShort || (withSi && prefix.length >= K_LENGTH);
   const unitPost = withCurrency ? token : '';
 
@@ -71,10 +76,14 @@ function applyFormat (value: Compact<any> | BN | string, [decimals, token]: [num
     return <>{major}.<span className='ui--FormatBalance-postfix'>{minor}</span><span className='ui--FormatBalance-unit'>{unit}{unit ? unitPost : ` ${unitPost}`}</span>{labelPost || ''}</>;
   }
 
-  return createElement(prefix, postfix, unitPost, labelPost, isShort);
+  if (useTicker) {
+    return createElement(prefix, postfix, unitPost, labelPost, isShort, ticker);
+  } else {
+    return createElement(prefix, postfix, unitPost, labelPost, isShort);
+  }
 }
 
-function FormatBalance ({ children, className = '', format, formatIndex, isShort, label, labelPost, value, valueFormatted, withCurrency, withSi }: Props): React.ReactElement<Props> {
+function FormatBalance ({ children, className = '', format, formatIndex, isShort, label, labelPost, useTicker, value, valueFormatted, withCurrency, withSi }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
 
@@ -85,28 +94,27 @@ function FormatBalance ({ children, className = '', format, formatIndex, isShort
 
   // labelPost here looks messy, however we ensure we have one less text node
   return (
-    <div className={`ui--FormatBalance ${className}`}>
+    <StyledSpan className={`${className} ui--FormatBalance`}>
       {label ? <>{label}&nbsp;</> : ''}
       <span
-        className='ui--FormatBalance-value'
+        className='ui--FormatBalance-value --digits'
         data-testid='balance-summary'
       >{
           valueFormatted
             ? splitFormat(valueFormatted, labelPost, isShort)
             : value
               ? value === 'all'
-                ? <>{t<string>('everything')}{labelPost || ''}</>
-                : applyFormat(value, formatInfo, withCurrency, withSi, isShort, labelPost)
+                ? <>{t('everything')}{labelPost || ''}</>
+                : applyFormat(value, formatInfo, withCurrency, withSi, isShort, labelPost, useTicker)
               : isString(labelPost)
                 ? `-${labelPost.toString()}`
                 : labelPost
         }</span>{children}
-    </div>
+    </StyledSpan>
   );
 }
 
-export default React.memo(styled(FormatBalance)`
-  display: inline-block;
+const StyledSpan = styled.span`
   vertical-align: baseline;
   white-space: nowrap;
 
@@ -122,16 +130,14 @@ export default React.memo(styled(FormatBalance)`
   }
 
   .ui--FormatBalance-unit {
-    font-size: 0.825em;
-    text-transform: uppercase;
+    font-size: var(--font-percent-tiny);
   }
 
   .ui--FormatBalance-value {
     text-align: right;
 
     > .ui--FormatBalance-postfix {
-      font-weight: var(--font-weight-light);
-      opacity: 0.7;
+      font-weight: lighter;
       vertical-align: baseline;
     }
   }
@@ -148,4 +154,6 @@ export default React.memo(styled(FormatBalance)`
   .ui--Icon+.ui--FormatBalance-value {
     margin-left: 0.375rem;
   }
-`);
+`;
+
+export default React.memo(FormatBalance);

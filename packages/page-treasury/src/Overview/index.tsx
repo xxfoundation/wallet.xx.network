@@ -1,4 +1,4 @@
-// Copyright 2017-2023 @polkadot/app-treasury authors & contributors
+// Copyright 2017-2025 @polkadot/app-treasury authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { DeriveTreasuryProposals } from '@polkadot/api-derive/types';
@@ -8,9 +8,9 @@ import React from 'react';
 import { Button } from '@polkadot/react-components';
 import { useApi, useCall } from '@polkadot/react-hooks';
 
-import ProposalCreate from './ProposalCreate';
-import Proposals from './Proposals';
-import Summary from './Summary';
+import ProposalCreate from './ProposalCreate.js';
+import Proposals from './Proposals.js';
+import Summary from './Summary.js';
 
 interface Props {
   className?: string;
@@ -28,9 +28,13 @@ function Overview ({ className, isMember, members }: Props): React.ReactElement<
         approvalCount={info?.approvals.length}
         proposalCount={info?.proposals.length}
       />
-      <Button.Group>
-        <ProposalCreate />
-      </Button.Group>
+      {
+        api.tx.treasury.proposeSpend || !!api.tx.treasury.spendLocal
+          ? <Button.Group>
+            <ProposalCreate />
+          </Button.Group>
+          : <></>
+      }
       <Proposals
         isMember={isMember}
         members={members}

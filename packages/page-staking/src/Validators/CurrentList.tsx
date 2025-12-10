@@ -5,7 +5,7 @@ import type { DeriveHeartbeats, DeriveStakingOverview } from '@polkadot/api-deri
 import type { Authors } from '@polkadot/react-query/BlockAuthors';
 import type { AccountId } from '@polkadot/types/interfaces';
 import type { BN } from '@polkadot/util';
-import type { NominatedByMap, SortedTargets, ValidatorInfo } from '../types';
+import type { NominatedByMap, SortedTargets, ValidatorInfo } from '../types.js';
 
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
@@ -14,10 +14,10 @@ import { useApi, useCall, useLoadingDelay, usePagination, useSavedFlags } from '
 import { BlockAuthorsContext } from '@polkadot/react-query';
 import { XxCmixCmixVariables } from '@polkadot/types/lookup';
 
-import Filtering from '../Filtering';
-import Legend from '../Legend';
-import { useTranslation } from '../translate';
-import Address from './Address';
+import Filtering from '../Filtering.js';
+import Legend from '../Legend.js';
+import { useTranslation } from '../translate.js';
+import Address from './Address/index.js';
 
 interface Props {
   className?: string;

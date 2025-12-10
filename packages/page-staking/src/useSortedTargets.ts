@@ -6,7 +6,7 @@
 import type { ApiPromise } from '@polkadot/api';
 import type { DeriveEraPrefs, DeriveSessionInfo, DeriveStakingElected, DeriveStakingQuery, DeriveStakingWaiting } from '@polkadot/api-derive/types';
 import type { Compact, Option, u32, u128 } from '@polkadot/types';
-import type { SortedTargets, TargetSortBy, ValidatorInfo } from './types';
+import type { SortedTargets, TargetSortBy, ValidatorInfo } from './types.js';
 
 import { useMemo } from 'react';
 
@@ -15,7 +15,7 @@ import { createNamedHook, useAccounts, useApi, useCall, useCallMulti, useInflati
 import { PalletStakingExposure } from '@polkadot/types/lookup';
 import { arrayFlatten, BN, BN_HUNDRED, BN_MAX_INTEGER, BN_ONE, BN_ZERO } from '@polkadot/util';
 
-import useTeamMultipliers, { TeamMultipliers } from './useTeamMultipliers';
+import useTeamMultipliers, { TeamMultipliers } from './useTeamMultipliers.js';
 
 interface LastEra {
   activeEra: BN;

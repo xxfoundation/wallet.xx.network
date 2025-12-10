@@ -1,11 +1,11 @@
-// Copyright 2017-2023 @polkadot/app-addresses authors & contributors
+// Copyright 2017-2025 @polkadot/app-addresses authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { DeriveAccountInfo } from '@polkadot/api-derive/types';
 import type { ActionStatus } from '@polkadot/react-components/Status/types';
-import type { ModalProps as Props } from '../types';
+import type { ModalProps as Props } from '../types.js';
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { AddressRow, Button, Input, InputAddress, Modal } from '@polkadot/react-components';
 import { useApi, useCall } from '@polkadot/react-hooks';
@@ -13,7 +13,7 @@ import { keyring } from '@polkadot/ui-keyring';
 import { hexToU8a } from '@polkadot/util';
 import { ethereumEncode } from '@polkadot/util-crypto';
 
-import { useTranslation } from '../translate';
+import { useTranslation } from '../translate.js';
 
 interface AddrState {
   address: string;
@@ -34,7 +34,7 @@ function Create ({ onClose, onStatusChange }: Props): React.ReactElement<Props> 
   const [{ isNameValid, name }, setName] = useState<NameState>({ isNameValid: false, name: '' });
   const [{ address, addressInput, isAddressExisting, isAddressValid }, setAddress] = useState<AddrState>({ address: '', addressInput: '', isAddressExisting: false, isAddressValid: false, isPublicKey: false });
   const info = useCall<DeriveAccountInfo>(!!address && isAddressValid && api.derive.accounts.info, [address]);
-  const isValid = (isAddressValid && isNameValid) && !!info?.accountId;
+  const isValid = useMemo(() => (isAddressValid && isNameValid) && !!info?.accountId, [isAddressValid, isNameValid, info]);
 
   const _onChangeAddress = useCallback(
     (addressInput: string): void => {
@@ -64,11 +64,10 @@ function Create ({ onClose, onStatusChange }: Props): React.ReactElement<Props> 
 
             isAddressExisting = true;
             isAddressValid = true;
-
             setName({ isNameValid: !!(newName || '').trim(), name: newName });
           }
         }
-      } catch (error) {
+      } catch {
         isAddressValid = false;
       }
 
@@ -98,8 +97,8 @@ function Create ({ onClose, onStatusChange }: Props): React.ReactElement<Props> 
         status.account = address;
         status.status = address ? 'success' : 'error';
         status.message = isAddressExisting
-          ? t<string>('address edited')
-          : t<string>('address created');
+          ? t('address edited')
+          : t('address created');
 
         InputAddress.setLastValue('address', address);
       } catch (error) {
@@ -115,7 +114,7 @@ function Create ({ onClose, onStatusChange }: Props): React.ReactElement<Props> 
 
   return (
     <Modal
-      header={t<string>('Add an address')}
+      header={t('Add an address')}
       onClose={onClose}
     >
       <Modal.Content>
@@ -131,19 +130,17 @@ function Create ({ onClose, onStatusChange }: Props): React.ReactElement<Props> 
           <Input
             autoFocus
             className='full'
-            help={t<string>('Paste here the address of the contact you want to add to your address book.')}
             isError={!isAddressValid}
-            label={t<string>('address')}
+            label={t('address')}
             onChange={_onChangeAddress}
             onEnter={_onCommit}
-            placeholder={t<string>('new address')}
+            placeholder={t('new address')}
             value={addressInput}
           />
           <Input
             className='full'
-            help={t<string>('Type the name of your contact. This name will be used across all the apps. It can be edited later on.')}
             isError={!isNameValid}
-            label={t<string>('name')}
+            label={t('name')}
             onChange={_onChangeName}
             onEnter={_onCommit}
             value={name}
@@ -154,7 +151,7 @@ function Create ({ onClose, onStatusChange }: Props): React.ReactElement<Props> 
         <Button
           icon='save'
           isDisabled={!isValid}
-          label={t<string>('Save')}
+          label={t('Save')}
           onClick={_onCommit}
         />
       </Modal.Actions>

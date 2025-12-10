@@ -6,8 +6,8 @@ import type { StakerState } from '@polkadot/react-hooks/types';
 import type { Option, StorageKey } from '@polkadot/types';
 import type { AccountId32 } from '@polkadot/types/interfaces';
 import type { PalletStakingStakingLedger, PalletStakingUnappliedSlash, PalletStakingValidatorPrefs } from '@polkadot/types/lookup';
-import type { SortedTargets } from '../../types';
-import type { Slash } from '../types';
+import type { SortedTargets } from '../../types.js';
+import type { Slash } from '../types.js';
 
 import React, { useCallback, useContext, useMemo } from 'react';
 import styled from 'styled-components';
@@ -17,21 +17,21 @@ import { AddressInfo, AddressMini, AddressSmall, Badge, Button, Menu, Popup, Sta
 import { useApi, useCall, useToggle } from '@polkadot/react-hooks';
 import { BN, formatNumber, isFunction } from '@polkadot/util';
 
-import { useTranslation } from '../../translate';
-import useSlashingSpans from '../useSlashingSpans';
-import BondExtra from './BondExtra';
-import InjectKeys from './InjectKeys';
-import KickNominees from './KickNominees';
-import ListNominees from './ListNominees';
-import Nominate from './Nominate';
-import Rebond from './Rebond';
-import SetCmixId from './SetCmixId';
-import SetControllerAccount from './SetControllerAccount';
-import SetSessionKey from './SetSessionKey';
-import TransferCmixId from './TransferCmixId';
-import Unbond from './Unbond';
-import Validate from './Validate';
-import WarnBond from './WarnBond';
+import { useTranslation } from '../../translate.js';
+import useSlashingSpans from '../useSlashingSpans.js';
+import BondExtra from './BondExtra.js';
+import InjectKeys from './InjectKeys.js';
+import KickNominees from './KickNominees.js';
+import ListNominees from './ListNominees.js';
+import Nominate from './Nominate.js';
+import Rebond from './Rebond.js';
+import SetCmixId from './SetCmixId.js';
+import SetControllerAccount from './SetControllerAccount.js';
+import SetSessionKey from './SetSessionKey.js';
+import TransferCmixId from './TransferCmixId.js';
+import Unbond from './Unbond.js';
+import Validate from './Validate.js';
+import WarnBond from './WarnBond.js';
 
 const ELECTION_FACTOR = 1.5;
 

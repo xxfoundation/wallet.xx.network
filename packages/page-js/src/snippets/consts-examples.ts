@@ -1,7 +1,7 @@
-// Copyright 2017-2023 @polkadot/app-js authors & contributors
+// Copyright 2017-2025 @polkadot/app-js authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Snippet } from '@polkadot/app-js/types';
+import type { Snippet } from '../types.js';
 
 // We must fix this :(
 /* eslint-disable sort-keys */
@@ -9,7 +9,7 @@ import type { Snippet } from '@polkadot/app-js/types';
 export const constsStakingParameters: Snippet = {
   value: 'constsStakingParameters',
   text: 'Get staking parameters',
-  label: { color: 'green', children: () => 'Consts', size: 'tiny' },
+  label: { color: 'green', children: 'Consts', size: 'tiny' },
   code: `// Get SRML staking parameters as consts
 // 'parameter_types' were added to substrate with spec_version: 101.
 // This example will throw an error if used with versions before that.

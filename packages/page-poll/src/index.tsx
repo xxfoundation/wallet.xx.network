@@ -1,20 +1,18 @@
-// Copyright 2017-2023 @polkadot/app-poll authors & contributors
+// Copyright 2017-2025 @polkadot/app-poll authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { QueryableStorageEntry } from '@polkadot/api/types';
 import type { Approvals, Balance, BlockNumber } from '@polkadot/types/interfaces';
 import type { ITuple } from '@polkadot/types/types';
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Trans } from 'react-i18next';
-import styled from 'styled-components';
 
-import { Button, Columar, InputAddress, Progress, Spinner, Tabs, Toggle, TxButton } from '@polkadot/react-components';
+import { Button, Columar, InputAddress, Progress, Spinner, styled, Tabs, Toggle, TxButton } from '@polkadot/react-components';
 import { useApi, useBestNumber, useCallMulti } from '@polkadot/react-hooks';
 import { BlockToTime, FormatBalance } from '@polkadot/react-query';
 import { BN, BN_MILLION, BN_ONE, BN_ZERO, bnMax, formatBalance, formatNumber } from '@polkadot/util';
 
-import { useTranslation } from './translate';
+import { useTranslation } from './translate.js';
 
 interface Props {
   basePath: string;
@@ -36,9 +34,8 @@ function PollApp ({ basePath, className }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
   const bestNumber = useBestNumber();
-  const totalIssuanceQuery = api.query.balances?.totalIssuance as QueryableStorageEntry<'promise'>;
   const [totalIssuance, totals] = useCallMulti<MultiResult>([
-    totalIssuanceQuery,
+    api.query.balances?.totalIssuance,
     api.query.poll.totals
   ], OPT_MULTI);
   const [accountId, setAccountId] = useState<string | null>(null);
@@ -52,7 +49,7 @@ function PollApp ({ basePath, className }: Props): React.ReactElement<Props> {
   const itemsRef = useRef([{
     isRoot: true,
     name: 'poll',
-    text: t<string>('Denomination poll')
+    text: t('Denomination poll')
   }]);
 
   useEffect((): void => {
@@ -77,7 +74,7 @@ function PollApp ({ basePath, className }: Props): React.ReactElement<Props> {
     return (
       <main className={className}>
         <div className='pollContainer'>
-          <Spinner label={t<string>('Retrieving totals...')} />
+          <Spinner label={t('Retrieving totals...')} />
         </div>
       </main>
     );
@@ -96,7 +93,7 @@ function PollApp ({ basePath, className }: Props): React.ReactElement<Props> {
   /* eslint-disable react/jsx-max-props-per-line */
 
   return (
-    <main className={className}>
+    <StyledMain className={className}>
       <Tabs
         basePath={basePath}
         items={itemsRef.current}
@@ -114,7 +111,7 @@ function PollApp ({ basePath, className }: Props): React.ReactElement<Props> {
             <div>
               {canVote
                 ? <BlockToTime value={blocksLeft} />
-                : t<string>('Completed')
+                : t('Completed')
               }
               <div>#{formatNumber(api.consts.poll.end as BlockNumber)}</div>
             </div>
@@ -143,9 +140,9 @@ function PollApp ({ basePath, className }: Props): React.ReactElement<Props> {
                       label={
                         canVote
                           ? value
-                            ? t<string>('Aye, I support this')
-                            : t<string>('Nay, I do not support this')
-                          : t<string>('Voting closed')
+                            ? t('Aye, I support this')
+                            : t('Nay, I do not support this')
+                          : t('Voting closed')
                       }
                       onChange={onChange}
                       value={canVote && value}
@@ -203,11 +200,11 @@ function PollApp ({ basePath, className }: Props): React.ReactElement<Props> {
           </ul>
         </div>
       </div>
-    </main>
+    </StyledMain>
   );
 }
 
-export default React.memo(styled(PollApp)`
+const StyledMain = styled.main`
   .pollActions {
     opacity: 0.75;
   }
@@ -247,7 +244,7 @@ export default React.memo(styled(PollApp)`
   .options {
     margin: 1rem 0;
 
-    .ui--Columnar {
+    .ui--Columar {
       margin: 0 -1.25rem;
       padding: 0 1.25rem;
 
@@ -300,4 +297,6 @@ export default React.memo(styled(PollApp)`
       margin: 0.75rem;
     }
   }
-`);
+`;
+
+export default React.memo(PollApp);

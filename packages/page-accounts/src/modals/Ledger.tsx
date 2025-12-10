@@ -1,17 +1,23 @@
-// Copyright 2017-2023 @polkadot/app-accounts authors & contributors
+// Copyright 2017-2025 @polkadot/app-accounts authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
+// This is for the use of `Ledger`
+//
+/* eslint-disable deprecation/deprecation */
+
 import type { ApiPromise } from '@polkadot/api';
-import type { Ledger } from '@polkadot/hw-ledger';
+import type { Ledger, LedgerGeneric } from '@polkadot/hw-ledger';
 
 import React, { useCallback, useRef, useState } from 'react';
 
 import { Button, Dropdown, Input, MarkError, Modal } from '@polkadot/react-components';
 import { useApi, useLedger } from '@polkadot/react-hooks';
 import { keyring } from '@polkadot/ui-keyring';
+import { settings } from '@polkadot/ui-settings';
 import { arrayRange } from '@polkadot/util';
 
-import { useTranslation } from '../translate';
+import Banner from '../Accounts/Banner.js';
+import { useTranslation } from '../translate.js';
 
 interface Option {
   text: string;
@@ -26,8 +32,20 @@ interface Props {
 export const AVAIL_INDEXES = arrayRange(20);
 
 // query the ledger for the address, adding it to the keyring
-async function queryLedger (api: ApiPromise, getLedger: () => Ledger, name: string, accountOffset: number, addressOffset: number): Promise<void> {
-  const { address } = await getLedger().getAddress(false, accountOffset, addressOffset);
+async function queryLedger (api: ApiPromise, getLedger: () => LedgerGeneric | Ledger, name: string, accountOffset: number, addressOffset: number, ss58Prefix: number): Promise<void> {
+  let address: string;
+  const currApp = settings.get().ledgerApp;
+
+  if (currApp === 'migration' || currApp === 'generic') {
+    const addr = await (getLedger() as LedgerGeneric).getAddress(ss58Prefix, false, accountOffset, addressOffset);
+
+    address = addr.address;
+  } else {
+    // This will always be the `chainSpecific` setting if the above condition is not met
+    const addr = await (getLedger() as Ledger).getAddress(false, accountOffset, addressOffset);
+
+    address = addr.address;
+  }
 
   keyring.addHardware(address, 'ledger', {
     accountOffset,
@@ -67,7 +85,7 @@ function LedgerModal ({ className, onClose }: Props): React.ReactElement<Props> 
       setError(null);
       setIsBusy(true);
 
-      queryLedger(api, getLedger, name, accIndex, addIndex)
+      queryLedger(api, getLedger, name, accIndex, addIndex, api.consts.system.ss58Prefix.toNumber())
         .then(() => onClose())
         .catch((error: Error): void => {
           console.error(error);
@@ -82,26 +100,24 @@ function LedgerModal ({ className, onClose }: Props): React.ReactElement<Props> 
   return (
     <Modal
       className={className}
-      header={t<string>('Add account via Ledger')}
+      header={t('Add account via Ledger')}
       onClose={onClose}
       size='large'
     >
       <Modal.Content>
-        <Modal.Columns hint={t<string>('The name for this account as it will appear under your accounts.')}>
+        <Modal.Columns hint={t('The name for this account as it will appear under your accounts.')}>
           <Input
             autoFocus
             className='full'
-            help={t<string>('Name given to this account to uniquely identity the account to yourself.')}
             isError={!isNameValid}
-            label={t<string>('name')}
+            label={t('name')}
             onChange={_onChangeName}
-            placeholder={t<string>('account name')}
+            placeholder={t('account name')}
             value={name}
           />
         </Modal.Columns>
         <Modal.Columns hint={t('The account type that you wish to create. This is the top-level derivation.')}>
           <Dropdown
-            help={t('The account type (derivation) to use')}
             label={t('account type')}
             onChange={setAccIndex}
             options={accOps.current}
@@ -110,7 +126,6 @@ function LedgerModal ({ className, onClose }: Props): React.ReactElement<Props> 
         </Modal.Columns>
         <Modal.Columns hint={t('The address index on the account that you wish to add. This is the second-level derivation.')}>
           <Dropdown
-            help={t('The address index (derivation on account) to use')}
             label={t('address index')}
             onChange={setAddIndex}
             options={addOps.current}
@@ -121,12 +136,15 @@ function LedgerModal ({ className, onClose }: Props): React.ReactElement<Props> 
           )}
         </Modal.Columns>
       </Modal.Content>
+      <Banner type={'warning'}>
+        <p>{`You are using the Ledger ${settings.ledgerApp.toUpperCase()} App. If you would like to switch it, please go the "manage ledger app" in the settings.`}</p>
+      </Banner>
       <Modal.Actions>
         <Button
           icon='plus'
           isBusy={isBusy}
           isDisabled={!isNameValid}
-          label={t<string>('Save')}
+          label={t('Save')}
           onClick={_onSave}
         />
       </Modal.Actions>

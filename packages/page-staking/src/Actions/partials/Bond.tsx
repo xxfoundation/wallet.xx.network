@@ -3,8 +3,8 @@
 
 import type { DeriveBalancesAll } from '@polkadot/api-derive/types';
 import type { BN } from '@polkadot/util';
-import type { AmountValidateState } from '../types';
-import type { BondInfo } from './types';
+import type { AmountValidateState } from '../types.js';
+import type { BondInfo } from './types.js';
 
 import React, { useCallback, useEffect, useState } from 'react';
 
@@ -13,10 +13,10 @@ import { useApi, useCall, useToggle } from '@polkadot/react-hooks';
 import { BalanceFree, BlockToTime } from '@polkadot/react-query';
 import { BN_ZERO } from '@polkadot/util';
 
-import { useTranslation } from '../../translate';
-import InputValidateAmount from '../Account/InputValidateAmount';
-import InputValidationController from '../Account/InputValidationController';
-import useUnbondDuration from '../useUnbondDuration';
+import { useTranslation } from '../../translate.js';
+import InputValidateAmount from '../Account/InputValidateAmount.js';
+import InputValidationController from '../Account/InputValidationController.js';
+import useUnbondDuration from '../useUnbondDuration.js';
 import { isHex } from '@polkadot/util';
 
 interface Props {

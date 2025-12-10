@@ -3,7 +3,7 @@
 
 import type { UnappliedSlash } from '@polkadot/types/interfaces';
 import type { BN } from '@polkadot/util';
-import type { NominatedBy, ValidatorInfo } from '../types';
+import type { NominatedBy, ValidatorInfo } from '../types.js';
 
 import React, { useCallback, useContext, useMemo } from 'react';
 
@@ -13,12 +13,12 @@ import { useApi, useDeriveAccountInfo } from '@polkadot/react-hooks';
 import { FormatBalance } from '@polkadot/react-query';
 import { formatNumber } from '@polkadot/util';
 
-import MaxBadge from '../MaxBadge';
-import { NodeLocationContext } from '../NodeLocationContext/context';
-import { useTranslation } from '../translate';
-import Favorite from '../Validators/Address/Favorite';
-import CommissionHover from './CommissionHover';
-import HorizontalBarChart from './HorizontalBarChart';
+import MaxBadge from '../MaxBadge.js';
+import { NodeLocationContext } from '../NodeLocationContext/context.js';
+import { useTranslation } from '../translate.js';
+import Favorite from '../Validators/Address/Favorite.js';
+import CommissionHover from './CommissionHover.js';
+import HorizontalBarChart from './HorizontalBarChart.js';
 
 interface Props {
   allSlashes?: [BN, UnappliedSlash[]][];

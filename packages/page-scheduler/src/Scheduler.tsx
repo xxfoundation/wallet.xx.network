@@ -1,4 +1,4 @@
-// Copyright 2017-2023 @polkadot/app-scheduler authors & contributors
+// Copyright 2017-2025 @polkadot/app-scheduler authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { ApiPromise } from '@polkadot/api';
@@ -6,15 +6,15 @@ import type { Bytes, Option, u8, u32 } from '@polkadot/types';
 import type { BlockNumber, Call, Hash, Scheduled } from '@polkadot/types/interfaces';
 import type { FrameSupportPreimagesBounded, PalletSchedulerScheduled } from '@polkadot/types/lookup';
 import type { Codec, ITuple } from '@polkadot/types/types';
-import type { ScheduledExt } from './types';
+import type { ScheduledExt } from './types.js';
 
 import React, { useMemo, useRef } from 'react';
 
 import { Table } from '@polkadot/react-components';
-import { useApi, useBestNumber, useCall } from '@polkadot/react-hooks';
+import { useApi, useBestNumberRelay, useCall } from '@polkadot/react-hooks';
 
-import ScheduledView from './Scheduled';
-import { useTranslation } from './translate';
+import ScheduledView from './Scheduled.js';
+import { useTranslation } from './translate.js';
 
 interface Props {
   className?: string;
@@ -81,18 +81,15 @@ const OPT_SCHED = {
 function Schedule ({ className = '' }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
-  const bestNumber = useBestNumber();
+  const bestNumber = useBestNumberRelay();
   const items = useCall<ScheduledExt[]>(api.query.scheduler.agenda.entries, undefined, OPT_SCHED);
 
   const filtered = useMemo(
-    () => bestNumber && items &&
-      items
-        .filter(({ blockNumber }) => blockNumber.gte(bestNumber))
-        .sort((a, b) => a.blockNumber.cmp(b.blockNumber)),
+    () => bestNumber && items?.filter(({ blockNumber }) => blockNumber.gte(bestNumber)).sort((a, b) => a.blockNumber.cmp(b.blockNumber)),
     [bestNumber, items]
   );
 
-  const headerRef = useRef([
+  const headerRef = useRef<[React.ReactNode?, string?, number?][]>([
     [t('scheduled'), 'start'],
     [t('id'), 'start'],
     [t('remaining')],
@@ -103,7 +100,7 @@ function Schedule ({ className = '' }: Props): React.ReactElement<Props> {
   return (
     <Table
       className={className}
-      empty={filtered && t<string>('No active schedules')}
+      empty={filtered && t('No active schedules')}
       header={headerRef.current}
     >
       {filtered?.map((value): React.ReactNode => (

@@ -1,4 +1,4 @@
-// Copyright 2017-2023 @polkadot/app-settings authors & contributors
+// Copyright 2017-2025 @polkadot/app-settings authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { QueryableStorageEntry } from '@polkadot/api/types';
@@ -34,7 +34,7 @@ function usePolkadotPreclaimsImpl (): string[] {
         result.concat([
           [api.query.claims.claims, ethAddr],
           [api.query.claims.vesting, ethAddr]
-        ] as unknown as [QueryableStorageEntry<'promise'>, EthereumAddress][]),
+        ]),
       []), (opts: Option<Codec>[]): void => {
         // filter the cases where either claims or vesting has a value
         mountedRef.current && setNeedsAttest(
@@ -43,7 +43,7 @@ function usePolkadotPreclaimsImpl (): string[] {
             .map(([address]) => address)
         );
       }
-    );
+    ).catch(console.error);
   }, [api, allAccounts, mountedRef, preclaims]);
 
   return needsAttest;

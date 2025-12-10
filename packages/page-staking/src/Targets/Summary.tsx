@@ -12,7 +12,7 @@ import { useApi, useCall, useTotalStakeableIssuance } from '@polkadot/react-hook
 import { FormatBalance } from '@polkadot/react-query';
 import { BN_ZERO } from '@polkadot/util';
 
-import { useTranslation } from '../translate';
+import { useTranslation } from '../translate.js';
 
 interface Props {
   avgStaked?: BN;

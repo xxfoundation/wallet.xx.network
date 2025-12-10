@@ -1,28 +1,26 @@
-// Copyright 2017-2023 @polkadot/app-js authors & contributors
+// Copyright 2017-2025 @polkadot/app-js authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { ApiPromise } from '@polkadot/api';
 import type { KeyringInstance } from '@polkadot/keyring/types';
 import type { ApiProps } from '@polkadot/react-api/types';
 import type { AppProps as Props } from '@polkadot/react-components/types';
-import type { Log, LogType, Snippet } from './types';
+import type { Log, LogType, Snippet } from './types.js';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import styled from 'styled-components';
 
-import { Button, Dropdown, Editor, Tabs } from '@polkadot/react-components';
+import { Button, Dropdown, Editor, styled, Tabs } from '@polkadot/react-components';
 import { useApi, useToggle } from '@polkadot/react-hooks';
 import * as types from '@polkadot/types';
 import uiKeyring from '@polkadot/ui-keyring';
 import * as util from '@polkadot/util';
 import * as hashing from '@polkadot/util-crypto';
 
-import makeWrapper from './snippets/wrapping';
-import ActionButtons from './ActionButtons';
-import { CUSTOM_LABEL, STORE_EXAMPLES, STORE_SELECTED } from './constants';
-import Output from './Output';
-import allSnippets from './snippets';
-import { useTranslation } from './translate';
+import { allSnippets, makeWrapper } from './snippets/index.js';
+import ActionButtons from './ActionButtons.js';
+import { CUSTOM_LABEL, STORE_EXAMPLES, STORE_SELECTED } from './constants.js';
+import Output from './Output.js';
+import { useTranslation } from './translate.js';
 
 interface Injected {
   api: ApiPromise;
@@ -68,8 +66,13 @@ function setupInjected ({ api, isDevelopment }: ApiProps, setIsRunning: (isRunni
     uiKeyring: isDevelopment
       ? uiKeyring
       : null,
-    util
+    util,
+    window
   };
+}
+
+interface IframeWithInjected extends HTMLIFrameElement {
+  contentWindow: (Window & { injected: Injected });
 }
 
 // FIXME This... ladies & gentlemen, is a mess that should be untangled
@@ -77,6 +80,7 @@ function Playground ({ basePath, className = '' }: Props): React.ReactElement<Pr
   const { t } = useTranslation();
   const apiProps = useApi();
   const injectedRef = useRef<Injected | null>(null);
+  const iframeRef = useRef<IframeWithInjected|null>(null);
   const [code, setCode] = useState('');
   const [isCustomExample, setIsCustomExample] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
@@ -90,7 +94,7 @@ function Playground ({ basePath, className = '' }: Props): React.ReactElement<Pr
     {
       isRoot: true,
       name: 'playground',
-      text: t<string>('Console')
+      text: t('Console')
     }
   ]);
 
@@ -160,24 +164,55 @@ function Playground ({ basePath, className = '' }: Props): React.ReactElement<Pr
         await injectedRef.current.api.isReady;
 
         try {
-          // squash into a single line so exceptions (with line numbers) maps to the
-          // same line/origin as we have in the editor view
-          // TODO: Make the console.error here actually return the full stack
-          const exec = `(async ({${Object.keys(injectedRef.current).sort().join(',')}}) => { try { ${code} \n } catch (error) { console.error(error); setIsRunning(false); } })(injected);`;
+          if (iframeRef.current?.contentWindow) {
+            const iframeDoc = iframeRef.current.contentWindow.document;
 
-          // eslint-disable-next-line no-new-func,@typescript-eslint/no-unsafe-call,@typescript-eslint/no-implied-eval
-          new Function('injected', exec).bind({}, injectedRef.current)();
+            iframeDoc.open();
+            iframeDoc.write('<!DOCTYPE html><html><head></head><body></body></html>');
+            iframeDoc.close();
+
+            // Expose injected to iframe window
+            iframeRef.current.contentWindow.injected = injectedRef.current;
+
+            // Build destructured keys from injectedRef
+            const injectedKeys = Object.keys(iframeRef.current.contentWindow.injected).sort().slice(1).join(', ');
+
+            // Build the code to run (scoped with destructured injected keys)
+            const exec = `
+              (async ({ ${injectedKeys} }) => {
+                try {
+                  ${code}
+                } catch (error) {
+                  console.error(error);
+                } finally {
+                  if (typeof setIsRunning === 'function') {
+                    setIsRunning(false);
+                  } 
+                }
+              })(injected);
+            `;
+
+            // Create script tag to run code
+            const bridgeScript = iframeDoc.createElement('script');
+
+            // eslint-disable-next-line no-new-func, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-implied-eval, @typescript-eslint/no-unsafe-assignment
+            bridgeScript.innerText = new Function('injected', exec).bind({}, iframeRef.current.contentWindow.injected)();
+
+            iframeRef.current.contentWindow.document.body.appendChild(bridgeScript);
+          } else {
+            throw new Error('No window found to run code');
+          }
         } catch (error) {
-          injectedRef.current.console.error(error);
-        }
+          if (injectedRef.current) {
+            injectedRef.current.console.error(error);
+          }
 
-        setIsRunning(false);
+          setIsRunning(false);
+        }
       }
 
       run().catch(console.error);
-    },
-    [_clearConsole, _hookConsole, apiProps, code]
-  );
+    }, [_clearConsole, _hookConsole, apiProps, code]);
 
   const _selectExample = useCallback(
     (value: string): void => {
@@ -218,7 +253,7 @@ function Playground ({ basePath, className = '' }: Props): React.ReactElement<Pr
       // camelCase keys, that's why 'custom' is passed as a string here
       const snapshot: Snippet = {
         code,
-        label: () => CUSTOM_LABEL,
+        label: CUSTOM_LABEL,
         text: snippetName,
         type: 'custom',
         value: `custom-${Date.now()}`
@@ -237,7 +272,7 @@ function Playground ({ basePath, className = '' }: Props): React.ReactElement<Pr
   const snippetName = selected.type === 'custom' ? selected.text : undefined;
 
   return (
-    <main className={`js--App ${className}`}>
+    <StyledMain className={`${className} js--App`}>
       <Tabs
         basePath={basePath}
         items={tabsRef.current}
@@ -246,7 +281,7 @@ function Playground ({ basePath, className = '' }: Props): React.ReactElement<Pr
         <Dropdown
           className='js--Dropdown'
           isFull
-          label={t<string>('Select example')}
+          label={t('Select example')}
           onChange={_selectExample}
           options={options}
           value={selected.value}
@@ -262,6 +297,11 @@ function Playground ({ basePath, className = '' }: Props): React.ReactElement<Pr
             saveSnippet={_saveSnippet}
             snippetName={snippetName}
             stopJs={_stopJs}
+          />
+          <iframe
+            ref={iframeRef}
+            sandbox='allow-scripts allow-same-origin'
+            style={{ display: 'none' }}
           />
           <Editor
             code={code}
@@ -295,11 +335,11 @@ function Playground ({ basePath, className = '' }: Props): React.ReactElement<Pr
           </article>
         </div>
       )}
-    </main>
+    </StyledMain>
   );
 }
 
-export default React.memo(styled(Playground)`
+const StyledMain = styled.main`
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -418,4 +458,6 @@ export default React.memo(styled(Playground)`
       margin-bottom: 0;
     }
   }
-`);
+`;
+
+export default React.memo(Playground);

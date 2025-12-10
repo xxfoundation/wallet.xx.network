@@ -1,11 +1,11 @@
-// Copyright 2017-2023 @polkadot/app-claims authors & contributors
+// Copyright 2017-2025 @polkadot/app-claims authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { EcdsaSignature, EthereumAddress, StatementKind } from '@polkadot/types/interfaces';
 
-import secp256k1 from 'secp256k1/elliptic';
+import secp256k1 from 'secp256k1/elliptic.js';
 
-import registry from '@polkadot/react-api/typeRegistry';
+import { statics } from '@polkadot/react-api/statics';
 import { assert, hexToU8a, stringToU8a, u8aConcat, u8aToBuffer } from '@polkadot/util';
 import { keccakAsHex, keccakAsU8a } from '@polkadot/util-crypto';
 
@@ -27,9 +27,10 @@ export function addrToChecksum (_address: string): string {
   let result = '0x';
 
   for (let n = 0; n < 40; n++) {
-    result = `${result}${parseInt(hash[n], 16) > 7
-      ? address[n + 2].toUpperCase()
-      : address[n + 2]
+    result = `${result}${
+      parseInt(hash[n], 16) > 7
+        ? address[n + 2].toUpperCase()
+        : address[n + 2]
     }`;
   }
 
@@ -77,7 +78,7 @@ export function recoverAddress (message: string, { recovery, signature }: Signat
   const senderPubKey = secp256k1.recover(msgHash, signature, recovery);
 
   return publicToAddr(
-    secp256k1.publicKeyConvert(senderPubKey, false).slice(1)
+    secp256k1.publicKeyConvert(senderPubKey, false).subarray(1)
   );
 }
 
@@ -94,8 +95,8 @@ export function recoverFromJSON (signatureJson: string | null): RecoveredSignatu
 
     return {
       error: null,
-      ethereumAddress: registry.createType('EthereumAddress', recoverAddress(msg, parts)),
-      signature: registry.createType('EcdsaSignature', u8aConcat(parts.signature, new Uint8Array([parts.recovery])))
+      ethereumAddress: statics.registry.createType('EthereumAddress', recoverAddress(msg, parts)),
+      signature: statics.registry.createType('EcdsaSignature', u8aConcat(parts.signature, new Uint8Array([parts.recovery])))
     };
   } catch (error) {
     console.error(error);
@@ -113,32 +114,29 @@ export interface Statement {
   url: string;
 }
 
-function getXxnetwork (kind?: StatementKind | null): Statement | undefined {
+function getPolkadot (kind?: StatementKind | null): Statement | undefined {
   if (!kind) {
     return undefined;
   }
 
-  if (!kind.isRegular) {
-    assert(true, 'Claims Statement kind is SAFT and it should not be.');
-
-    return undefined;
-  }
-
-  const url = 'https://docs.xx.network/xxNetworkDistributionContractV2.pdf';
-  const hash = '0x3895c0d2a25a727b8eded6dcca37b2cb11bdfc94ae999da369d7bdc9eeca603c';
+  const url = kind.isRegular
+    ? 'https://statement.polkadot.network/regular.html'
+    : 'https://statement.polkadot.network/saft.html';
+  const hash = kind.isRegular
+    ? 'Qmc1XYqT6S39WNp2UeiRUrZichUWUPpGEThDE6dAb3f6Ny'
+    : 'QmXEkMahfhHJPzT3RjkXiZVFi77ZeVeuxtAjhojGRNYckz';
 
   return {
-    sentence: `I hereby agree to the terms of the statement whose SHA-256 hash is ${hash}. (This may be found at the URL: ${url})`,
+    sentence: `I hereby agree to the terms of the statement whose SHA-256 multihash is ${hash}. (This may be found at the URL: ${url})`,
     url
   };
 }
 
 export function getStatement (network: string, kind?: StatementKind | null): Statement | undefined {
   switch (network) {
-    case 'xx network':
-    case 'xx network Development':
-    case 'phoenixx testnet':
-      return getXxnetwork(kind);
+    case 'Polkadot':
+    case 'Polkadot CC1':
+      return getPolkadot(kind);
 
     default:
       return undefined;

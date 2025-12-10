@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback, useMemo, useState } from 'react';
 
-import { useToggle } from './useToggle';
+import { useToggle } from './useToggle.js';
 
 export interface Pagination<T> {
   currentPage: number;

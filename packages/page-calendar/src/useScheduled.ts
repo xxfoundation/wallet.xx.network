@@ -1,14 +1,16 @@
-// Copyright 2017-2023 @polkadot/app-calendar authors & contributors
+// Copyright 2017-2025 @polkadot/app-calendar authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { DeriveCollectiveProposal, DeriveDispatch, DeriveReferendumExt, DeriveSessionProgress } from '@polkadot/api-derive/types';
 import type { Option } from '@polkadot/types';
-import type { BlockNumber, EraIndex, Scheduled, UnappliedSlash } from '@polkadot/types/interfaces';
+import type { BlockNumber, EraIndex, LeasePeriodOf, Scheduled, UnappliedSlash } from '@polkadot/types/interfaces';
+import type { ITuple } from '@polkadot/types/types';
 import type { BN } from '@polkadot/util';
-import type { EntryInfo, EntryInfoTyped, EntryType } from './types';
+import type { EntryInfo, EntryInfoTyped, EntryType } from './types.js';
 
 import { useEffect, useState } from 'react';
 
+import { useLeaseRangeMax } from '@polkadot/app-parachains/useLeaseRanges';
 import { createNamedHook, useApi, useBestNumber, useBlockInterval, useCall } from '@polkadot/react-hooks';
 import { BN_ONE, BN_ZERO } from '@polkadot/util';
 
@@ -169,6 +171,19 @@ function createScheduled (bestNumber: BlockNumber, blockTime: BN, scheduled: Sch
     }, [])]];
 }
 
+function createAuctionInfo (bestNumber: BlockNumber, blockTime: BN, rangeMax: BN, [leasePeriod, endBlock]: [LeasePeriodOf, BlockNumber]): [EntryType, EntryInfo[]][] {
+  const blocks = endBlock.sub(bestNumber);
+
+  return [
+    ['parachainAuction', [{
+      ...newDate(blocks, blockTime),
+      blockNumber: endBlock,
+      blocks,
+      info: `${leasePeriod.toString()} - ${leasePeriod.add(rangeMax).toString()}`
+    }]]
+  ];
+}
+
 function addFiltered (state: EntryInfoTyped[], types: [EntryType, EntryInfo[]][]): EntryInfoTyped[] {
   return types.reduce((state: EntryInfoTyped[], [typeFilter, items]): EntryInfoTyped[] => {
     return state
@@ -182,10 +197,12 @@ function addFiltered (state: EntryInfoTyped[], types: [EntryType, EntryInfo[]][]
 }
 
 // TODO council votes, tips closing
-function useScheduledImpl (): EntryInfo[] {
+function useScheduledImpl (): EntryInfoTyped[] {
   const { api } = useApi();
   const blockTime = useBlockInterval();
   const bestNumber = useBestNumber();
+  const leaseRangeMax = useLeaseRangeMax();
+  const auctionInfo = useCall<Option<ITuple<[LeasePeriodOf, BlockNumber]>>>(api.query.auctions?.auctionInfo);
   const councilMotions = useCall<DeriveCollectiveProposal[]>(api.derive.council?.proposals);
   const dispatches = useCall<DeriveDispatch[]>(api.derive.democracy?.dispatchQueue);
   const referendums = useCall<DeriveReferendumExt[]>(api.derive.democracy?.referendums);
@@ -225,13 +242,19 @@ function useScheduledImpl (): EntryInfo[] {
   }, [api, bestNumber, blockTime, sessionInfo, slashes]);
 
   useEffect((): void => {
+    bestNumber && auctionInfo?.isSome && setState((state) =>
+      addFiltered(state, createAuctionInfo(bestNumber, blockTime, leaseRangeMax, auctionInfo.unwrap()))
+    );
+  }, [auctionInfo, bestNumber, blockTime, leaseRangeMax]);
+
+  useEffect((): void => {
     bestNumber && setState((state) =>
       addFiltered(state, createConstDurations(bestNumber, blockTime, [
         ['councilElection', (api.consts.elections || api.consts.phragmenElection || api.consts.electionsPhragmen)?.termDuration],
         ['democracyLaunch', api.consts.democracy?.launchPeriod],
-        // ['parachainLease', api.consts.slots?.leasePeriod as BlockNumber, BN_ONE],
-        // ['societyChallenge', api.consts.society?.challengePeriod],
-        // ['societyRotate', api.consts.society?.rotationPeriod],
+        ['parachainLease', api.consts.slots?.leasePeriod as BlockNumber, BN_ONE, api.consts.slots?.leaseOffset as BlockNumber],
+        ['societyChallenge', api.consts.society?.challengePeriod],
+        ['societyRotate', api.consts.society?.rotationPeriod as BlockNumber],
         ['treasurySpend', api.consts.treasury?.spendPeriod]
       ]))
     );

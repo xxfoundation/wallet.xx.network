@@ -1,9 +1,9 @@
-// Copyright 2017-2023 @polkadot/apps-config authors & contributors
+// Copyright 2017-2025 @polkadot/apps-config authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { ApiPromise } from '@polkadot/api';
 
-import { KULUPU_GENESIS, KUSAMA_GENESIS, POLKADOT_GENESIS } from '../constants';
+import { KULUPU_GENESIS, KUSAMA_GENESIS, POLKADOT_GENESIS } from '../constants.js';
 
 // normal fast-track proposals
 const FAST_TRACK: Record<string, number> = {
@@ -19,13 +19,13 @@ const PROPOSE: Record<string, number> = {
   [KULUPU_GENESIS]: 1,
   [KUSAMA_GENESIS]: 1 / 2,
   [POLKADOT_GENESIS]: 3 / 5,
-  default: 3 / 5
+  default: 1 / 2
 };
 
 const SLASH: Record<string, number> = {
   [KUSAMA_GENESIS]: 1 / 2,
   [POLKADOT_GENESIS]: 3 / 4,
-  default: 3 / 4
+  default: 1 / 2
 };
 
 const TREASURY: Record<string, number> = {

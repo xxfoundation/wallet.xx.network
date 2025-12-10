@@ -1,13 +1,15 @@
-// Copyright 2017-2023 @polkadot/apps authors & contributors
+// Copyright 2017-2025 @polkadot/apps authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { RuntimeVersion } from '@polkadot/types/interfaces';
 
 import React from 'react';
-import styled from 'styled-components';
 
-import { useApi, useCall } from '@polkadot/react-hooks';
-import { BestNumber } from '@polkadot/react-query';
+import { ChainImg, Icon, styled } from '@polkadot/react-components';
+import { useApi, useCall, useIpfs, useToggle } from '@polkadot/react-hooks';
+import { BestNumber, Chain } from '@polkadot/react-query';
+
+import Endpoints from '../Endpoints/index.js';
 
 interface Props {
   className?: string;
@@ -16,13 +18,19 @@ interface Props {
 function ChainInfo ({ className }: Props): React.ReactElement<Props> {
   const { api, isApiReady } = useApi();
   const runtimeVersion = useCall<RuntimeVersion>(isApiReady && api.rpc.state.subscribeRuntimeVersion);
+  const { ipnsChain } = useIpfs();
+  const [isEndpointsVisible, toggleEndpoints] = useToggle();
+  const canToggle = !ipnsChain;
 
   return (
-    <div className={className}>
+    <StyledDiv className={className}>
       <div
-        className='apps--SideBar-logo-inner highlight--color-contrast'
+        className={`apps--SideBar-logo-inner${canToggle ? ' isClickable' : ''} highlight--color-contrast`}
+        onClick={toggleEndpoints}
       >
+        <ChainImg />
         <div className='info media--1000'>
+          <Chain className='chain' />
           {runtimeVersion && (
             <div className='runtimeVersion'>{runtimeVersion.specName.toString()}/{runtimeVersion.specVersion.toNumber()}</div>
           )}
@@ -31,12 +39,21 @@ function ChainInfo ({ className }: Props): React.ReactElement<Props> {
             label='#'
           />
         </div>
+        {canToggle && (
+          <Icon
+            className='dropdown'
+            icon={isEndpointsVisible ? 'caret-right' : 'caret-down'}
+          />
+        )}
       </div>
-    </div>
+      {isEndpointsVisible && (
+        <Endpoints onClose={toggleEndpoints} />
+      )}
+    </StyledDiv>
   );
 }
 
-export default React.memo(styled(ChainInfo)`
+const StyledDiv = styled.div`
   box-sizing: border-box;
   padding: 0.5rem 1rem 0.5rem 0;
   margin: 0;
@@ -50,7 +67,7 @@ export default React.memo(styled(ChainInfo)`
       cursor: pointer;
     }
 
-    img {
+    .ui--ChainImg {
       height: 3rem;
       margin-right: 0.5rem;
       width: 3rem;
@@ -70,26 +87,24 @@ export default React.memo(styled(ChainInfo)`
 
     .info {
       flex: 1;
+      font-size: var(--font-size-tiny);
+      line-height: 1.2;
       padding-right: 0.5rem;
       text-align: right;
 
       .chain {
+        font-size: var(--font-size-small);
         max-width: 16rem;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
 
-      .chain, .bestNumber {
-        font-size: 0.9rem;
-        line-height: 1.2;
-      }
-
       .runtimeVersion {
-          font-size: 0.75rem;
-          line-height: 1.2;
-          letter-spacing: -0.01em;
+        letter-spacing: -0.01em;
       }
     }
   }
-`);
+`;
+
+export default React.memo(ChainInfo);

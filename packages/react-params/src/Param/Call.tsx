@@ -1,16 +1,17 @@
-// Copyright 2017-2023 @polkadot/react-params authors & contributors
+// Copyright 2017-2025 @polkadot/react-params authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Extrinsic } from '@polkadot/types/interfaces';
-import type { Props } from '../types';
+import type { Props } from '../types.js';
 
 import React from 'react';
 
-import { Call, Static } from '@polkadot/react-components';
+import { Static } from '@polkadot/react-components';
 
-import { useTranslation } from '../translate';
-import Bare from './Bare';
-import Unknown from './Unknown';
+import { Call } from '../Named/index.js';
+import { useTranslation } from '../translate.js';
+import Bare from './Bare.js';
+import Unknown from './Unknown.js';
 
 function CallDisplay (props: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
@@ -24,6 +25,7 @@ function CallDisplay (props: Props): React.ReactElement<Props> {
 
   const call = value as Extrinsic;
   const { method, section } = call.registry.findMetaCall(call.callIndex);
+  const callName = `${section}.${method}`;
 
   return (
     <Bare>
@@ -32,11 +34,11 @@ function CallDisplay (props: Props): React.ReactElement<Props> {
         label={label}
         withLabel={withLabel}
       >
-        {section}.{method}
+        {callName}
       </Static>
       <Call
-        labelHash={t<string>('call hash / {{section}}.{{method}}', { replace: { method, section } })}
-        noIndent
+        callName={callName}
+        labelHash={t('call hash / {{section}}.{{method}}', { replace: { method, section } })}
         value={call}
         withHash
       />

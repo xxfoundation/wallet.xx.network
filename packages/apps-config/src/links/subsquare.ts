@@ -1,45 +1,59 @@
-// Copyright 2017-2023 @polkadot/apps-config authors & contributors
+// Copyright 2017-2025 @polkadot/apps-config authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { BN } from '@polkadot/util';
+import type { ExternalDef } from './types.js';
 
-import { externalLogos } from '../ui/logos';
+import { externalSubsquareSVG } from '../ui/logos/external/index.js';
 
-export default {
+export const Subsquare: ExternalDef = {
   chains: {
     Acala: 'acala',
+    'Ajuna Polkadot': 'ajuna',
     Altair: 'altair',
+    Astar: 'astar',
     Basilisk: 'basilisk',
-    Bifrost: 'bifrost',
+    Bifrost: 'bifrost-kusama',
+    'Bifrost Polkadot': 'bifrost-polkadot',
     Centrifuge: 'centrifuge',
+    Collectives: 'collectives',
     Crust: 'crust',
-    'Darwinia Crab': 'crab',
-    HydraDX: 'hydradx',
+    Heima: 'heima',
+    Hydration: 'hydration',
+    'Hyperbridge (Nexus)': 'hyperbridge',
     Interlay: 'interlay',
     Karura: 'karura',
-    Khala: 'khala',
     Kusama: 'kusama',
-    Litmus: 'litmus',
+    'Kusama Asset Hub': 'kusama',
+    'Laos Network': 'laos',
+    'Paseo Asset Hub': 'paseo',
+    'Paseo Testnet': 'paseo',
     Phala: 'phala',
     Polkadot: 'polkadot',
-    'Turing Network': 'turing',
+    'Polkadot Asset Hub': 'polkadot',
+    'Vara Network': 'vara',
+    Westend: 'westend',
+    'Westend Asset Hub': 'westend',
     Zeitgeist: 'zeitgeist',
     kintsugi: 'kintsugi'
   },
   create: (chain: string, path: string, data: BN | number | string): string =>
-    `https://${chain}.subsquare.io/${path}/${data.toString()}`,
+    `https://${chain}.subsquare.io/${path}/${data.toString()}${path === 'user' ? '/votes' : ''}`,
+  homepage: 'https://subsquare.io/',
   isActive: true,
-  logo: externalLogos.subsquare as string,
   paths: {
+    address: 'user',
     bounty: 'treasury/bounty',
     council: 'council/motion',
-    external: 'democracy/external',
+    democracyExternal: 'democracy/external',
+    democracyProposal: 'democracy/proposal',
+    democracyReferendum: 'democracy/referendum',
     fellowshipReferenda: 'fellowship/referendum',
-    proposal: 'democracy/proposal',
     referenda: 'referenda/referendum',
-    referendum: 'democracy/referendum',
     tip: 'treasury/tip',
     treasury: 'treasury/proposal'
   },
-  url: 'https://subsquare.io/'
+  ui: {
+    logo: externalSubsquareSVG
+  }
 };

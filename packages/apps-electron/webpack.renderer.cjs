@@ -1,4 +1,4 @@
-// Copyright 2017-2023 @polkadot/apps authors & contributors
+// Copyright 2017-2025 @polkadot/apps authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 /* eslint-disable camelcase */
@@ -27,8 +27,8 @@ module.exports = merge(
         }]
       }),
       new HtmlWebpackPlugin({
-        PAGE_TITLE: 'xx wallet',
-        inject: true,
+        PAGE_TITLE: 'Polkadot/Substrate Portal',
+        minify: false,
         template: path.join(context, '../apps/public/index.html')
       })
     ],

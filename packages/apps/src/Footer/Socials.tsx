@@ -70,7 +70,7 @@ type Props = {
 const urlMappers: Record<string, (a: string) => string> = {
   twitter: (username: string) => `https://twitter.com/${username}`,
   email: (email: string) => `mailto:${email}`,
-  github: (username: string) => `https://github.com/${username}`,
+  github: (username: string) => `https://git.xx.network/${username}`,
   telegram: (username: string) => `https://t.me/${username}`,
   discord: (url: string) => url
 };

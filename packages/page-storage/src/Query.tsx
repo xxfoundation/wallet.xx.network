@@ -1,4 +1,4 @@
-// Copyright 2017-2023 @polkadot/app-storage authors & contributors
+// Copyright 2017-2025 @polkadot/app-storage authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { QueryableStorageEntry } from '@polkadot/api/types';
@@ -6,17 +6,16 @@ import type { ComponentRenderer, DefaultProps, RenderFn } from '@polkadot/react-
 import type { ConstValue } from '@polkadot/react-components/InputConsts/types';
 import type { Option, Raw } from '@polkadot/types';
 import type { Registry } from '@polkadot/types/types';
-import type { QueryTypes, StorageModuleQuery } from './types';
+import type { QueryTypes, StorageModuleQuery } from './types.js';
 
 import React, { useCallback, useMemo } from 'react';
-import styled from 'styled-components';
 
 import { withCallDiv } from '@polkadot/react-api/hoc';
-import { Button, Labelled } from '@polkadot/react-components';
+import { Button, Labelled, styled } from '@polkadot/react-components';
 import { useApi } from '@polkadot/react-hooks';
 import valueToText from '@polkadot/react-params/valueToText';
 import { getSiName } from '@polkadot/types/metadata/util';
-import { unwrapStorageType } from '@polkadot/types/primitive/StorageKey';
+import { unwrapStorageType } from '@polkadot/types/util';
 import { compactStripLength, isU8a, u8aToHex, u8aToString } from '@polkadot/util';
 
 interface Props {
@@ -27,7 +26,7 @@ interface Props {
 
 interface CacheInstance {
   Component: React.ComponentType<any>;
-  render: (value?: any) => React.ComponentType<any>;
+  render: RenderFn;
   refresh: (swallowErrors: boolean) => React.ComponentType<any>;
 }
 
@@ -124,7 +123,7 @@ function getCachedComponent (registry: Registry, query: QueryTypes): CacheInstan
         });
       }
 
-      type = key.creator && key.creator.meta
+      type = key.creator?.meta
         ? queryTypeToString(registry, key)
         : 'Raw';
     }
@@ -132,7 +131,7 @@ function getCachedComponent (registry: Registry, query: QueryTypes): CacheInstan
     const defaultProps = { className: 'ui--output' };
     const Component = renderHelper(
       // By default we render a simple div node component with the query results in it
-      (value: unknown) => <pre>{valueToText(type, value as null)}</pre>,
+      (value: unknown) => <pre>{valueToText(type, value as null, undefined, true)}</pre>,
       defaultProps
     );
 
@@ -171,7 +170,7 @@ function Query ({ className = '', onRemove, value }: Props): React.ReactElement<
   }
 
   return (
-    <div className={`storage--Query storage--actionrow ${className}`}>
+    <StyledDiv className={`${className} storage--Query storage--actionrow`}>
       <div className='storage--actionrow-value'>
         <Labelled
           label={
@@ -190,11 +189,11 @@ function Query ({ className = '', onRemove, value }: Props): React.ReactElement<
           onClick={_onRemove}
         />
       </div>
-    </div>
+    </StyledDiv>
   );
 }
 
-export default React.memo(styled(Query)`
+const StyledDiv = styled.div`
   margin-bottom: 0.25em;
 
   label {
@@ -212,7 +211,7 @@ export default React.memo(styled(Query)`
   }
 
   pre {
-    margin: 0;
+    margin: 0.5;
 
     .ui--Param-text {
       overflow: hidden;
@@ -223,4 +222,6 @@ export default React.memo(styled(Query)`
   .storage--actionrow-buttons {
     margin-top: -0.25rem; /* offset parent spacing for buttons */
   }
-`);
+`;
+
+export default React.memo(Query);

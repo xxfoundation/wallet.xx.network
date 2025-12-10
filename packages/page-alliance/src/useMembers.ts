@@ -1,15 +1,14 @@
-// Copyright 2017-2023 @polkadot/app-alliance authors & contributors
+// Copyright 2017-2025 @polkadot/app-alliance authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { AccountId32 } from '@polkadot/types/interfaces';
-import type { Member } from './types';
+import type { Member } from './types.js';
 
 import { useEffect, useState } from 'react';
 
 import { createNamedHook, useApi, useCall } from '@polkadot/react-hooks';
 
-// these are reversed (catering for old "Founder" role)
-const ROLES = <const> ['Retiring', 'Ally', 'Fellow', 'Founder'];
+const ROLES = ['Retiring', 'Ally', 'Fellow'] as const;
 
 function addMembers (prev: Member[], ...query: AccountId32[][]): Member[] {
   const all: Member[] = [];
@@ -18,7 +17,7 @@ function addMembers (prev: Member[], ...query: AccountId32[][]): Member[] {
     const role = ROLES[i];
     const accountIds = query[i];
 
-    for (let j = 0; j < accountIds.length; j++) {
+    for (let j = 0, count = accountIds.length; j < count; j++) {
       const accountId = accountIds[j].toString();
       const existing = prev.find((p) =>
         p.accountId === accountId &&
@@ -41,15 +40,13 @@ function useMembersImpl (): Member[] | undefined {
   const role0 = useCall<AccountId32[]>(api.query.alliance.members, [ROLES[0]]);
   const role1 = useCall<AccountId32[]>(api.query.alliance.members, [ROLES[1]]);
   const role2 = useCall<AccountId32[]>(api.query.alliance.members, [ROLES[2]]);
-  // for the Founder role, we don't expect and actual value
-  const role3 = useCall<AccountId32[]>(api.query.alliance.members, [ROLES[3]]);
 
   useEffect((): void => {
     role0 && role1 && role2 &&
       setState((prev = []) =>
-        addMembers(prev, role0, role1, role2, role3 || [])
+        addMembers(prev, role0, role1, role2)
       );
-  }, [role0, role1, role2, role3]);
+  }, [role0, role1, role2]);
 
   return state;
 }

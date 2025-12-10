@@ -1,4 +1,4 @@
-// Copyright 2017-2023 @polkadot/react-params authors & contributors
+// Copyright 2017-2025 @polkadot/react-params authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Keys, ValidatorId } from '@polkadot/types/interfaces';
@@ -6,6 +6,7 @@ import type { Codec } from '@polkadot/types/types';
 
 import React from 'react';
 
+import { CopyButton } from '@polkadot/react-components';
 import { Option, Raw } from '@polkadot/types';
 import { isFunction, isNull, isUndefined, stringify, u8aToHex } from '@polkadot/util';
 
@@ -14,15 +15,14 @@ interface DivProps {
   key?: string;
 }
 
-function div ({ className = '', key }: DivProps, ...values: React.ReactNode[]): React.ReactNode {
-  return (
-    <div
-      className={`ui--Param-text ${className}`}
-      key={key}
-    >
-      {values}
-    </div>
-  );
+function div ({ className = '', key }: DivProps, ...values: React.ReactNode[]): { cName: string, key: string | undefined, values: React.ReactNode[] } {
+  const cName = `${className} ui--Param-text`;
+
+  return {
+    cName,
+    key,
+    values
+  };
 }
 
 function formatKeys (keys: [ValidatorId, Keys][]): string {
@@ -33,15 +33,16 @@ function formatKeys (keys: [ValidatorId, Keys][]): string {
   );
 }
 
-function toHuman (value: Codec | Codec[]): unknown {
+function toHuman (value: Codec | Codec[], isExtended?: boolean, disableAscii?: boolean): unknown {
+  // eslint-disable-next-line @typescript-eslint/unbound-method
   return isFunction((value as Codec).toHuman)
-    ? (value as Codec).toHuman()
+    ? (value as Codec).toHuman(isExtended, disableAscii)
     : Array.isArray(value)
-      ? value.map((v) => toHuman(v))
+      ? value.map((v) => toHuman(v, isExtended, disableAscii))
       : value.toString();
 }
 
-export function toHumanJson (value: any): string {
+export function toHumanJson (value: unknown): string {
   return stringify(value, 2)
     .replace(/,\n/g, '\n')
     .replace(/"/g, '')
@@ -49,13 +50,22 @@ export function toHumanJson (value: any): string {
     .replace(/\],\[/g, '],\n[');
 }
 
-export default function valueToText (type: string, value: Codec | undefined | null): React.ReactNode {
+export default function valueToText (type: string, value: Codec | undefined | null, isExtended?: boolean, disableAscii?: boolean): React.ReactNode {
   if (isNull(value) || isUndefined(value)) {
-    return div({}, '<unknown>');
+    const { cName, key, values } = div({}, '<unknown>');
+
+    return (
+      <div
+        className={cName}
+        key={key}
+      >
+        {values}
+      </div>
+    );
   }
 
-  return div(
-    {},
+  const renderedValue = (
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     ['Bytes', 'Raw', 'Option<Keys>', 'Keys'].includes(type) && isFunction(value.toU8a)
       ? u8aToHex(value.toU8a(true))
       // HACK Handle Keys as hex-only (this should go away once the node value is
@@ -68,6 +78,18 @@ export default function valueToText (type: string, value: Codec | undefined | nu
             : value.toString()
           : (value instanceof Option) && value.isNone
             ? '<none>'
-            : toHumanJson(toHuman(value))
+            : toHumanJson(toHuman(value, isExtended, disableAscii))
+  );
+
+  const { cName, key, values } = div({}, renderedValue);
+
+  return (
+    <div
+      className={cName}
+      key={key}
+    >
+      {values}
+      <CopyButton value={renderedValue} />
+    </div>
   );
 }

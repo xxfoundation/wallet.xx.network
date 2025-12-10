@@ -3,8 +3,8 @@
 
 import { useEffect, useState } from 'react';
 
-import { createNamedHook } from './createNamedHook';
-import { useIsMountedRef } from './useIsMountedRef';
+import { createNamedHook } from './createNamedHook.js';
+import { useIsMountedRef } from './useIsMountedRef.js';
 
 function useLoadingDelayImpl (delay = 0): boolean {
   const mountedRef = useIsMountedRef();

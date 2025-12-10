@@ -10,11 +10,103 @@ This document tracks all modifications made to the upstream [polkadot-js/apps](h
 
 ### 2025-12-10: Upstream Sync (polkadot-js/apps v0.169.2)
 
+**Version Jump**: v0.122.3 → v0.169.2 (47 minor releases, ~3 years of development)
+
+**Files Changed**: ~4,100+ files
+
 **Conflicts Resolved**: 1,492 files
 
 **Strategy**: Take upstream for most files, preserve XX Network customizations for critical files.
 
-**XX Network Customizations Preserved**:
+#### Major Upstream Features Added
+
+**Polkadot 2.0 / Coretime**:
+- Full Coretime UI for broker/sales interface
+- Relay chain coretime overview and sales pages
+- Core renewal tracking and region info display
+
+**Governance Improvements**:
+- OpenGov v2 with abstain voting support
+- Referenda track filters and fellowship support
+- Improved voting modals with all type values
+- External links for Subsquare and Polkassembly
+
+**Identity & People Chain**:
+- Identity lookup from People system parachains
+- `isPeopleForIdentity` flag support for parachains
+
+**Staking Enhancements**:
+- Better staking overview UI
+- Async feedback for staking operations
+- Post-AHM (Asset Hub Migration) validator display
+- Improved session keys UX
+- Remove expired votes feature
+
+**Asset & Treasury**:
+- Fee payment with sufficient (non-native) assets
+- Enhanced non-native asset balance display
+- Treasury `spendLocal` support
+- Improved teleport/XCM features
+
+**Developer Experience**:
+- Scheduler split into separate app
+- Chopsticks local fork integration for testing
+- Light client (Substrate Connect) support
+- Command center UI component
+- Playground code runs in iframe sandbox
+
+**Multisig Improvements**:
+- Export multisig as JSON
+- Better proxy account support
+- Improved call data field handling
+
+#### Breaking Changes
+
+| Change | Before | After |
+|--------|--------|-------|
+| Node.js | >=14.0.0 | >=18.14 |
+| Yarn | 3.2.4 | 4.6.0 |
+| Module System | CommonJS | ES Modules (`"type": "module"`) |
+| ESLint Config | `.eslintrc.cjs` | `eslint.config.js` (flat config) |
+| Jest Config | `jest.config.cjs` | Removed (uses `@polkadot/dev`) |
+| Babel | `babel.config.cjs` | Removed (native ESM) |
+| @polkadot/api | v9.14.2 | v16.5.3 |
+| Electron | v21 | v28 |
+| Import Style | `./file` | `./file.js` |
+
+#### Dependency Updates
+
+| Package | Old | New |
+|---------|-----|-----|
+| @polkadot/api | 9.14.2 | 16.5.3 |
+| @polkadot/common | - | 13.5.9 |
+| @polkadot/wasm-crypto | - | 7.5.4 |
+| @polkadot/extension | - | 0.62.6 |
+| @polkadot/dev | 0.67.173 | 0.83.3 |
+| electron | 21.3.3 | 28.0.0 |
+| electron-builder | 23.6.0 | 24.10.0 |
+| TypeScript target | ES2019 | ES2022 |
+
+#### New Chains Added (Notable)
+
+- Analog Timechain
+- Autonomys (mainnet + EVM)
+- Bittensor
+- zkVerify + VFlow
+- Torus
+- Commune AI
+- Many Paseo testnet parachains
+
+#### Files Removed by Upstream
+
+- `.eslintrc.cjs` → `eslint.config.js`
+- `babel.config.cjs` (no longer needed)
+- `jest.config.cjs`, `jest-ci.config.cjs`, `jest-slow.config.cjs`
+- `jest/globalSetup.cjs`, `jest/globalTeardown.cjs`, `jest/setupEnv.cjs`
+- `packages/apps-config/LICENSE` (consolidated)
+- Various deprecated chain configs (Rococo relay removed)
+
+#### XX Network Customizations Preserved
 
 | Area | Files | Action |
 |------|-------|--------|

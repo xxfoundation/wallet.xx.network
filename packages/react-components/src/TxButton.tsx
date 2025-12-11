@@ -1,23 +1,22 @@
-// Copyright 2017-2022 @polkadot/react-components authors & contributors
+// Copyright 2017-2025 @polkadot/react-components authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
+import type { SubmittableResult } from '@polkadot/api';
 import type { SubmittableExtrinsic } from '@polkadot/api/types';
-import type { TxButtonProps as Props } from './types';
+import type { TxButtonProps as Props } from './types.js';
 
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
-import { SubmittableResult } from '@polkadot/api';
-import { useIsMountedRef } from '@polkadot/react-hooks';
+import { useIsMountedRef, useQueue } from '@polkadot/react-hooks';
 import { assert, isFunction } from '@polkadot/util';
 
-import Button from './Button';
-import { StatusContext } from './Status';
-import { useTranslation } from './translate';
+import Button from './Button/index.js';
+import { useTranslation } from './translate.js';
 
 function TxButton ({ accountId, className = '', extrinsic: propsExtrinsic, icon, isBasic, isBusy, isDisabled, isIcon, isToplevel, isUnsigned, label, onClick, onFailed, onSendRef, onStart, onSuccess, onUpdate, params, tooltip, tx, withSpinner, withoutLink }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const mountedRef = useIsMountedRef();
-  const { queueExtrinsic } = useContext(StatusContext);
+  const { queueExtrinsic } = useQueue();
   const [isSending, setIsSending] = useState(false);
   const [isStarted, setIsStarted] = useState(false);
 
@@ -74,7 +73,7 @@ function TxButton ({ accountId, className = '', extrinsic: propsExtrinsic, icon,
 
       extrinsics.forEach((extrinsic): void => {
         queueExtrinsic({
-          accountId: accountId && accountId.toString(),
+          accountId: accountId?.toString(),
           extrinsic,
           isUnsigned,
           txFailedCb: withSpinner ? _onFailed : onFailed,
@@ -86,7 +85,7 @@ function TxButton ({ accountId, className = '', extrinsic: propsExtrinsic, icon,
 
       onClick && onClick();
     },
-    [_onFailed, _onStart, _onSuccess, accountId, isUnsigned, onClick, onFailed, onSuccess, onUpdate, params, propsExtrinsic, queueExtrinsic, setIsSending, tx, withSpinner, mountedRef]
+    [_onFailed, _onStart, _onSuccess, accountId, isUnsigned, mountedRef, onClick, onFailed, onSuccess, onUpdate, params, propsExtrinsic, queueExtrinsic, tx, withSpinner]
   );
 
   if (onSendRef) {
@@ -108,7 +107,7 @@ function TxButton ({ accountId, className = '', extrinsic: propsExtrinsic, icon,
       )}
       isIcon={isIcon}
       isToplevel={isToplevel}
-      label={label || (isIcon ? '' : t<string>('Submit'))}
+      label={label || (isIcon ? '' : t('Submit'))}
       onClick={_onSend}
       tooltip={tooltip}
       withoutLink={withoutLink}

@@ -1,15 +1,16 @@
-// Copyright 2017-2022 @polkadot/react-hooks authors & contributors
+// Copyright 2017-2025 @polkadot/react-hooks authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
+import type { ApiPromise } from '@polkadot/api';
 import type { Option } from '@polkadot/types';
 import type { AccountId, StakingLedger } from '@polkadot/types/interfaces';
 
 import { useMemo } from 'react';
 
-import { createNamedHook } from './createNamedHook';
-import { useAccounts } from './useAccounts';
-import { useApi } from './useApi';
-import { useCall } from './useCall';
+import { createNamedHook } from './createNamedHook.js';
+import { useAccounts } from './useAccounts.js';
+import { useApi } from './useApi.js';
+import { useCall } from './useCall.js';
 
 type IsInKeyring = boolean;
 
@@ -31,9 +32,10 @@ function getStashes (allAccounts: string[], ownBonded: Option<AccountId>[], ownL
   return result;
 }
 
-function useOwnStashesImpl (additional?: string[]): [string, IsInKeyring][] | undefined {
+function useOwnStashesImpl (additional?: string[], apiOverride?: ApiPromise): [string, IsInKeyring][] | undefined {
   const { allAccounts } = useAccounts();
-  const { api } = useApi();
+  const { api: connectedApi } = useApi();
+  const api = useMemo(() => apiOverride ?? connectedApi, [apiOverride, connectedApi]);
 
   const ids = useMemo(
     () => allAccounts.concat(additional || []),

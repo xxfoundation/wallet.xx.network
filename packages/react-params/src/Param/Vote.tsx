@@ -1,84 +1,95 @@
-// Copyright 2017-2022 @polkadot/react-params authors & contributors
+// Copyright 2017-2025 @polkadot/react-params authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Props } from '../types';
+import type { Props } from '../types.js';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 
 import { Dropdown } from '@polkadot/react-components';
 import { GenericVote } from '@polkadot/types';
-import { isBn } from '@polkadot/util';
+import { isBn, isNumber } from '@polkadot/util';
 
-import { useTranslation } from '../translate';
-import Bare from './Bare';
+import { useTranslation } from '../translate.js';
+import Bare from './Bare.js';
 
-interface VoteParts {
-  aye: boolean;
-  conviction: number;
-}
+const AYE_MASK = 0b10000000;
 
-const EMPTY_VOTE: VoteParts = { aye: true, conviction: 0 };
-
+// In this approach, it will avoid using additional local states and instead rely directly on the parent-provided values and methods.
 function Vote ({ className = '', defaultValue: { value }, isDisabled, isError, onChange, withLabel }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
-  const [vote, setVote] = useState(EMPTY_VOTE);
 
-  useEffect((): void => {
-    onChange && onChange({ isValid: true, value: vote });
-  }, [onChange, vote]);
+  // Derive aye and conviction from the value prop
+  const { aye, conviction } = useMemo(() => {
+    // Logic sucks here, but to be honest, can not find other way to do it
+    const resolvedAye = value instanceof GenericVote
+      ? value.isAye
+      : isBn(value)
+        ? !!(value.toNumber() & AYE_MASK)
+        : isNumber(value)
+          ? !!(value & AYE_MASK)
+          : typeof value === 'object' && value !== null && 'aye' in value
+            ? !!value.aye
+            : true;
+
+    const resolvedConviction = value instanceof GenericVote
+      ? value.conviction.index
+      : typeof value === 'object' && value !== null && 'conviction' in value
+        ? Number(value.conviction)
+        : 0;
+
+    return {
+      aye: resolvedAye,
+      conviction: resolvedConviction
+    };
+  }, [value]);
 
   const onChangeVote = useCallback(
-    (aye: boolean) => setVote(({ conviction }) => ({ aye, conviction })),
-    []
+    (newAye: boolean) => {
+      onChange?.({ isValid: true, value: { aye: newAye, conviction } });
+    },
+    [conviction, onChange]
   );
 
   const onChangeConviction = useCallback(
-    (conviction: number) => setVote(({ aye }) => ({ aye, conviction })),
-    []
+    (newConviction: number) => {
+      onChange?.({ isValid: true, value: { aye, conviction: newConviction } });
+    },
+    [aye, onChange]
   );
 
   const optAyeRef = useRef([
-    { text: t<string>('Nay'), value: false },
-    { text: t<string>('Aye'), value: true }
+    { text: t('Nay'), value: false },
+    { text: t('Aye'), value: true }
   ]);
 
   const optConvRef = useRef([
-    { text: t<string>('None'), value: 0 },
-    { text: t<string>('Locked1x'), value: 1 },
-    { text: t<string>('Locked2x'), value: 2 },
-    { text: t<string>('Locked3x'), value: 3 },
-    { text: t<string>('Locked4x'), value: 4 },
-    { text: t<string>('Locked5x'), value: 5 },
-    { text: t<string>('Locked6x'), value: 6 }
+    { text: t('None'), value: 0 },
+    { text: t('Locked1x'), value: 1 },
+    { text: t('Locked2x'), value: 2 },
+    { text: t('Locked3x'), value: 3 },
+    { text: t('Locked4x'), value: 4 },
+    { text: t('Locked5x'), value: 5 },
+    { text: t('Locked6x'), value: 6 }
   ]);
-
-  const defaultVote = isBn(value)
-    ? (value.toNumber() !== 0)
-    : value instanceof GenericVote
-      ? value.isAye
-      : (value as number !== 0);
-  const defaultConv = value instanceof GenericVote
-    ? value.conviction.index
-    : 0;
 
   return (
     <Bare className={className}>
       <Dropdown
         className='full'
-        defaultValue={defaultVote}
+        defaultValue={aye}
         isDisabled={isDisabled}
         isError={isError}
-        label={t<string>('aye: bool')}
+        label={t('aye: bool')}
         onChange={onChangeVote}
         options={optAyeRef.current}
         withLabel={withLabel}
       />
       <Dropdown
         className='full'
-        defaultValue={defaultConv}
+        defaultValue={conviction}
         isDisabled={isDisabled}
         isError={isError}
-        label={t<string>('conviction: Conviction')}
+        label={t('conviction: Conviction')}
         onChange={onChangeConviction}
         options={optConvRef.current}
         withLabel={withLabel}

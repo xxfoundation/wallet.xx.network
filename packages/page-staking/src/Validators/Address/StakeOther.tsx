@@ -1,4 +1,4 @@
-// Copyright 2017-2022 @polkadot/app-staking authors & contributors
+// Copyright 2017-2023 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { NominatorValue } from './types';
@@ -54,7 +54,12 @@ function extractTotals (maxPaid: BN | undefined, nominators: NominatorValue[], s
   const unrewarded = sorted.slice(max);
   const unrewardedTotal = sumValue(unrewarded);
 
-  return [extractFunction(rewarded), rewardedTotal, extractFunction(unrewarded), unrewardedTotal];
+  return [
+    extractFunction(rewarded),
+    rewardedTotal,
+    extractFunction(unrewarded),
+    unrewardedTotal
+  ];
 }
 
 function StakeOther ({ nominators, stakeOther }: Props): React.ReactElement<Props> {

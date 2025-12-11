@@ -1,22 +1,24 @@
-// Copyright 2017-2022 @polkadot/apps authors & contributors
+// Copyright 2017-2025 @polkadot/apps authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { LinkOption } from '@polkadot/apps-config/endpoints/types';
-import type { Group } from './types';
+import type { Group, IFavoriteChainProps } from './types.js';
 
 // ok, this seems to be an eslint bug, this _is_ a package import
 import punycode from 'punycode/';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import store from 'store';
-import styled from 'styled-components';
 
 import { createWsEndpoints, CUSTOM_ENDPOINT_KEY } from '@polkadot/apps-config';
-import { Button, Input, Sidebar } from '@polkadot/react-components';
+import { Button, Input, Sidebar, styled } from '@polkadot/react-components';
+import { defaultHighlight } from '@polkadot/react-components/styles';
+import { useApi } from '@polkadot/react-hooks';
 import { settings } from '@polkadot/ui-settings';
 import { isAscii } from '@polkadot/util';
 
-import { useTranslation } from '../translate';
-import GroupDisplay from './Group';
+import { useTranslation } from '../translate.js';
+import GroupDisplay from './Group.js';
+import { getFavoriteChains, isFavoriteChain, toggleFavoriteChain } from './utils.js';
 
 interface Props {
   className?: string;
@@ -43,30 +45,73 @@ function isValidUrl (url: string): boolean {
 }
 
 function combineEndpoints (endpoints: LinkOption[]): Group[] {
-  return endpoints.reduce((result: Group[], e): Group[] => {
+  const favoriteChains = getFavoriteChains();
+  let favoriteGroupIndex = -1;
+
+  const combinedEndpoints = endpoints.reduce((result: Group[], e): Group[] => {
     if (e.isHeader) {
+      const isFavoriteHeader =
+        typeof e.text === 'string' && e.text.includes('Favorite chains');
+
       result.push({ header: e.text, isDevelopment: e.isDevelopment, isSpaced: e.isSpaced, networks: [] });
+
+      if (isFavoriteHeader) {
+        favoriteGroupIndex = result.length - 1;
+      }
     } else {
       const prev = result[result.length - 1];
       const prov = { isLightClient: e.isLightClient, name: e.textBy, url: e.value };
+
+      const isFavorite = isFavoriteChain(favoriteChains,
+        { chainName: e.text?.toString() ?? '',
+          paraId: e.paraId,
+          relay: e.textRelay?.toString() });
+
+      if (isFavorite && favoriteGroupIndex !== -1 && !e.isUnreachable) {
+        const favGroup = result[favoriteGroupIndex];
+        const lastFav = favGroup.networks[favGroup.networks.length - 1];
+
+        if (lastFav && lastFav.name === e.text && lastFav.nameRelay === e.textRelay && lastFav.paraId === e.paraId) {
+          lastFav.providers.push(prov);
+        } else {
+          favGroup.networks.push({
+            isChild: e.isChild,
+            isRelay: !!e.genesisHash,
+            name: e.text as string,
+            nameRelay: e.textRelay as string,
+            paraId: e.paraId,
+            providers: [prov],
+            ui: e.ui
+          });
+        }
+      }
 
       if (prev.networks[prev.networks.length - 1] && e.text === prev.networks[prev.networks.length - 1].name) {
         prev.networks[prev.networks.length - 1].providers.push(prov);
       } else if (!e.isUnreachable) {
         prev.networks.push({
-          icon: e.info,
           isChild: e.isChild,
           isRelay: !!e.genesisHash,
           name: e.text as string,
           nameRelay: e.textRelay as string,
           paraId: e.paraId,
-          providers: [prov]
+          providers: [prov],
+          ui: e.ui
         });
       }
     }
 
     return result;
   }, []);
+
+  // Swap first two items in `networks` if first item is relay chain
+  combinedEndpoints.forEach((r) => {
+    if (r.networks.length >= 2 && r.networks[0].isRelay && r.header?.toString().includes('parachains')) {
+      [r.networks[0], r.networks[1]] = [r.networks[1], r.networks[0]];
+    }
+  });
+
+  return combinedEndpoints;
 }
 
 function getCustomEndpoints (): string[] {
@@ -119,11 +164,31 @@ function loadAffinities (groups: Group[]): Record<string, string> {
     }), {});
 }
 
-function isSwitchDisabled (hasUrlChanged: boolean, apiUrl: string, isUrlValid: boolean): boolean {
+function isSwitchDisabled (hasUrlChanged: boolean, apiUrl: string, isUrlValid: boolean, isLocalFork?: boolean): boolean {
   if (!hasUrlChanged) {
-    return true;
+    if (isLocalFork) {
+      return false;
+    } else {
+      return true;
+    }
   } else if (apiUrl.startsWith('light://')) {
     return false;
+  } else if (isUrlValid) {
+    return false;
+  }
+
+  return true;
+}
+
+function isLocalForkDisabled (hasUrlChanged: boolean, apiUrl: string, isUrlValid: boolean, isLocalFork?: boolean): boolean {
+  if (!hasUrlChanged) {
+    if (isLocalFork) {
+      return true;
+    } else {
+      return false;
+    }
+  } else if (apiUrl.startsWith('light://')) {
+    return true;
   } else if (isUrlValid) {
     return false;
   }
@@ -134,10 +199,13 @@ function isSwitchDisabled (hasUrlChanged: boolean, apiUrl: string, isUrlValid: b
 function Endpoints ({ className = '', offset, onClose }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const linkOptions = createWsEndpoints(t);
+  const { apiEndpoint, isLocalFork } = useApi();
+  const [favoriteChains, setFavoriteChains] = useState(() => getFavoriteChains());
   const [groups, setGroups] = useState(() => combineEndpoints(linkOptions));
   const [{ apiUrl, groupIndex, hasUrlChanged, isUrlValid }, setApiUrl] = useState<UrlState>(() => extractUrlState(settings.get().apiUrl, groups));
   const [storedCustomEndpoints, setStoredCustomEndpoints] = useState<string[]>(() => getCustomEndpoints());
   const [affinities, setAffinities] = useState(() => loadAffinities(groups));
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
   const isKnownUrl = useMemo(() => {
     let result = false;
@@ -176,6 +244,12 @@ function Endpoints ({ className = '', offset, onClose }: Props): React.ReactElem
     []
   );
 
+  const _toggleFavoriteChain = useCallback((chainInfo: IFavoriteChainProps) => {
+    toggleFavoriteChain(chainInfo);
+    setFavoriteChains(getFavoriteChains());
+    setGroups(combineEndpoints(createWsEndpoints(t)));
+  }, [t]);
+
   const _removeApiEndpoint = useCallback(
     (): void => {
       if (!isSavedCustomEndpoint) {
@@ -205,7 +279,7 @@ function Endpoints ({ className = '', offset, onClose }: Props): React.ReactElem
 
         return newValue;
       });
-      setApiUrl(extractUrlState(apiUrl, groups));
+      setApiUrl((state) => ({ ...extractUrlState(apiUrl, groups), groupIndex: state.groupIndex }));
     },
     [groups]
   );
@@ -216,19 +290,39 @@ function Endpoints ({ className = '', offset, onClose }: Props): React.ReactElem
         apiUrl = punycode.toASCII(apiUrl);
       }
 
-      setApiUrl(extractUrlState(apiUrl, groups));
+      setApiUrl((state) => ({ ...extractUrlState(apiUrl, groups), groupIndex: state.groupIndex }));
     },
     [groups]
   );
 
   const _onApply = useCallback(
     (): void => {
+      store.set('localFork', '');
       settings.set({ ...(settings.get()), apiUrl });
       window.location.assign(`${window.location.origin}${window.location.pathname}?rpc=${encodeURIComponent(apiUrl)}${window.location.hash}`);
-      // window.location.reload();
+
+      if (!hasUrlChanged) {
+        window.location.reload();
+      }
+
       onClose();
     },
-    [apiUrl, onClose]
+    [apiUrl, onClose, hasUrlChanged]
+  );
+
+  const _onLocalFork = useCallback(
+    (): void => {
+      store.set('localFork', apiUrl);
+      settings.set({ ...(settings.get()), apiUrl });
+      window.location.assign(`${window.location.origin}${window.location.pathname}?rpc=${encodeURIComponent(apiUrl)}${window.location.hash}`);
+
+      if (!hasUrlChanged) {
+        window.location.reload();
+      }
+
+      onClose();
+    },
+    [apiUrl, onClose, hasUrlChanged]
   );
 
   const _saveApiEndpoint = useCallback(
@@ -245,34 +339,52 @@ function Endpoints ({ className = '', offset, onClose }: Props): React.ReactElem
   );
 
   const canSwitch = useMemo(
-    () => isSwitchDisabled(hasUrlChanged, apiUrl, isUrlValid),
-    [hasUrlChanged, apiUrl, isUrlValid]
+    () => isSwitchDisabled(hasUrlChanged, apiUrl, isUrlValid, isLocalFork),
+    [hasUrlChanged, apiUrl, isUrlValid, isLocalFork]
+  );
+
+  const canLocalFork = useMemo(
+    () => isLocalForkDisabled(hasUrlChanged, apiUrl, isUrlValid, isLocalFork),
+    [hasUrlChanged, apiUrl, isUrlValid, isLocalFork]
   );
 
   return (
-    <Sidebar
-      button={
-        <Button
-          icon='sync'
-          isDisabled={canSwitch}
-          label={t<string>('Switch')}
-          onClick={_onApply}
-        />
+    <StyledSidebar
+      buttons={
+        <>
+          <Button
+            icon='code-fork'
+            isDisabled={canLocalFork}
+            label={t('Fork Locally')}
+            onClick={_onLocalFork}
+            tooltip='fork-locally-btn'
+          />
+          <Button
+            icon='sync'
+            isDisabled={canSwitch}
+            label={t('Switch')}
+            onClick={_onApply}
+          />
+        </>
       }
       className={className}
       offset={offset}
       onClose={onClose}
       position='left'
+      sidebarRef={sidebarRef}
     >
       {groups.map((group, index): React.ReactNode => (
         <GroupDisplay
           affinities={affinities}
           apiUrl={apiUrl}
+          favoriteChains={favoriteChains}
+          highlightColor={apiEndpoint?.ui.color || defaultHighlight}
           index={index}
           isSelected={groupIndex === index}
           key={index}
           setApiUrl={_setApiUrl}
           setGroup={_changeGroup}
+          toggleFavoriteChain={_toggleFavoriteChain}
           value={group}
         >
           {group.isDevelopment && (
@@ -281,7 +393,7 @@ function Endpoints ({ className = '', offset, onClose }: Props): React.ReactElem
                 className='endpointCustom'
                 isError={!isUrlValid}
                 isFull
-                label={t<string>('custom endpoint')}
+                label={t('custom endpoint')}
                 onChange={_onChangeCustom}
                 value={apiUrl}
               />
@@ -306,13 +418,12 @@ function Endpoints ({ className = '', offset, onClose }: Props): React.ReactElem
           )}
         </GroupDisplay>
       ))}
-    </Sidebar>
+    </StyledSidebar>
   );
 }
 
-export default React.memo(styled(Endpoints)`
+const StyledSidebar = styled(Sidebar)`
   color: var(--color-text);
-  padding-top: 3.5rem;
 
   .customButton {
     position: absolute;
@@ -329,4 +440,6 @@ export default React.memo(styled(Endpoints)`
   .endpointCustomWrapper {
     position: relative;
   }
-`);
+`;
+
+export default React.memo(Endpoints);

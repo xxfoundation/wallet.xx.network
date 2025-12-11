@@ -1,17 +1,18 @@
-// Copyright 2017-2022 @polkadot/app-settings authors & contributors
+// Copyright 2017-2025 @polkadot/app-settings authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
+import type { BlockNumber, RuntimeVersion } from '@polkadot/types/interfaces';
 import type { NetworkSpecsStruct } from '@polkadot/ui-settings/types';
-import type { ChainInfo, ChainType } from '../types';
+import type { ChainInfo, ChainType } from '../types.js';
 
 import React, { useCallback, useEffect, useReducer, useRef, useState } from 'react';
-import styled from 'styled-components';
 
-import { ChainImg, Input, QrNetworkSpecs, Spinner, Table } from '@polkadot/react-components';
-import { useApi, useDebounce } from '@polkadot/react-hooks';
+import { ChainImg, Input, QrNetworkSpecs, Spinner, styled, Table } from '@polkadot/react-components';
+import { useApi, useCall, useDebounce } from '@polkadot/react-hooks';
+import { formatNumber } from '@polkadot/util';
 
-import { useTranslation } from '../translate';
-import ChainColorIndicator from './ChainColorIndicator';
+import { useTranslation } from '../translate.js';
+import ChainColorIndicator from './ChainColorIndicator.js';
 
 interface Props {
   chainInfo: ChainInfo | null;
@@ -46,9 +47,11 @@ const initialState = {
 
 function NetworkSpecs ({ chainInfo, className }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
-  const { isApiReady, systemChain } = useApi();
+  const { api, isApiReady, systemChain } = useApi();
   const [qrData, setQrData] = useState<NetworkSpecsStructWithType>(initialState);
   const debouncedQrData = useDebounce(qrData, 500);
+  const runtimeVersion = useCall<RuntimeVersion>(isApiReady && api.rpc.state.subscribeRuntimeVersion);
+  const blockNumber = useCall<BlockNumber>(isApiReady && api.derive.chain.bestNumber);
 
   const reducer = (state: NetworkSpecsStructWithType, delta: Partial<NetworkSpecsStructWithType>): NetworkSpecsStructWithType => {
     const newState = {
@@ -94,8 +97,8 @@ function NetworkSpecs ({ chainInfo, className }: Props): React.ReactElement<Prop
     [networkSpecs]
   );
 
-  const headerRef = useRef([
-    [t('chain specifications'), 'start', '2']
+  const headerRef = useRef<[React.ReactNode?, string?, number?][]>([
+    [t('chain specifications'), 'start', 2]
   ]);
 
   if (!isApiReady) {
@@ -103,26 +106,24 @@ function NetworkSpecs ({ chainInfo, className }: Props): React.ReactElement<Prop
   }
 
   return (
-    <Table
+    <StyledTable
       className={className}
-      empty={t<string>('No open tips')}
+      empty={t('No open tips')}
       header={headerRef.current}
     >
-
       <tr>
         <td>
           <div className='settings--networkSpecs-name'>
             <Input
               className='full'
-              help={t<string>('Name of the network. It is only for display purposes.')}
               isDisabled
-              label={t<string>('Network Name')}
+              label={t('Network Name')}
               value={networkSpecs.title}
             />
             <ChainImg className='settings--networkSpecs-logo' />
           </div>
         </td>
-        <td rowSpan={6}>
+        <td rowSpan={9}>
           {qrData.genesisHash && (
             <QrNetworkSpecs
               className='settings--networkSpecs-qr'
@@ -137,9 +138,8 @@ function NetworkSpecs ({ chainInfo, className }: Props): React.ReactElement<Prop
             <div>
               <Input
                 className='full settings--networkSpecs-colorInput'
-                help={t<string>('The color used to distinguish this network with others, use color code with 3 or 6 digits, like "#FFF" or "#111111"')}
                 isError={!_checkColorValid()}
-                label={t<string>('Color')}
+                label={t('Color')}
                 onChange={_onChangeColor}
                 value={networkSpecs.color}
               />
@@ -147,7 +147,7 @@ function NetworkSpecs ({ chainInfo, className }: Props): React.ReactElement<Prop
                 className='settings--networkSpecs-colorChangeButton'
                 onClick={_onSetRandomColor}
               >
-                {t<string>('generate random color')}
+                {t('generate random color')}
               </a>
             </div>
             <ChainColorIndicator
@@ -161,9 +161,8 @@ function NetworkSpecs ({ chainInfo, className }: Props): React.ReactElement<Prop
         <td>
           <Input
             className='full'
-            help={t<string>('Genesis Hash refers to initial state of the chain, it cannot be changed once the chain is launched')}
             isDisabled
-            label={t<string>('Genesis Hash')}
+            label={t('Genesis Hash')}
             value={networkSpecs.genesisHash}
           />
         </td>
@@ -173,9 +172,8 @@ function NetworkSpecs ({ chainInfo, className }: Props): React.ReactElement<Prop
 
           <Input
             className='full'
-            help={t<string>('Unit decides the name of 1 unit token, e.g. "DOT" for Polkadot')}
             isDisabled
-            label={t<string>('Unit')}
+            label={t('Unit')}
             value={networkSpecs.unit}
           />
         </td>
@@ -184,9 +182,8 @@ function NetworkSpecs ({ chainInfo, className }: Props): React.ReactElement<Prop
         <td>
           <Input
             className='full'
-            help={t<string>('Prefix indicates the ss58 address format in this network, it is a 16 bit unsigned integer that describes the precise format of the bytes of the address')}
             isDisabled
-            label={t<string>('Address Prefix')}
+            label={t('Address Prefix')}
             value={networkSpecs.prefix.toString()}
           />
         </td>
@@ -195,9 +192,8 @@ function NetworkSpecs ({ chainInfo, className }: Props): React.ReactElement<Prop
         <td>
           <Input
             className='full'
-            help={t<string>('Decimals decides the smallest unit of the token, which is 1/10^decimals')}
             isDisabled
-            label={t<string>('Decimals')}
+            label={t('Decimals')}
             value={networkSpecs.decimals.toString()}
           />
         </td>
@@ -206,24 +202,52 @@ function NetworkSpecs ({ chainInfo, className }: Props): React.ReactElement<Prop
         <td>
           <Input
             className='full'
-            help={t<string>('Chain type (ethereum compatible or regular substrate)')}
             isDisabled
-            label={t<string>('Chain Type')}
+            label={t('Chain Type')}
             value={networkSpecs.chainType}
           />
         </td>
       </tr>
-    </Table>
+      <tr>
+        <td>
+          <Input
+            className='full'
+            isDisabled
+            label={t('Runtime Version')}
+            value={runtimeVersion ? `${runtimeVersion.specName.toString()}/${runtimeVersion.specVersion.toNumber()}` : ''}
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <Input
+            className='full'
+            isDisabled
+            label={t('Current Block')}
+            value={blockNumber ? formatNumber(blockNumber) : ''}
+          />
+        </td>
+      </tr>
+    </StyledTable>
   );
 }
 
-export default React.memo(styled(NetworkSpecs)`
+const StyledTable = styled(Table)`
   td {
     padding: 0;
 
     .input.ui--Input input {
       border: none !important;
       background: transparent;
+    }
+  }
+
+  @media (max-width: 900px) {
+    tr {
+      &:first-child {
+        display: flex;
+        flex-direction: column;
+      }
     }
   }
 
@@ -279,4 +303,6 @@ export default React.memo(styled(NetworkSpecs)`
       border: 1px solid white;
     }
   }
-`);
+`;
+
+export default React.memo(NetworkSpecs);

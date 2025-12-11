@@ -1,4 +1,4 @@
-// Copyright 2017-2022 @polkadot/react-components authors & contributors
+// Copyright 2017-2023 @polkadot/react-components authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
@@ -42,8 +42,16 @@ export interface ContentProps {
   children: React.ReactNode;
 }
 
+export interface RadioGroupProps {
+  title: string;
+  defaultValue: string;
+  value: { header: string[], options: string[] };
+  onChangeOption: (option: string) => void;
+}
+
 export type ModalType = React.FC<ModalProps> & {
   Actions: React.FC<ActionsProps>;
   Columns: React.FC<ColumnsProps>;
   Content: React.FC<ContentProps>;
+  RadioGroup: React.FC<RadioGroupProps>;
 };

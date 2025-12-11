@@ -1,0 +1,81 @@
+image: ilyasemenov/gitlab-ci-git-push
+
+before_script:
+  ##
+  ## Install ssh-agent if not already installed, it is required by Docker.
+  ## (change apt-get to yum if you use an RPM-based image)
+  ##
+  - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+
+  ##
+  ## Run ssh-agent (inside the build environment)
+  ##
+  - eval $(ssh-agent -s)
+
+  ##
+  ## Add the SSH key stored in SSH_PRIVATE_KEY variable to the agent store
+  ## We're using tr to fix line endings which makes ed25519 keys work
+  ## without extra base64 encoding.
+  ## https://gitlab.com/gitlab-examples/ssh-private-key/issues/1#note_48526556
+  ##
+  - echo "$SSH_PRIVATE_KEY"
+  - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+
+  ##
+  ## Create the SSH directory and give it the right permissions
+  ##
+  - mkdir -p ~/.ssh
+  - chmod 700 ~/.ssh
+
+stages:
+  - build
+  - deploy
+
+build:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'push'
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == 'staging'
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == 'master'
+  stage: build
+  image: node:latest
+  cache:
+    paths:
+      - node_modules/
+  before_script:
+    - node --version
+    - yarn --version
+    - yarn
+    - node -e 'console.log(v8.getHeapStatistics().heap_size_limit/(1024*1024))'
+    - export NODE_OPTIONS="--max-old-space-size=8192"
+  script:
+    - echo "Starting build script..."
+    - node -e 'console.log(v8.getHeapStatistics().heap_size_limit/(1024*1024))'
+    - yarn build:www
+
+staging:
+  stage: deploy
+  before_script:
+    - apk add --update curl && apk add --update jq && rm -rf /var/cache/apk/*
+  environment:
+    name: staging
+    url: https://wallet-staging.xx.network
+  only:
+    - staging
+  script:
+    - echo $SLACK_CHANNEL
+    - export EXIT_STATUS=$?
+    - ./scripts/notify_slack.sh
+
+prod:
+  stage: deploy
+  before_script:
+    - apk add --update curl && apk add --update jq && rm -rf /var/cache/apk/*
+  environment:
+    name: production
+    url: https://wallet.xx.network
+  only:
+    - master
+  script:
+    - echo $SLACK_CHANNEL
+    - export EXIT_STATUS=$?
+    - ./scripts/notify_slack.sh

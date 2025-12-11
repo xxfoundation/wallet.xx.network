@@ -23,3 +23,6 @@ yarn-error.log*
 .log
 env-config.js
 NOTES.md
+
+# Local Netlify folder
+.netlify

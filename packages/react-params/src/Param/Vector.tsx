@@ -1,18 +1,18 @@
-// Copyright 2017-2022 @polkadot/react-params authors & contributors
+// Copyright 2017-2025 @polkadot/react-params authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { ParamDef, Props, RawParam } from '../types';
+import type { ParamDef, Props, RawParam } from '../types.js';
 
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { Button } from '@polkadot/react-components';
 import { isUndefined } from '@polkadot/util';
 
-import getInitValue from '../initValue';
-import { useTranslation } from '../translate';
-import Params from '../';
-import Base from './Base';
-import useParamDefs from './useParamDefs';
+import Params from '../index.js';
+import getInitValue from '../initValue.js';
+import { useTranslation } from '../translate.js';
+import Base from './Base.js';
+import useParamDefs from './useParamDefs.js';
 
 function getParam ([{ name, type }]: ParamDef[], index: number): ParamDef {
   return {
@@ -36,6 +36,10 @@ export function getParams (inputParams: ParamDef[], prev: ParamDef[], max: numbe
 }
 
 export function getValues ({ value }: RawParam): RawParam[] {
+  if (value instanceof Set) {
+    value = [...value.values()];
+  }
+
   return Array.isArray(value)
     ? value.map((value: RawParam) =>
       isUndefined(value) || isUndefined(value.isValid)
@@ -56,9 +60,9 @@ function Vector ({ className = '', defaultValue, isDisabled = false, label, onCh
   useEffect((): void => {
     inputParams.length &&
       setParams((prev) =>
-        getParams(inputParams, prev, isDisabled ? (defaultValue.value as RawParam[] || []).length : count)
+        getParams(inputParams, prev, isDisabled ? values.length : count)
       );
-  }, [count, defaultValue, isDisabled, inputParams]);
+  }, [count, values, isDisabled, inputParams]);
 
   // when !isDisable, generating an input list based on count
   useEffect((): void => {
@@ -106,13 +110,13 @@ function Vector ({ className = '', defaultValue, isDisabled = false, label, onCh
         <div className='ui--Param-Vector-buttons'>
           <Button
             icon='plus'
-            label={t<string>('Add item')}
+            label={t('Add item')}
             onClick={_rowAdd}
           />
           <Button
             icon='minus'
             isDisabled={values.length === 0}
-            label={t<string>('Remove item')}
+            label={t('Remove item')}
             onClick={_rowRemove}
           />
         </div>

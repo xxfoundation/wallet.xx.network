@@ -1,23 +1,24 @@
-// Copyright 2017-2022 @polkadot/react-hooks authors & contributors
+// Copyright 2017-2023 @polkadot/react-hooks authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
+import type { DeriveStakingQuery } from '@polkadot/api-derive/types';
 import type { Nominations, ValidatorPrefs } from '@polkadot/types/interfaces';
 import type { KeyringJson$Meta } from '@polkadot/ui-keyring/types';
-import type { AddressFlags, AddressIdentity, UseAccountInfo } from './types';
+import type { AddressFlags, AddressIdentity, UseAccountInfo } from './types.js';
 
 import { useCallback, useEffect, useState } from 'react';
 
 import { keyring } from '@polkadot/ui-keyring';
 import { isFunction, isHex } from '@polkadot/util';
 
-import { createNamedHook } from './createNamedHook';
-import { useAccounts } from './useAccounts';
-import { useAddresses } from './useAddresses';
-import { useApi } from './useApi';
-import { useCall } from './useCall';
-import { useDeriveAccountFlags } from './useDeriveAccountFlags';
-import { useDeriveAccountInfo } from './useDeriveAccountInfo';
-import { useToggle } from './useToggle';
+import { createNamedHook } from './createNamedHook.js';
+import { useAccounts } from './useAccounts.js';
+import { useAddresses } from './useAddresses.js';
+import { useApi } from './useApi.js';
+import { useCall } from './useCall.js';
+import { useDeriveAccountFlags } from './useDeriveAccountFlags.js';
+import { useDeriveAccountInfo } from './useDeriveAccountInfo.js';
+import { useToggle } from './useToggle.js';
 
 const IS_NONE = {
   isCouncil: false,
@@ -45,6 +46,7 @@ function useAccountInfoImpl (value: string | null, isContract = false): UseAccou
   const { isAddress } = useAddresses();
   const accountInfo = useDeriveAccountInfo(value);
   const accountFlags = useDeriveAccountFlags(value);
+  const stakingLedger = useCall<DeriveStakingQuery>(api.derive.staking.query, [value, { withLedger: true }]);
   const nominator = useCall<Nominations>(api.query.staking?.nominators, [value]);
   const validator = useCall<ValidatorPrefs>(api.query.staking?.validators, [value]);
   const [accountIndex, setAccountIndex] = useState<string | undefined>(undefined);
@@ -52,6 +54,7 @@ function useAccountInfoImpl (value: string | null, isContract = false): UseAccou
   const [name, setName] = useState('');
   const [genesisHash, setGenesisHash] = useState<string | null>(null);
   const [identity, setIdentity] = useState<AddressIdentity | undefined>();
+  const [cmixId, setCmixId] = useState<string | undefined>();
   const [flags, setFlags] = useState<AddressFlags>(IS_NONE);
   const [meta, setMeta] = useState<KeyringJson$Meta | undefined>();
   const [isEditingName, toggleIsEditingName, setIsEditingName] = useToggle();
@@ -77,6 +80,10 @@ function useAccountInfoImpl (value: string | null, isContract = false): UseAccou
       ...accountFlags
     }));
   }, [accountFlags]);
+
+  useEffect(() => {
+    stakingLedger && stakingLedger.cmixId && setCmixId(stakingLedger.cmixId);
+  }, [stakingLedger]);
 
   useEffect((): void => {
     const { accountIndex, identity, nickname } = accountInfo || {};
@@ -254,6 +261,7 @@ function useAccountInfoImpl (value: string | null, isContract = false): UseAccou
     flags,
     genesisHash,
     identity,
+    cmixId,
     isEditing,
     isEditingName,
     isEditingTags,

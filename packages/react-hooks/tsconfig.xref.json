@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": "..",
+    "outDir": "./build",
+    "rootDir": "./src"
+  },
+  "include": [
+    "src/ctx/Api.tsx",
+    "src/ctx/types.ts",
+    "src/types.ts",
+    "src/constants.ts",
+  ],
+  "references": [
+    { "path": "../apps-config/tsconfig.build.json" }
+  ]
+}

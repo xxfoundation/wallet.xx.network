@@ -396,6 +396,7 @@
   "Potential dispatch of referendum {{id}} (if passed)": "ریفرنڈم کی ممکنہ ترسیل {{id}} (اگر منظور ہو)",
   "Pre-sale ethereum address": "قبل از فروخت ایتھیریم کا پتہ",
   "Prefix indicates the ss58 address format in this network, it is a 16 bit unsigned integer that describes the precise format of the bytes of the address": "پری فکس اس نیٹ ورک میں ss58 ایڈریس فارمیٹ کی نشاندہی کرتا ہے، یہ 0 ~ 255 کے درمیان ایک نمبر ہے جو ایڈریس کے بائٹس کی درست شکل بیان کرتا ہے",
+  "Prefix indicates the ss58 address format in this network, it is a number between 0 ~ 255 that describes the precise format of the bytes of the address": "پری فکس اس نیٹ ورک میں ss58 ایڈریس فارمیٹ کی نشاندہی کرتا ہے، یہ 0 ~ 255 کے درمیان ایک نمبر ہے جو ایڈریس کے بائٹس کی درست شکل بیان کرتا ہے",
   "Preimage": "پری امیج",
   "Preparing QR for signing": "دستخط کے لیے کیو آر کی تیاری",
   "Present the QR code containing the signature to the UI. Once scanned it will be submitted for on-chain processing and execution.": "یو آئی کے لیئے دستخط پر مشتمل کیو آر کوڈ پیش کریں۔ ایک بار اسکین کرنے کے بعد اسے آن چین پروسیسنگ اور عملدرآمد کے لیے جمع کیا جائے گا۔",
@@ -896,7 +897,7 @@
   "You need to unlock this account to be able to sign data.": "ڈیٹا پر دستخط کرنے کے قابل ہونے کے لیئے آپ کو اس اکاؤنٹ کو انلاک کرنے کی ضرورت ہے",
   "You should trust your nominations to act competently and honest; basing your decision purely on their current profitability could lead to reduced profits or even loss of funds.": "آپ کو اپنی نامزدگیوں پر بھروسہ کرنا چاہیئے تاکہ آپ قابل اور ایماندار رہتے ہوئے کام کریں۔ اپنے فیصلے خالصتاً ان کے موجودہ منافع کی بنیاد پر کرنا منافع کو کم کرنے یا فنڈز کے نقصان کا باعث بن سکتا ہے",
   "You will no longer have sudo access": "اب آپ کو سوڈو تک رسائی حاصل نہیں ہوگی",
-  "You will remove any delegation made by this acccount": "آپ اس اکاؤنٹ کی طرف سے بنایا گیا کوئی بھی ڈیلیگیشن ہٹا دیں گے",
+  "You will remove any delegation made by this account": "آپ اس اکاؤنٹ کی طرف سے بنایا گیا کوئی بھی ڈیلیگیشن ہٹا دیں گے",
   "Your Ethereum account": "آپ کا ایتھیریم اکاؤنٹ",
   "Your candidate/bid account. Once accepted this account will become a member.": "آپ کا امیدوار/بولی اکاؤنٹ۔ ایک بار منظور ہونے پر یہ اکاؤنٹ میمبر بن جائے گا",
   "Your close will be applied for this council account.": "آپ کا بند کرنے کا عمل اس کونسل اکاؤنٹ پر لاگو ہوگا",
@@ -1292,7 +1293,7 @@
   "transactions": "ٹرانزیکشنز",
   "transfer received": "منتقلی موصول ہوئی",
   "transfer remark/comment": "منتقلی پر کمینٹ/ریمارک دیں",
-  "transferrable": "قابل منتقلی",
+  "transferable": "قابل منتقلی",
   "trusted social recovery helpers": "قابل اعتماد سوشل ریکوری ہیلپرز",
   "turnout": "ٹرن آؤٹ",
   "twitter": "ٹویٹر",
@@ -1379,5 +1380,6 @@
   "{{step}}. Sign with your ETH address": "{{step}}۔ اپنے ای ٹی ایچ ایڈریس کے ساتھ دستخط کریں",
   "{{threshold}}, not passing": "{{threshold}} ، نہیں پار ہورہا",
   "{{threshold}}, passing": "{{threshold}} ، پار ہورہا ہے",
-  "{{value}}x voting balance, locked for {{lock}}x duration ({{period}} days)": "{{value}} x ووٹنگ بیلنس، نفاذ کے لیئے لاک {{lock}} x کیا گیا ({{period}} دن)"
+  "{{value}}x voting balance, locked for {{lock}}x duration ({{period}} days)": "{{value}} x ووٹنگ بیلنس، نفاذ کے لیئے لاک {{lock}} x کیا گیا ({{period}} دن)",
+  "{{value}}x voting balance, locked for {{lock}}x enactment ({{period}} days)": "{{value}} x ووٹنگ بیلنس، نفاذ کے لیئے لاک {{lock}} x کیا گیا ({{period}} دن)"
 }

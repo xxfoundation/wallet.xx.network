@@ -1,17 +1,16 @@
-// Copyright 2017-2022 @polkadot/app-js authors & contributors
+// Copyright 2017-2025 @polkadot/app-js authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { SubmittableExtrinsic } from '@polkadot/api/types';
-import type { BN } from '@polkadot/util';
 
 import React, { useCallback, useState } from 'react';
-import styled from 'styled-components';
 
-import { Button, Extrinsic, Icon, InputNumber, Toggle, TxButton } from '@polkadot/react-components';
+import { Button, Icon, styled, Toggle, TxButton } from '@polkadot/react-components';
 import { useApi, useToggle } from '@polkadot/react-hooks';
-import { BN_ZERO, isFunction } from '@polkadot/util';
+import { Extrinsic } from '@polkadot/react-params';
+import { isFunction } from '@polkadot/util';
 
-import { useTranslation } from './translate';
+import { useTranslation } from './translate.js';
 
 interface Props {
   className?: string;
@@ -21,85 +20,66 @@ interface Props {
 
 function Sudo ({ className, isMine, sudoKey }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
-  const { api, apiDefaultTxSudo } = useApi();
+  const { api } = useApi();
   const [withWeight, toggleWithWeight] = useToggle();
-  const [method, setMethod] = useState<SubmittableExtrinsic<'promise'> | null>(null);
-  const [weight, setWeight] = useState<BN>(BN_ZERO);
+  const [extrinsic, setExtrinsic] = useState<SubmittableExtrinsic<'promise'> | null>(null);
 
   const _onChangeExtrinsic = useCallback(
-    (method: SubmittableExtrinsic<'promise'> | null = null) => setMethod(() => method),
-    []
-  );
-
-  const _onChangeWeight = useCallback(
-    (weight: BN = BN_ZERO) => setWeight(weight),
+    (method?: SubmittableExtrinsic<'promise'>) => {
+      setExtrinsic(() => method || null);
+    },
     []
   );
 
   return isMine
     ? (
-      <section className={className}>
+      <StyledSection className={className}>
         <Extrinsic
-          defaultValue={apiDefaultTxSudo}
-          label={t<string>('submit the following change')}
+          defaultValue={withWeight ? api.tx.sudo.sudoUncheckedWeight : api.tx.sudo.sudo}
+          isDisabled
+          key={String(withWeight)}
+          label={t('submit the following change')}
           onChange={_onChangeExtrinsic}
         />
         {isFunction(api.tx.sudo.sudoUncheckedWeight) && (
-          <InputNumber
-            help={t<string>('The unchecked weight as specified for the sudoUncheckedWeight call.')}
-            isDisabled={!withWeight}
-            isError={weight.eq(BN_ZERO)}
-            isZeroable={false}
-            label={t<string>('unchecked weight for this call')}
-            onChange={_onChangeWeight}
-            value={weight}
-          >
-            <Toggle
-              className='sudoToggle'
-              isOverlay
-              label={t<string>('with weight override')}
-              onChange={toggleWithWeight}
-              value={withWeight}
-            />
-          </InputNumber>
+          <Toggle
+            className='sudoToggle'
+            label={t('with weight override')}
+            onChange={toggleWithWeight}
+            value={withWeight}
+          />
         )}
         <Button.Group>
           <TxButton
             accountId={sudoKey}
+            extrinsic={extrinsic}
             icon='sign-in-alt'
-            isDisabled={!method || (withWeight ? weight.eq(BN_ZERO) : false)}
+            isDisabled={!extrinsic}
             label={
               withWeight
-                ? t<string>('Submit Sudo Unchecked')
-                : t<string>('Submit Sudo')
-            }
-            params={
-              withWeight
-                ? [method, weight]
-                : [method]
-            }
-            tx={
-              withWeight
-                ? api.tx.sudo.sudoUncheckedWeight
-                : api.tx.sudo.sudo
+                ? t('Submit Sudo Unchecked')
+                : t('Submit Sudo')
             }
           />
         </Button.Group>
-      </section>
+      </StyledSection>
     )
     : (
       <article className='error padded'>
         <div>
           <Icon icon='ban' />
-          {t<string>('You do not have access to the current sudo key')}
+          {t('You do not have access to the current sudo key')}
         </div>
       </article>
     );
 }
 
-export default React.memo(styled(Sudo)`
+const StyledSection = styled.section`
   .sudoToggle {
     width: 100%;
     text-align: right;
+    padding-top: 1rem;
   }
-`);
+`;
+
+export default React.memo(Sudo);

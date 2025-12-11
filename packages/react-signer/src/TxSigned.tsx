@@ -1,40 +1,49 @@
-// Copyright 2017-2022 @polkadot/react-signer authors & contributors
+// Copyright 2017-2025 @polkadot/react-signer authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
+// This is for the use of `Ledger`
+//
+/* eslint-disable deprecation/deprecation */
+
+import type { ApiPromise } from '@polkadot/api';
 import type { SignerOptions } from '@polkadot/api/submittable/types';
 import type { SubmittableExtrinsic } from '@polkadot/api/types';
-import type { Ledger } from '@polkadot/hw-ledger';
+import type { Ledger, LedgerGeneric } from '@polkadot/hw-ledger';
 import type { KeyringPair } from '@polkadot/keyring/types';
 import type { QueueTx, QueueTxMessageSetStatus } from '@polkadot/react-components/Status/types';
 import type { Option } from '@polkadot/types';
 import type { Multisig, Timepoint } from '@polkadot/types/interfaces';
+import type { BN } from '@polkadot/util';
 import type { HexString } from '@polkadot/util/types';
-import type { AddressFlags, AddressProxy, QrState } from './types';
+import type { AddressFlags, AddressProxy, ExtendedSignerOptions, QrState } from './types.js';
 
-import React, { useCallback, useContext, useEffect, useState } from 'react';
-import styled from 'styled-components';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { ApiPromise } from '@polkadot/api';
 import { web3FromSource } from '@polkadot/extension-dapp';
-import { Button, ErrorBoundary, Modal, Output, StatusContext, Toggle } from '@polkadot/react-components';
-import { useApi, useLedger, useToggle } from '@polkadot/react-hooks';
+import { Button, ErrorBoundary, Modal, Output, styled, Toggle } from '@polkadot/react-components';
+import { useApi, useLedger, useQueue, useToggle } from '@polkadot/react-hooks';
 import { keyring } from '@polkadot/ui-keyring';
-import { assert, BN_ZERO, nextTick } from '@polkadot/util';
+import { settings } from '@polkadot/ui-settings';
+import { assert, nextTick } from '@polkadot/util';
 import { addressEq } from '@polkadot/util-crypto';
 
-import Address from './Address';
-import Qr from './Qr';
-import { AccountSigner, LedgerSigner, QrSigner } from './signers';
-import SignFields from './SignFields';
-import Tip from './Tip';
-import Transaction from './Transaction';
-import { useTranslation } from './translate';
-import { cacheUnlock, extractExternal, handleTxResults } from './util';
+import { AccountSigner, LedgerSigner, QrSigner } from './signers/index.js';
+import Address from './Address.js';
+import PayWithAsset from './PayWithAsset.js';
+import Qr from './Qr.js';
+import SignFields from './SignFields.js';
+import Tip from './Tip.js';
+import Transaction from './Transaction.js';
+import { useTranslation } from './translate.js';
+import { cacheUnlock, extractExternal, handleTxResults } from './util.js';
 
 interface Props {
   className?: string;
   currentItem: QueueTx;
-  requestAddress: string;
+  isQueueSubmit: boolean;
+  queueSize: number;
+  requestAddress: string | null;
+  setIsQueueSubmit: (isQueueSubmit: boolean) => void;
 }
 
 interface InnerTx {
@@ -52,7 +61,11 @@ function unlockAccount ({ isUnlockCached, signAddress, signPassword }: AddressPr
   let publicKey;
 
   try {
-    publicKey = keyring.decodeAddress(signAddress as string);
+    if (!signAddress) {
+      throw new Error('Invalid signAddress');
+    }
+
+    publicKey = keyring.decodeAddress(signAddress);
   } catch (error) {
     console.error(error);
 
@@ -73,11 +86,31 @@ function unlockAccount ({ isUnlockCached, signAddress, signPassword }: AddressPr
   return null;
 }
 
-async function signAndSend (queueSetTxStatus: QueueTxMessageSetStatus, currentItem: QueueTx, tx: SubmittableExtrinsic<'promise'>, pairOrAddress: KeyringPair | string, options: Partial<SignerOptions>): Promise<void> {
+async function fakeSignForChopsticks (api: ApiPromise, tx: SubmittableExtrinsic<'promise'>, sender: string): Promise<void> {
+  const account = await api.query.system.account(sender);
+  const options = {
+    blockHash: api.genesisHash,
+    genesisHash: api.genesisHash,
+    nonce: account.nonce,
+    runtimeVersion: api.runtimeVersion
+  };
+  const mockSignature = new Uint8Array(64);
+
+  mockSignature.fill(0xcd);
+  mockSignature.set([0xde, 0xad, 0xbe, 0xef]);
+  tx.signFake(sender, options);
+  tx.signature.set(mockSignature);
+}
+
+async function signAndSend (queueSetTxStatus: QueueTxMessageSetStatus, currentItem: QueueTx, tx: SubmittableExtrinsic<'promise'>, pairOrAddress: KeyringPair | string, options: Partial<SignerOptions>, api: ApiPromise, isMockSign: boolean): Promise<void> {
   currentItem.txStartCb && currentItem.txStartCb();
 
   try {
-    await tx.signAsync(pairOrAddress, options);
+    if (!isMockSign) {
+      await tx.signAsync(pairOrAddress, options);
+    } else {
+      await fakeSignForChopsticks(api, tx, pairOrAddress as string);
+    }
 
     console.info('sending', tx.toHex());
 
@@ -94,11 +127,15 @@ async function signAndSend (queueSetTxStatus: QueueTxMessageSetStatus, currentIt
   }
 }
 
-async function signAsync (queueSetTxStatus: QueueTxMessageSetStatus, { id, txFailedCb = NOOP, txStartCb = NOOP }: QueueTx, tx: SubmittableExtrinsic<'promise'>, pairOrAddress: KeyringPair | string, options: Partial<SignerOptions>): Promise<string | null> {
+async function signAsync (queueSetTxStatus: QueueTxMessageSetStatus, { id, txFailedCb = NOOP, txStartCb = NOOP }: QueueTx, tx: SubmittableExtrinsic<'promise'>, pairOrAddress: KeyringPair | string, options: Partial<SignerOptions>, api: ApiPromise, isMockSign: boolean): Promise<string | null> {
   txStartCb();
 
   try {
-    await tx.signAsync(pairOrAddress, options);
+    if (!isMockSign) {
+      await tx.signAsync(pairOrAddress, options);
+    } else {
+      await fakeSignForChopsticks(api, tx, pairOrAddress as string);
+    }
 
     return tx.toJSON();
   } catch (error) {
@@ -159,25 +196,31 @@ async function wrapTx (api: ApiPromise, currentItem: QueueTx, { isMultiCall, mul
   return tx;
 }
 
-async function extractParams (api: ApiPromise, address: string, options: Partial<SignerOptions>, getLedger: () => Ledger, setQrState: (state: QrState) => void): Promise<['qr' | 'signing', string, Partial<SignerOptions>]> {
+async function extractParams (api: ApiPromise, address: string, options: Partial<SignerOptions>, getLedger: () => LedgerGeneric | Ledger, setQrState: (state: QrState) => void): Promise<['qr' | 'signing', string, Partial<SignerOptions>, boolean]> {
   const pair = keyring.getPair(address);
-  const { meta: { accountOffset, addressOffset, isExternal, isHardware, isInjected, isProxied, source } } = pair;
+  const { meta: { accountOffset, addressOffset, isExternal, isHardware, isInjected, isLocal, isProxied, source } } = pair;
 
   if (isHardware) {
-    return ['signing', address, { ...options, signer: new LedgerSigner(api.registry, getLedger, accountOffset as number || 0, addressOffset as number || 0) }];
+    return ['signing', address, { ...options, signer: new LedgerSigner(api, getLedger, accountOffset || 0, addressOffset || 0) }, false];
+  } else if (isLocal) {
+    return ['signing', address, { ...options, signer: new AccountSigner(api.registry, pair) }, true];
   } else if (isExternal && !isProxied) {
-    return ['qr', address, { ...options, signer: new QrSigner(api.registry, setQrState) }];
+    return ['qr', address, { ...options, signer: new QrSigner(api.registry, setQrState) }, false];
   } else if (isInjected) {
-    const injected = await web3FromSource(source as string);
+    if (!source) {
+      throw new Error(`Unable to find injected source for ${address}`);
+    }
+
+    const injected = await web3FromSource(source);
 
     assert(injected, `Unable to find a signer for ${address}`);
 
-    return ['signing', address, { ...options, signer: injected.signer }];
+    return ['signing', address, { ...options, signer: injected.signer }, false];
   }
 
   assert(addressEq(address, pair.address), `Unable to retrieve keypair for ${address}`);
 
-  return ['signing', address, { ...options, signer: new AccountSigner(api.registry, pair) }];
+  return ['signing', address, { ...options, signer: new AccountSigner(api.registry, pair) }, false];
 }
 
 function tryExtract (address: string | null): AddressFlags {
@@ -188,11 +231,11 @@ function tryExtract (address: string | null): AddressFlags {
   }
 }
 
-function TxSigned ({ className, currentItem, requestAddress }: Props): React.ReactElement<Props> | null {
+function TxSigned ({ className, currentItem, isQueueSubmit, queueSize, requestAddress, setIsQueueSubmit }: Props): React.ReactElement<Props> | null {
   const { t } = useTranslation();
   const { api } = useApi();
   const { getLedger } = useLedger();
-  const { queueSetTxStatus } = useContext(StatusContext);
+  const { queueSetTxStatus } = useQueue();
   const [flags, setFlags] = useState(() => tryExtract(requestAddress));
   const [error, setError] = useState<Error | null>(null);
   const [{ isQrHashed, qrAddress, qrPayload, qrResolve }, setQrState] = useState<QrState>(() => ({ isQrHashed: false, qrAddress: '', qrPayload: new Uint8Array() }));
@@ -201,10 +244,11 @@ function TxSigned ({ className, currentItem, requestAddress }: Props): React.Rea
   const [isSubmit, setIsSubmit] = useState(true);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [senderInfo, setSenderInfo] = useState<AddressProxy>(() => ({ isMultiCall: false, isUnlockCached: false, multiRoot: null, proxyRoot: null, signAddress: requestAddress, signPassword: '' }));
-  const [signedOptions, setSignedOptions] = useState<Partial<SignerOptions>>({});
+  const [signedOptions, setSignedOptions] = useState<ExtendedSignerOptions>({});
   const [signedTx, setSignedTx] = useState<string | null>(null);
   const [{ innerHash, innerTx }, setCallInfo] = useState<InnerTx>(EMPTY_INNER);
-  const [tip, setTip] = useState(BN_ZERO);
+  const [tip, setTip] = useState<BN | undefined>();
+  const [initialIsQueueSubmit] = useState(isQueueSubmit);
 
   useEffect((): void => {
     setFlags(tryExtract(senderInfo.signAddress));
@@ -248,14 +292,24 @@ function TxSigned ({ className, currentItem, requestAddress }: Props): React.Rea
           passwordError = unlockAccount(senderInfo);
         } else if (flags.isHardware) {
           try {
+            const currApp = settings.get().ledgerApp;
             const ledger = getLedger();
-            const { address } = await ledger.getAddress(false, flags.accountOffset, flags.addressOffset);
 
-            console.log(`Signing with Ledger address ${address}`);
+            if (currApp === 'migration' || currApp === 'generic') {
+              const { address } = await (ledger as LedgerGeneric).getAddress(api.consts.system.ss58Prefix.toNumber(), false, flags.accountOffset, flags.addressOffset);
+
+              console.log(`Signing with Ledger address ${address}`);
+            } else {
+              const { address } = await (ledger as Ledger).getAddress(false, flags.accountOffset, flags.addressOffset);
+
+              console.log(`Signing with Ledger address ${address}`);
+            }
           } catch (error) {
             console.error(error);
 
-            passwordError = t<string>('Unable to connect to the Ledger, ensure support is enabled in settings and no other app is using it. {{error}}', { replace: { error: (error as Error).message } });
+            const errorMessage = (error as Error).message;
+
+            passwordError = t('Unable to connect to the Ledger, ensure support is enabled in settings and no other app is using it. {{errorMessage}}', { replace: { errorMessage } });
           }
         }
       }
@@ -264,7 +318,7 @@ function TxSigned ({ className, currentItem, requestAddress }: Props): React.Rea
 
       return !passwordError;
     },
-    [flags, getLedger, senderInfo, t]
+    [flags, getLedger, senderInfo, t, api.consts.system.ss58Prefix]
   );
 
   const _onSendPayload = useCallback(
@@ -284,28 +338,28 @@ function TxSigned ({ className, currentItem, requestAddress }: Props): React.Rea
   const _onSend = useCallback(
     async (queueSetTxStatus: QueueTxMessageSetStatus, currentItem: QueueTx, senderInfo: AddressProxy): Promise<void> => {
       if (senderInfo.signAddress) {
-        const [tx, [status, pairOrAddress, options]] = await Promise.all([
+        const [tx, [status, pairOrAddress, options, isMockSign]] = await Promise.all([
           wrapTx(api, currentItem, senderInfo),
-          extractParams(api, senderInfo.signAddress, { nonce: -1, tip }, getLedger, setQrState)
+          extractParams(api, senderInfo.signAddress, { nonce: -1, tip, withSignedTransaction: true, ...signedOptions }, getLedger, setQrState)
         ]);
 
         queueSetTxStatus(currentItem.id, status);
 
-        await signAndSend(queueSetTxStatus, currentItem, tx, pairOrAddress, options);
+        await signAndSend(queueSetTxStatus, currentItem, tx, pairOrAddress, options, api, isMockSign);
       }
     },
-    [api, getLedger, tip]
+    [api, getLedger, signedOptions, tip]
   );
 
   const _onSign = useCallback(
     async (queueSetTxStatus: QueueTxMessageSetStatus, currentItem: QueueTx, senderInfo: AddressProxy): Promise<void> => {
       if (senderInfo.signAddress) {
-        const [tx, [, pairOrAddress, options]] = await Promise.all([
+        const [tx, [, pairOrAddress, options, isMockSign]] = await Promise.all([
           wrapTx(api, currentItem, senderInfo),
-          extractParams(api, senderInfo.signAddress, { ...signedOptions, tip }, getLedger, setQrState)
+          extractParams(api, senderInfo.signAddress, { ...signedOptions, tip, withSignedTransaction: true }, getLedger, setQrState)
         ]);
 
-        setSignedTx(await signAsync(queueSetTxStatus, currentItem, tx, pairOrAddress, options));
+        setSignedTx(await signAsync(queueSetTxStatus, currentItem, tx, pairOrAddress, options, api, isMockSign));
       }
     },
     [api, getLedger, signedOptions, tip]
@@ -343,9 +397,36 @@ function TxSigned ({ className, currentItem, requestAddress }: Props): React.Rea
     [_onSend, _onSendPayload, _onSign, _unlock, currentItem, isSubmit, queueSetTxStatus, senderInfo]
   );
 
+  const signLabel = useMemo(() => {
+    if (flags.isQr) {
+      return t('Sign via Qr');
+    } else if (isSubmit) {
+      if (flags.isLocal) {
+        return t('Mock Sign and Submit');
+      } else {
+        return t('Sign and Submit');
+      }
+    } else {
+      if (flags.isLocal) {
+        return t('Mock Sign (no submission)');
+      } else {
+        return t('Sign (no submission)');
+      }
+    }
+  }, [flags.isQr, flags.isLocal, isSubmit, t]);
+
+  const isAutoCapable = senderInfo.signAddress && (queueSize > 1) && isSubmit && !(flags.isHardware || flags.isMultisig || flags.isProxied || flags.isQr || flags.isUnlockable) && !isRenderError;
+
+  if (!isBusy && isAutoCapable && initialIsQueueSubmit) {
+    setBusy(true);
+    setTimeout(_doStart, 1000);
+
+    return null;
+  }
+
   return (
     <>
-      <Modal.Content className={className}>
+      <StyledModalContent className={className}>
         <ErrorBoundary
           error={error}
           onError={toggleRenderError}
@@ -366,6 +447,7 @@ function TxSigned ({ className, currentItem, requestAddress }: Props): React.Rea
                   accountId={senderInfo.signAddress}
                   currentItem={currentItem}
                   onError={toggleRenderError}
+                  signerOptions={signedOptions}
                 />
                 <Address
                   currentItem={currentItem}
@@ -375,7 +457,10 @@ function TxSigned ({ className, currentItem, requestAddress }: Props): React.Rea
                   requestAddress={requestAddress}
                 />
                 {!currentItem.payload && (
-                  <Tip onChange={setTip} />
+                  <>
+                    <PayWithAsset onChangeFeeAsset={setSignedOptions} />
+                    <Tip onChange={setTip} />
+                  </>
                 )}
                 {!isSubmit && (
                   <SignFields
@@ -389,7 +474,7 @@ function TxSigned ({ className, currentItem, requestAddress }: Props): React.Rea
                     <Output
                       isDisabled
                       isTrimmed
-                      label={t<string>('multisig call data')}
+                      label={t('multisig call data')}
                       value={innerTx}
                       withCopy
                     />
@@ -400,7 +485,7 @@ function TxSigned ({ className, currentItem, requestAddress }: Props): React.Rea
                     <Output
                       isDisabled
                       isTrimmed
-                      label={t<string>('call hash')}
+                      label={t('call hash')}
                       value={innerHash}
                       withCopy
                     />
@@ -410,7 +495,7 @@ function TxSigned ({ className, currentItem, requestAddress }: Props): React.Rea
             )
           }
         </ErrorBoundary>
-      </Modal.Content>
+      </StyledModalContent>
       <Modal.Actions>
         <Button
           icon={
@@ -420,35 +505,41 @@ function TxSigned ({ className, currentItem, requestAddress }: Props): React.Rea
           }
           isBusy={isBusy}
           isDisabled={!senderInfo.signAddress || isRenderError}
-          label={
-            flags.isQr
-              ? t<string>('Sign via Qr')
-              : isSubmit
-                ? t<string>('Sign and Submit')
-                : t<string>('Sign (no submission)')
-          }
+          label={signLabel}
           onClick={_doStart}
           tabIndex={2}
         />
-        {!isBusy && (
-          <Toggle
-            className='signToggle'
-            isDisabled={!!currentItem.payload}
-            label={
-              isSubmit
-                ? t<string>('Sign and Submit')
-                : t<string>('Sign (no submission)')
-            }
-            onChange={setIsSubmit}
-            value={isSubmit}
-          />
-        )}
+        <div className='signToggle'>
+          {!isBusy && (
+            <Toggle
+              isDisabled={!!currentItem.payload}
+              label={
+                isSubmit
+                  ? t('Sign and Submit')
+                  : t('Sign (no submission)')
+              }
+              onChange={setIsSubmit}
+              value={isSubmit}
+            />
+          )}
+          {isAutoCapable && (
+            <Toggle
+              label={
+                isQueueSubmit
+                  ? t('Submit {{queueSize}} items', { replace: { queueSize } })
+                  : t('Submit individual')
+              }
+              onChange={setIsQueueSubmit}
+              value={isQueueSubmit}
+            />
+          )}
+        </div>
       </Modal.Actions>
     </>
   );
 }
 
-export default React.memo(styled(TxSigned)`
+const StyledModalContent = styled(Modal.Content)`
   .tipToggle {
     width: 100%;
     text-align: right;
@@ -457,4 +548,6 @@ export default React.memo(styled(TxSigned)`
   .ui--Checks {
     margin-top: 0.75rem;
   }
-`);
+`;
+
+export default React.memo(TxSigned);

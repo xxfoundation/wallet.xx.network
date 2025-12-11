@@ -1,4 +1,4 @@
-// Copyright 2017-2022 @polkadot/apps-config authors & contributors
+// Copyright 2017-2023 @polkadot/apps-config authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { EndpointOption } from './types';
@@ -17,11 +17,19 @@ import { getTeleports } from './util';
 // IMPORTANT: Alphabetical based on text
 export const testParasRococo: EndpointOption[] = [
   {
+    info: 'rococoAcurast',
+    paraId: 4191,
+    text: 'Acurast Testnet',
+    providers: {
+      Acurast: 'wss://ws.acurast-rococo.diamond.papers.tech'
+    }
+  },
+  {
     info: 'rococoAmplitude',
     paraId: 2124,
-    text: 'Amplitude',
+    text: 'Amplitude testnet (Foucoco)',
     providers: {
-      PendulumChain: 'wss://pencol-roc-00.pendulumchain.tech'
+      PendulumChain: 'wss://rpc-foucoco.pendulumchain.tech'
     }
   },
   {
@@ -124,7 +132,7 @@ export const testParasRococo: EndpointOption[] = [
     paraId: 4044,
     text: 'Frequency',
     providers: {
-      Frequency: 'wss://collator1.frequency.xyz'
+      Frequency: 'wss://rpc.rococo.frequency.xyz'
     }
   },
   {
@@ -335,6 +343,14 @@ export const testParasRococo: EndpointOption[] = [
     text: 'Turing Network (Staging)',
     providers: {
       OAK: 'wss://rpc.turing-staging.oak.tech'
+    }
+  },
+  {
+    info: 'rococoUnitNetwork',
+    paraId: 4168,
+    text: 'Unit Network',
+    providers: {
+      UnitNetwork: 'wss://www.unitnode3.info:443'
     }
   },
   {

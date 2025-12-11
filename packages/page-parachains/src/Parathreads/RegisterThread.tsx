@@ -1,18 +1,19 @@
-// Copyright 2017-2022 @polkadot/app-parachains authors & contributors
+// Copyright 2017-2025 @polkadot/app-parachains authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { BalanceOf } from '@polkadot/types/interfaces';
-import type { OwnedId, OwnerInfo } from '../types';
+import type { PolkadotRuntimeParachainsConfigurationHostConfiguration } from '@polkadot/types/lookup';
+import type { OwnedId, OwnerInfo } from '../types.js';
 
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { InputAddress, InputBalance, InputFile, InputNumber, Modal, TxButton } from '@polkadot/react-components';
-import { useApi } from '@polkadot/react-hooks';
+import { useApi, useCall } from '@polkadot/react-hooks';
 import { BN, compactAddLength } from '@polkadot/util';
 
-import InputOwner from '../InputOwner';
-import { useTranslation } from '../translate';
-import { LOWEST_INVALID_ID } from './constants';
+import InputOwner from '../InputOwner.js';
+import { useTranslation } from '../translate.js';
+import { LOWEST_INVALID_ID } from './constants.js';
 
 interface Props {
   className?: string;
@@ -28,6 +29,7 @@ function RegisterThread ({ className, nextParaId, onClose, ownedIds }: Props): R
   const [paraId, setParaId] = useState<BN | undefined>();
   const [wasm, setWasm] = useState<Uint8Array | null>(null);
   const [genesisState, setGenesisState] = useState<Uint8Array | null>(null);
+  const paraConfig = useCall<PolkadotRuntimeParachainsConfigurationHostConfiguration>(api.query.configuration?.activeConfig);
 
   const _setGenesisState = useCallback(
     (data: Uint8Array) => setGenesisState(compactAddLength(data)),
@@ -49,9 +51,15 @@ function RegisterThread ({ className, nextParaId, onClose, ownedIds }: Props): R
 
   const reservedDeposit = useMemo(
     () => (api.consts.registrar.paraDeposit as BalanceOf)
-      .add((api.consts.registrar.dataDepositPerByte as BalanceOf).muln(wasm ? wasm.length : 0))
+      .add((api.consts.registrar.dataDepositPerByte as BalanceOf).muln(
+        paraConfig?.maxCodeSize
+          ? paraConfig.maxCodeSize.toNumber()
+          : wasm
+            ? wasm.length
+            : 0
+      ))
       .iadd((api.consts.registrar.dataDepositPerByte as BalanceOf).muln(genesisState ? genesisState.length : 0)),
-    [api, wasm, genesisState]
+    [api, wasm, genesisState, paraConfig]
   );
 
   const isIdError = !paraId || !paraId.gt(LOWEST_INVALID_ID);
@@ -59,7 +67,7 @@ function RegisterThread ({ className, nextParaId, onClose, ownedIds }: Props): R
   return (
     <Modal
       className={className}
-      header={t<string>('Register parathread')}
+      header={t('Register parathread')}
       onClose={onClose}
       size='large'
     >
@@ -74,48 +82,46 @@ function RegisterThread ({ className, nextParaId, onClose, ownedIds }: Props): R
           )
           : (
             <>
-              <Modal.Columns hint={t<string>('This account will be associated with the parachain and pay the deposit.')}>
+              <Modal.Columns hint={t('This account will be associated with the parachain and pay the deposit.')}>
                 <InputAddress
-                  label={t<string>('register from')}
+                  label={t('register from')}
                   onChange={setAccountId}
                   type='account'
                   value={accountId}
                 />
               </Modal.Columns>
-              <Modal.Columns hint={t<string>('The id of this parachain as known on the network')}>
+              <Modal.Columns hint={t('The id of this parachain as known on the network')}>
                 <InputNumber
                   autoFocus
                   defaultValue={nextParaId}
                   isError={isIdError}
                   isZeroable={false}
-                  label={t<string>('parachain id')}
+                  label={t('parachain id')}
                   onChange={setParaId}
                 />
               </Modal.Columns>
             </>
           )
         }
-        <Modal.Columns hint={t<string>('The WASM validation function for this parachain.')}>
+        <Modal.Columns hint={t('The WASM validation function for this parachain.')}>
           <InputFile
-            help={t<string>('The compiled runtime WASM for the parachain you wish to register.')}
             isError={!wasm}
-            label={t<string>('code')}
+            label={t('code')}
             onChange={_setWasm}
           />
         </Modal.Columns>
-        <Modal.Columns hint={t<string>('The genesis state for this parachain.')}>
+        <Modal.Columns hint={t('The genesis state for this parachain.')}>
           <InputFile
-            help={t<string>('The genesis state for the parachain.')}
             isError={!genesisState}
-            label={t<string>('initial state')}
+            label={t('initial state')}
             onChange={_setGenesisState}
           />
         </Modal.Columns>
-        <Modal.Columns hint={t<string>('The reservation fee for this parachain, including base fee and per-byte fees')}>
+        <Modal.Columns hint={t('The reservation fee for this parachain, including base fee and per-byte fees')}>
           <InputBalance
             defaultValue={reservedDeposit}
             isDisabled
-            label={t<string>('reserved deposit')}
+            label={t('reserved deposit')}
           />
         </Modal.Columns>
       </Modal.Content>

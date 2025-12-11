@@ -1,4 +1,4 @@
-// Copyright 2017-2022 @polkadot/app-staking authors & contributors
+// Copyright 2017-2023 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Option } from '@polkadot/types';
@@ -8,14 +8,15 @@ import type { BN } from '@polkadot/util';
 import React, { useMemo } from 'react';
 
 import { CardSummary, SummaryBox } from '@polkadot/react-components';
-import { useApi, useCall } from '@polkadot/react-hooks';
+import { useApi, useCall, useTotalStakeableIssuance } from '@polkadot/react-hooks';
 import { FormatBalance } from '@polkadot/react-query';
 import { BN_ZERO } from '@polkadot/util';
 
-import { useTranslation } from '../translate';
+import { useTranslation } from '../translate.js';
 
 interface Props {
   avgStaked?: BN;
+  custodyRewardsActive: boolean;
   lastEra?: BN;
   lowStaked?: BN;
   minNominated?: BN;
@@ -48,14 +49,21 @@ function getProgressInfo (value?: BN, total?: BN): ProgressInfo | undefined {
     : undefined;
 }
 
-function Summary ({ avgStaked, lastEra, lowStaked, minNominated, minNominatorBond, stakedReturn, totalIssuance, totalStaked }: Props): React.ReactElement<Props> {
+function Summary ({ avgStaked, custodyRewardsActive, lastEra, lowStaked, minNominated, minNominatorBond, stakedReturn, totalStaked }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
+  console.log('lastEra', lastEra)
   const lastReward = useCall<BN>(lastEra && api.query.staking.erasValidatorReward, [lastEra], OPT_REWARD);
+  console.log('lastReward', lastReward)
+  const totalStakeableIssuance = useTotalStakeableIssuance();
+
+  const helpReturns = t('Network overall staking return. This is calculated from the current staked ratio, current ideal interest and inflation parameters.');
+  const helpStaked = t('Team multipliers are not counted in total staked, but impact staking returns');
+  const helpLowest = t('Team multipliers are included in the lowest / avg staked numbers');
 
   const progressStake = useMemo(
-    () => getProgressInfo(totalStaked, totalIssuance),
-    [totalIssuance, totalStaked]
+    () => getProgressInfo(totalStaked, totalStakeableIssuance),
+    [totalStakeableIssuance, totalStaked]
   );
 
   const progressAvg = useMemo(
@@ -68,6 +76,7 @@ function Summary ({ avgStaked, lastEra, lowStaked, minNominated, minNominatorBon
       <section className='media--800'>
         {progressStake && (
           <CardSummary
+            help={custodyRewardsActive && helpStaked}
             label={t<string>('total staked')}
             progress={progressStake}
           >
@@ -75,12 +84,20 @@ function Summary ({ avgStaked, lastEra, lowStaked, minNominated, minNominatorBon
               value={totalStaked}
               withSi
             />
+            &nbsp;/&nbsp;<br />
+            <FormatBalance
+              value={totalStakeableIssuance}
+              withSi
+            />
           </CardSummary>
         )}
       </section>
       <section className='media--800'>
-        {totalIssuance && (stakedReturn > 0) && Number.isFinite(stakedReturn) && (
-          <CardSummary label={t<string>('returns')}>
+        {(stakedReturn > 0) && Number.isFinite(stakedReturn) && (
+          <CardSummary
+            help={helpReturns}
+            label={t<string>('returns')}
+          >
             {stakedReturn.toFixed(1)}%
           </CardSummary>
         )}
@@ -88,6 +105,7 @@ function Summary ({ avgStaked, lastEra, lowStaked, minNominated, minNominatorBon
       <section className='media--1000'>
         {progressAvg && (
           <CardSummary
+            help={custodyRewardsActive && helpLowest}
             label={`${t<string>('lowest / avg staked')}`}
             progress={progressAvg}
           >

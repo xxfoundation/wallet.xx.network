@@ -1,4 +1,4 @@
-// Copyright 2017-2022 @polkadot/react-components authors & contributors
+// Copyright 2017-2023 @polkadot/react-components authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { ThemeDef } from '../types';
@@ -10,14 +10,13 @@ import styled, { createGlobalStyle, ThemeContext } from 'styled-components';
 
 import Header from './Header';
 
-const ESC_KEYCODE = 27;
-
 function Base (props: ModalProps): React.ReactElement<ModalProps> {
   const { theme } = useContext(ThemeContext as React.Context<ThemeDef>);
   const { children, className = '', header, onClose, size = 'medium', testId = 'modal' } = props;
 
   const listenKeyboard = useCallback((event: KeyboardEvent) => {
-    if (event.key === 'Escape' || event.keyCode === ESC_KEYCODE) {
+    // eslint-disable-next-line deprecation/deprecation
+    if (event.key === 'Escape' || event.keyCode === 27) {
       onClose();
     }
   }, [onClose]);

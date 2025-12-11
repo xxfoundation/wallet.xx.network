@@ -1,11 +1,13 @@
-// Copyright 2017-2022 @polkadot/app-staking authors & contributors
+// Copyright 2017-2023 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { DeriveBalancesAll, DeriveStakingAccount } from '@polkadot/api-derive/types';
+import type { DeriveBalancesAll, DeriveSessionProgress, DeriveStakingAccount } from '@polkadot/api-derive/types';
 import type { StakerState } from '@polkadot/react-hooks/types';
-import type { PalletStakingUnappliedSlash } from '@polkadot/types/lookup';
-import type { SortedTargets } from '../../types';
-import type { Slash } from '../types';
+import type { Option, StorageKey } from '@polkadot/types';
+import type { AccountId32 } from '@polkadot/types/interfaces';
+import type { PalletStakingStakingLedger, PalletStakingUnappliedSlash, PalletStakingValidatorPrefs } from '@polkadot/types/lookup';
+import type { SortedTargets } from '../../types.js';
+import type { Slash } from '../types.js';
 
 import React, { useCallback, useContext, useMemo } from 'react';
 import styled from 'styled-components';
@@ -15,20 +17,23 @@ import { AddressInfo, AddressMini, AddressSmall, Badge, Button, Menu, Popup, Sta
 import { useApi, useCall, useToggle } from '@polkadot/react-hooks';
 import { BN, formatNumber, isFunction } from '@polkadot/util';
 
-import { useTranslation } from '../../translate';
-import useSlashingSpans from '../useSlashingSpans';
-import BondExtra from './BondExtra';
-import InjectKeys from './InjectKeys';
-import KickNominees from './KickNominees';
-import ListNominees from './ListNominees';
-import Nominate from './Nominate';
-import Rebond from './Rebond';
-import SetControllerAccount from './SetControllerAccount';
-import SetRewardDestination from './SetRewardDestination';
-import SetSessionKey from './SetSessionKey';
-import Unbond from './Unbond';
-import Validate from './Validate';
-import WarnBond from './WarnBond';
+import { useTranslation } from '../../translate.js';
+import useSlashingSpans from '../useSlashingSpans.js';
+import BondExtra from './BondExtra.js';
+import InjectKeys from './InjectKeys.js';
+import KickNominees from './KickNominees.js';
+import ListNominees from './ListNominees.js';
+import Nominate from './Nominate.js';
+import Rebond from './Rebond.js';
+import SetCmixId from './SetCmixId.js';
+import SetControllerAccount from './SetControllerAccount.js';
+import SetSessionKey from './SetSessionKey.js';
+import TransferCmixId from './TransferCmixId.js';
+import Unbond from './Unbond.js';
+import Validate from './Validate.js';
+import WarnBond from './WarnBond.js';
+
+const ELECTION_FACTOR = 1.5;
 
 interface Props {
   allSlashes?: [BN, PalletStakingUnappliedSlash[]][];
@@ -57,9 +62,20 @@ function useStashCalls (api: ApiPromise, stashId: string) {
   const params = useMemo(() => [stashId], [stashId]);
   const balancesAll = useCall<DeriveBalancesAll>(api.derive.balances?.all, params);
   const stakingAccount = useCall<DeriveStakingAccount>(api.derive.staking.account, params);
+  const stakingValidators = useCall<[StorageKey, PalletStakingValidatorPrefs][]>(api.query.staking.validators.entries);
+  const activeValidators = useCall<string[]>(api.query.session.validators);
+  const stakingLedgers = useCall<[StorageKey, Option<PalletStakingStakingLedger>][]>(api.query.staking.ledger.entries);
+  const bonded = useCall<[StorageKey, Option<AccountId32>][]>(api.query.staking.bonded.entries);
   const spanCount = useSlashingSpans(stashId);
 
-  return { balancesAll, spanCount, stakingAccount };
+  return { activeValidators, balancesAll, bonded, spanCount, stakingAccount, stakingLedgers, stakingValidators };
+}
+
+function useControllerCalls (api: ApiPromise, controllerId: string | null) {
+  const params = useMemo(() => [controllerId], [controllerId]);
+  const stakingLedger = useCall<Option<PalletStakingStakingLedger>>(api.query.staking.ledger, params);
+
+  return stakingLedger?.unwrapOr(undefined);
 }
 
 function Account ({ allSlashes, className = '', info: { controllerId, destination, hexSessionIdNext, hexSessionIdQueue, isLoading, isOwnController, isOwnStash, isStashNominating, isStashValidating, nominating, sessionIds, stakingLedger, stashId }, isDisabled, minCommission, targets }: Props): React.ReactElement<Props> {
@@ -71,12 +87,29 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
   const [isKickOpen, toggleKick] = useToggle();
   const [isNominateOpen, toggleNominate] = useToggle();
   const [isRebondOpen, toggleRebond] = useToggle();
-  const [isRewardDestinationOpen, toggleRewardDestination] = useToggle();
   const [isSetControllerOpen, toggleSetController] = useToggle();
   const [isSetSessionOpen, toggleSetSession] = useToggle();
   const [isUnbondOpen, toggleUnbond] = useToggle();
   const [isValidateOpen, toggleValidate] = useToggle();
-  const { balancesAll, spanCount, stakingAccount } = useStashCalls(api, stashId);
+  const [isSetCmixIdOpen, toggleSetCmixId] = useToggle();
+  const [isTransferCmixIdOpen, toggleTransferCmixId] = useToggle();
+  const { activeValidators, balancesAll, bonded, spanCount, stakingAccount, stakingLedgers, stakingValidators } = useStashCalls(api, stashId);
+
+  const ledger = useControllerCalls(api, controllerId);
+  const ledgers = useMemo(() => stakingLedgers?.map((elem) => {
+    return elem[1].unwrap();
+  }) || [], [stakingLedgers]);
+  const cmixId = ledger?.cmixId.isSome ? ledger?.cmixId.unwrap().toString() : undefined;
+
+  const sessionInfo = useCall<DeriveSessionProgress>(api.derive.session?.progress);
+  const lastEraSession = sessionInfo ? sessionInfo.eraLength.toNumber() - sessionInfo.sessionLength.toNumber() * 2 : 0;
+  const electionCutoffLength = sessionInfo ? sessionInfo.eraLength.toNumber() - sessionInfo.sessionLength.toNumber() * ELECTION_FACTOR : 0;
+  const transferWindow = sessionInfo && (sessionInfo?.eraProgress.toNumber() < electionCutoffLength || sessionInfo?.eraProgress.toNumber() > lastEraSession);
+
+  const stakingValAddresses = stakingValidators?.filter(([key]) => key.args.length).map(([key]) => key.args[0].toString()) || [];
+  const bondedAddresses = bonded?.filter(([key]) => key.args.length).map(([key]) => key.args[0].toString()) || [];
+
+  const validToTransferCmixId = cmixId && activeValidators && stashId && !activeValidators.some((element) => element === stashId) && !stakingValAddresses?.some((elem) => elem === stashId) && transferWindow;
 
   const slashes = useMemo(
     () => extractSlashes(stashId, allSlashes),
@@ -156,14 +189,6 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
             stashId={stashId}
           />
         )}
-        {isRewardDestinationOpen && controllerId && (
-          <SetRewardDestination
-            controllerId={controllerId}
-            defaultDestination={destination}
-            onClose={toggleRewardDestination}
-            stashId={stashId}
-          />
-        )}
         {isSetSessionOpen && controllerId && (
           <SetSessionKey
             controllerId={controllerId}
@@ -187,15 +212,25 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
             stashId={stashId}
           />
         )}
+        {isSetCmixIdOpen && (
+          <SetCmixId
+            controllerId={controllerId || stashId}
+            onClose={toggleSetCmixId}
+            stashId={stashId}
+          />
+        )}
+        {isTransferCmixIdOpen && cmixId && (
+          <TransferCmixId
+            cmixId={cmixId}
+            ledgers={ledgers}
+            onClose={toggleTransferCmixId}
+            stashId={stashId}
+            stashes={bondedAddresses}
+          />
+        )}
       </td>
       <td className='address'>
         <AddressMini value={controllerId} />
-      </td>
-      <td className='start media--1200'>
-        {destination?.isAccount
-          ? <AddressMini value={destination.asAccount} />
-          : destination?.toString()
-        }
       </td>
       <td className='number'>
         <StakingBonded stakingInfo={stakingAccount} />
@@ -311,11 +346,6 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
                     label={t<string>('Change controller account')}
                     onClick={toggleSetController}
                   />
-                  <Menu.Item
-                    isDisabled={!isOwnController}
-                    label={t<string>('Change reward destination')}
-                    onClick={toggleRewardDestination}
-                  />
                   {isStashValidating && (
                     <>
                       <Menu.Item
@@ -353,6 +383,23 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
                       onClick={toggleInject}
                     />
                   )}
+                  <Menu.Divider />
+                  {
+                    <Menu.Item
+                      isDisabled={!!cmixId}
+                      onClick={toggleSetCmixId}
+                    >
+                      {t<string>('Set Cmix ID')}
+                    </Menu.Item>
+                  }
+                  {
+                    <Menu.Item
+                      isDisabled={!validToTransferCmixId}
+                      onClick={toggleTransferCmixId}
+                    >
+                      {t<string>('Transfer Cmix ID')}
+                    </Menu.Item>
+                  }
                 </Menu>
               }
             />
@@ -368,5 +415,9 @@ export default React.memo(styled(Account)`
     display: inline-block;
     margin-right: 0.25rem;
     vertical-align: inherit;
+  }
+
+  .hidden {
+    display: none;
   }
 `);

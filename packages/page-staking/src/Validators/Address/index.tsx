@@ -1,4 +1,4 @@
-// Copyright 2017-2022 @polkadot/app-staking authors & contributors
+// Copyright 2017-2023 @polkadot/app-staking authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { DeriveHeartbeatAuthor } from '@polkadot/api-derive/types';
@@ -8,10 +8,12 @@ import type { BN } from '@polkadot/util';
 import type { NominatedBy as NominatedByType, ValidatorInfo } from '../../types';
 import type { NominatorValue } from './types';
 
-import React, { useMemo } from 'react';
+import React, { useContext, useMemo } from 'react';
 
 import { ApiPromise } from '@polkadot/api';
+import { NodeLocationContext } from '@polkadot/app-staking/NodeLocationContext/context';
 import { AddressSmall, Icon, LinkExternal } from '@polkadot/react-components';
+import CmixAddress from '@polkadot/react-components/CmixAddress';
 import { checkVisibility } from '@polkadot/react-components/util';
 import { useApi, useCall, useDeriveAccountInfo } from '@polkadot/react-hooks';
 import { FormatBalance } from '@polkadot/react-query';
@@ -48,13 +50,16 @@ interface StakingState {
   stakeTotal?: BN;
   stakeOther?: BN;
   stakeOwn?: BN;
+  teamMultiplier?: BN;
+  pastAvgCommission: number;
 }
 
-function expandInfo ({ exposure, validatorPrefs }: ValidatorInfo, minCommission?: BN): StakingState {
+function expandInfo ({ exposure, pastAvgCommission, teamMultiplier, validatorPrefs }: ValidatorInfo, minCommission?: BN): StakingState {
   let nominators: NominatorValue[] = [];
   let stakeTotal: BN | undefined;
   let stakeOther: BN | undefined;
   let stakeOwn: BN | undefined;
+  let multiplier: BN | undefined;
 
   if (exposure && exposure.total) {
     nominators = exposure.others.map(({ value, who }) => ({
@@ -64,6 +69,7 @@ function expandInfo ({ exposure, validatorPrefs }: ValidatorInfo, minCommission?
     stakeTotal = exposure.total?.unwrap() || BN_ZERO;
     stakeOwn = exposure.own.unwrap();
     stakeOther = stakeTotal.sub(stakeOwn);
+    multiplier = exposure.custody ? exposure.custody.unwrap() : teamMultiplier;
   }
 
   const commission = (validatorPrefs as ValidatorPrefs)?.commission?.unwrap();
@@ -72,9 +78,11 @@ function expandInfo ({ exposure, validatorPrefs }: ValidatorInfo, minCommission?
     commission: commission?.toHuman(),
     isChilled: commission && minCommission && commission.isZero() && commission.lt(minCommission),
     nominators,
+    pastAvgCommission,
     stakeOther,
     stakeOwn,
-    stakeTotal
+    stakeTotal,
+    teamMultiplier: multiplier
   };
 }
 
@@ -94,12 +102,23 @@ function Address ({ address, className = '', filterName, hasQueries, isElected, 
   const { api } = useApi();
   const { accountInfo, slashingSpans } = useAddressCalls(api, address, isMain);
 
-  const { commission, isChilled, nominators, stakeOther, stakeOwn } = useMemo(
+  const locationContext = useContext(NodeLocationContext);
+
+  const location = useMemo(() => {
+    return (locationContext && locationContext.nodeLocations && validatorInfo && validatorInfo.cmixId)
+      ? locationContext.nodeLocations[validatorInfo.cmixId]
+      : null;
+  }, [locationContext, validatorInfo]);
+
+  const { commission, isChilled, nominators, pastAvgCommission, stakeOther, stakeOwn, teamMultiplier } = useMemo(
     () => validatorInfo
-      ? expandInfo(validatorInfo, minCommission)
-      : { nominators: [] },
-    [minCommission, validatorInfo]
+      ? expandInfo(validatorInfo)
+      : { nominators: [], pastAvgCommission: 0.0 },
+    [validatorInfo]
   );
+
+  const fixedCommission = validatorInfo?.commissionPer.toFixed(2);
+  const commUse = isMain ? commission : `${fixedCommission ?? ''}%`;
 
   const isVisible = useMemo(
     () => accountInfo ? checkVisibility(api, address, accountInfo, filterName, withIdentity) : true,
@@ -137,6 +156,15 @@ function Address ({ address, className = '', filterName, hasQueries, isElected, 
       <td className='address'>
         <AddressSmall value={address} />
       </td>
+      <td className='number'>
+        <CmixAddress
+          nodeId={validatorInfo?.cmixId}
+          shorten={true}
+        />
+      </td>
+      <td>
+        {location}
+      </td>
       {isMain
         ? (
           <StakeOther
@@ -152,15 +180,33 @@ function Address ({ address, className = '', filterName, hasQueries, isElected, 
         )
       }
       {isMain && (
-        <td className='number media--1100'>
-          {stakeOwn?.gtn(0) && (
-            <FormatBalance value={stakeOwn} />
-          )}
+        <>
+          <td className='number media--1100'>
+            {stakeOwn?.gtn(0) && (
+              <FormatBalance value={stakeOwn} />
+            )}
+          </td>
+          <td className='number media--1100'>
+            {teamMultiplier?.gtn(0) && (
+              <FormatBalance value={teamMultiplier} />
+            )}
+          </td>
+        </>
+      )}
+      <td
+        className='number'
+        style={{ color: !isMain && validatorInfo?.isCommissionReducing ? 'red' : 'black' }}
+      >
+        {commUse}
+      </td>
+      {!isMain && (
+        <td
+          className='number'
+          style={{ color: validatorInfo?.isCommissionReducing ? 'red' : 'black' }}
+        >
+          {pastAvgCommission.toFixed(2)}%
         </td>
       )}
-      <td className='number'>
-        {commission}
-      </td>
       {isMain && (
         <>
           <td className='number'>

@@ -1,11 +1,12 @@
-// Copyright 2017-2022 @polkadot/react-components authors & contributors
+// Copyright 2017-2023 @polkadot/react-components authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { ApiPromise } from '@polkadot/api';
 import type { SubmittableExtrinsic } from '@polkadot/api/types';
 import type { DeriveAccountFlags, DeriveAccountRegistration } from '@polkadot/api-derive/types';
 import type { DisplayedJudgement } from '@polkadot/react-components/types';
-import type { AccountId, Balance, BlockNumber, Call, Exposure, Hash, RewardDestination, SessionIndex, StakingLedger, ValidatorPrefs } from '@polkadot/types/interfaces';
+import type { AccountId, Balance, BlockNumber, Call, Exposure, Hash, RewardDestination, SessionIndex, ValidatorPrefs } from '@polkadot/types/interfaces';
+import type { PalletStakingStakingLedger } from '@polkadot/types/lookup';
 import type { IExtrinsic } from '@polkadot/types/types';
 import type { KeyringJson$Meta } from '@polkadot/ui-keyring/types';
 
@@ -116,6 +117,7 @@ export interface UseAccountInfo {
   setTags: React.Dispatch<string[]>;
   genesisHash: string | null;
   identity?: AddressIdentity;
+  cmixId?: string;
   isEditingName: boolean;
   meta?: KeyringJson$Meta;
   toggleIsEditingName: () => void;
@@ -144,7 +146,7 @@ export interface StakerState {
   isStashValidating: boolean;
   nominating?: string[];
   sessionIds: string[];
-  stakingLedger?: StakingLedger;
+  stakingLedger?: PalletStakingStakingLedger;
   stashId: string;
   validatorPrefs?: ValidatorPrefs;
 }

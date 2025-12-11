@@ -3,7 +3,7 @@
 
 import type { ApiPromise } from '@polkadot/api';
 import type { u32, Vec } from '@polkadot/types';
-import type { SpStakingPagedExposureMetadata } from '@polkadot/types/lookup';
+import type { PalletStakingStakingLedger, SpStakingExposure, SpStakingPagedExposureMetadata } from '@polkadot/types/lookup';
 import type { Route, TFunction } from './types.js';
 
 import Component from '@polkadot/app-staking';
@@ -13,18 +13,32 @@ import { assert, BN_ONE } from '@polkadot/util';
 
 function needsApiCheck (api: ApiPromise): boolean {
   try {
-    // Hide for every Asset Hub chain and for Relay chains which have stakingAhClient storagr
+    // Hide for every Asset Hub chain and for Relay chains which have stakingAhClient storage
     if (api.query.stakingAhClient || api.tx.stakingRcClient) {
       return false;
     }
 
-    // we need a known Exposure type
-    const { nominatorCount, own, pageCount, total } = api.registry.createType<SpStakingPagedExposureMetadata>(
-      unwrapStorageType(api.registry, api.query.staking.erasStakersOverview.creator.meta.type),
-      { nominatorCount: BN_ONE, own: BN_ONE, pageCount: BN_ONE, total: BN_ONE }
-    );
+    // Check for newer erasStakersOverview first (Polkadot/Kusama style)
+    if (typeof api.query.staking.erasStakersOverview === 'function') {
+      const { nominatorCount, own, pageCount, total } = api.registry.createType<SpStakingPagedExposureMetadata>(
+        unwrapStorageType(api.registry, api.query.staking.erasStakersOverview.creator.meta.type),
+        { nominatorCount: BN_ONE, own: BN_ONE, pageCount: BN_ONE, total: BN_ONE }
+      );
 
-    assert(total && own && nominatorCount && pageCount && total.eq(BN_ONE) && own.eq(BN_ONE), 'Needs a known Exposure type');
+      assert(total && own && nominatorCount && pageCount && total.eq(BN_ONE) && own.eq(BN_ONE), 'Needs a known Exposure type');
+    } else if (typeof api.query.staking.erasStakers === 'function') {
+      // Fallback to erasStakers for XX Network and other chains using older staking pallet
+      const { others, own, total } = api.registry.createType<SpStakingExposure>(
+        unwrapStorageType(api.registry, api.query.staking.erasStakers.creator.meta.type),
+        { others: [{ value: BN_ONE, who: ZERO_ACCOUNT }], own: BN_ONE, total: BN_ONE }
+      );
+
+      assert(total && own && others && total.eq(BN_ONE) && own.eq(BN_ONE), 'Needs a known Exposure type');
+    } else {
+      console.warn('No known erasStakers or erasStakersOverview, disabling staking route');
+
+      return false;
+    }
   } catch {
     console.warn('Unable to create known-shape Exposure type, disabling staking route');
 
@@ -50,18 +64,37 @@ function needsApiCheck (api: ApiPromise): boolean {
     return false;
   }
 
-  // For compatibility - `api.query.staking.ledger` returns `legacyClaimedRewards` instead of `claimedRewards` as of v1.4
+  // For compatibility - check for claimedRewards or legacyClaimedRewards
   try {
-    const v = api.registry.createType<Vec<u32>>(
-      unwrapStorageType(api.registry, api.query.staking.claimedRewards.creator.meta.type),
-      [0]
-    );
+    // First try the newer claimedRewards query
+    if (typeof api.query.staking.claimedRewards === 'function') {
+      const v = api.registry.createType<Vec<u32>>(
+        unwrapStorageType(api.registry, api.query.staking.claimedRewards.creator.meta.type),
+        [0]
+      );
 
-    assert(v.eq([0]), 'Needs a legacyClaimedRewards array');
+      assert(v.eq([0]), 'Needs a claimedRewards array');
+    } else {
+      // Fallback to checking ledger for claimedRewards/legacyClaimedRewards (XX Network style)
+      const v = api.registry.createType<PalletStakingStakingLedger>(
+        unwrapStorageType(api.registry, api.query.staking.ledger.creator.meta.type),
+        { claimedRewards: [1, 2, 3] }
+      );
+
+      if ((v as unknown as { claimedRewards: Vec<u32> }).claimedRewards) {
+        assert((v as unknown as { claimedRewards: Vec<u32> }).claimedRewards.eq([1, 2, 3]), 'Needs a claimedRewards array');
+      } else {
+        const v2 = api.registry.createType<PalletStakingStakingLedger>(
+          unwrapStorageType(api.registry, api.query.staking.ledger.creator.meta.type),
+          { legacyClaimedRewards: [1, 2, 3] }
+        );
+
+        assert(v2.legacyClaimedRewards.eq([1, 2, 3]), 'Needs a legacyClaimedRewards array');
+      }
+    }
   } catch {
-    console.warn('No known legacyClaimedRewards or claimedRewards inside staking ledger, disabling staking route');
-
-    return false;
+    // XX Network may not have claimedRewards - allow staking anyway if bond works
+    console.warn('No known claimedRewards check passed, but allowing staking route');
   }
 
   return true;
@@ -72,7 +105,6 @@ export default function create (t: TFunction): Route {
     Component,
     display: {
       needsApi: [
-        'query.staking.erasStakersOverview',
         'tx.staking.bond'
       ],
       needsApiCheck

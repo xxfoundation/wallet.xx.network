@@ -128,6 +128,179 @@ This document tracks all modifications made to the upstream [polkadot-js/apps](h
 
 ---
 
+### 2025-12-11: Post-Merge Fixes (v0.169.2-xx-2)
+
+**Issues Fixed**:
+
+#### Staking Page - Stake Values Not Displaying
+
+**Problem**: Own stake, other stake, and total stake columns on the Targets page showed values only in tooltips (via HorizontalBarChart), not directly in table cells.
+
+**Root Cause**: The `HorizontalBarChart` component rendered a progress bar with tooltip-only values.
+
+**Fix**: Modified `packages/page-staking/src/Targets/Validator.tsx` to render `FormatBalance` components directly in table cells instead of using the bar chart.
+
+| File | Change |
+|------|--------|
+| `Targets/Validator.tsx` | Replaced `<HorizontalBarChart>` with direct `<FormatBalance>` cells for bondOwn and bondOther |
+
+#### Commission Column Sorting Not Working
+
+**Problem**: Clicking the commission column header on the Validators Overview page did not sort by commission.
+
+**Root Cause**: Bug in `sort` callback - used closure variable `sortBy` instead of parameter `key`.
+
+**Fix**:
+```typescript
+// Before (broken)
+setSortState((state) => ({
+  sortBy,  // Bug: captures stale closure value
+  sortFromMax: state.sortBy === key ? !state.sortFromMax : state.sortFromMax
+}));
+
+// After (fixed)
+setSortState((state) => ({
+  sortBy: key,  // Correctly uses the clicked sort type
+  sortFromMax: state.sortBy === key ? !state.sortFromMax : state.sortFromMax
+}));
+```
+
+| File | Change |
+|------|--------|
+| `Validators/CurrentList.tsx` | Fixed `sort` callback to use `key` parameter instead of `sortBy` closure variable |
+
+#### ESM Module Resolution
+
+**Problem**: Custom derives weren't loading due to missing `.js` extensions on relative imports.
+
+**Fix**: Added `.js` extensions to all relative imports in custom-derives package.
+
+| File | Change |
+|------|--------|
+| `custom-derives/src/index.ts` | `./staking/index` → `./staking/index.js` |
+| `custom-derives/src/staking/index.ts` | `./query` → `./query.js`, `./stakerRewards` → `./stakerRewards.js` |
+| `custom-derives/src/xxCustody/index.ts` | `./nominatingCustodyAccounts` → `./nominatingCustodyAccounts.js` |
+| `custom-derives/src/xxCustody/nominatingCustodyAccounts.ts` | `../types/index` → `../types/index.js` |
+| `custom-derives/src/types/augment.ts` | `./index` → `./index.js` |
+
+#### styled-components Transient Props Warnings
+
+**Problem**: React warnings about invalid DOM props (`visible`, `color`, `isCommissionReducing`).
+
+**Fix**: Changed to transient props (prefixed with `$`) per styled-components v5+ convention.
+
+| File | Change |
+|------|--------|
+| `Targets/CommissionHover.tsx` | `visible` → `$visible`, `color` → `$color`, `isCommissionReducing` → `$isCommissionReducing` |
+| `Targets/HorizontalBarChart.tsx` | `visible` → `$visible`, `color` → `$color` |
+
+#### Upstream API Compatibility
+
+**Problem**: Upstream changed from `withExposure` to `withExposureErasStakersLegacy` flag.
+
+**Fix**: Support both flags for backward compatibility.
+
+| File | Change |
+|------|--------|
+| `custom-derives/src/staking/query.ts` | Added `withExposureErasStakersLegacy` flag support, returns both `exposure` and `exposureEraStakers` fields |
+| `page-staking/src/useSortedTargets.ts` | Uses both `withExposure` and `withExposureErasStakersLegacy` flags |
+
+#### Type Import Updates
+
+**Problem**: Deprecated type imports from `@polkadot/types/lookup`.
+
+**Fix**: Updated to use `@polkadot/types/interfaces`.
+
+| File | Change |
+|------|--------|
+| `custom-derives/src/staking/query.ts` | `Exposure`, `Nominations`, `StakingLedger`, `ValidatorPrefs` from interfaces |
+| `custom-derives/src/staking/stakerRewards.ts` | `StakingLedger` from interfaces |
+
+#### Page Title Branding
+
+**Problem**: Page title showed "Polkadot/Substrate Portal" instead of "xx network portal".
+
+**Fix**: Updated webpack configs to use correct branding.
+
+| File | Change |
+|------|--------|
+| `apps/webpack.config.cjs` | `PAGE_TITLE: 'xx network portal'` |
+| `apps/webpack.serve.cjs` | `PAGE_TITLE: 'xx network portal'` |
+| `apps-electron/webpack.renderer.cjs` | `PAGE_TITLE: 'xx network portal'` |
+
+#### On-Chain Identity Disabled
+
+**Problem**: "Set on-chain identity" menu option not showing for XX Network accounts.
+
+**Root Cause**: Upstream added a `isPeopleForIdentity` system where relay chains don't have identity enabled by default (it's expected to be on a People parachain). XX Network uses the identity pallet directly on the relay chain.
+
+**Fix**: Added `isPeopleForIdentity: false` to XX Network endpoint configs to enable the local identity pallet.
+
+| File | Change |
+|------|--------|
+| `apps-config/src/endpoints/production.ts` | Added `isPeopleForIdentity: false` to xxnetwork endpoint |
+| `apps-config/src/endpoints/testing.ts` | Added `isPeopleForIdentity: false` to xxnetwork testnet endpoint |
+
+#### Staking Tab Re-enabled
+
+**Problem**: Staking tab was not appearing in navigation after upstream merge.
+
+**Fix**: Restored staking routes in apps-routing.
+
+| File | Change |
+|------|--------|
+| `apps-routing/src/staking.ts` | Re-enabled staking page routes and sub-routes |
+
+#### Sleeve (Quantum-Secure) Account Generation
+
+**Problem**: Sleeve account generation wizard was not showing up.
+
+**Fix**: Fixed the Generate account flow to properly display sleeve generation steps.
+
+| File | Change |
+|------|--------|
+| `page-accounts/src/Generate/Steps/Step1.tsx` | Fixed sleeve generation step |
+| `page-accounts/src/Generate/Steps/Step2.tsx` | Fixed sleeve generation step |
+| `page-accounts/src/Generate/Steps/Step3.tsx` | Fixed sleeve generation step |
+| `page-accounts/src/Generate/index.tsx` | Fixed generate flow |
+| `page-accounts/src/index.tsx` | Added sleeve account support |
+
+#### Validator Charts Fixed
+
+**Problem**: Validator query charts (Points, Preferences, Rewards, Stake) were broken after upstream merge.
+
+**Fix**: Added custom `ownExposures` derive and fixed chart components.
+
+| File | Change |
+|------|--------|
+| `custom-derives/src/staking/ownExposures.ts` | New custom derive for validator exposure history |
+| `custom-derives/src/staking/index.ts` | Export ownExposures |
+| `page-staking/src/Query/ChartPoints.tsx` | Fixed chart component |
+| `page-staking/src/Query/ChartPrefs.tsx` | Fixed chart component |
+| `page-staking/src/Query/ChartRewards.tsx` | Fixed chart component |
+| `page-staking/src/Query/ChartStake.tsx` | Fixed chart component |
+
+#### Dwellir RPC Endpoint Updated
+
+**Fix**: Updated Dwellir RPC endpoint URL.
+
+| File | Change |
+|------|--------|
+| `apps-config/src/endpoints/production.ts` | `wss://xxnetwork-rpc.n.dwellir.com` |
+
+#### Simplified RPC Endpoint Sidebar
+
+**Problem**: Too many RPC endpoint options in the sidebar dropdown.
+
+**Fix**: Thinned down the endpoint list to show only XX Network endpoints.
+
+| File | Change |
+|------|--------|
+| `apps-config/src/endpoints/index.ts` | Simplified to only show XX Network endpoints |
+| `apps/src/Endpoints/index.tsx` | Simplified endpoint UI |
+
+---
+
 ## [Custom Packages Added]
 
 ### @xxnetwork/custom-derives

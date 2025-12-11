@@ -2,99 +2,31 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { ApiPromise } from '@polkadot/api';
-import type { u32, Vec } from '@polkadot/types';
-import type { PalletStakingStakingLedger, SpStakingExposure, SpStakingPagedExposureMetadata } from '@polkadot/types/lookup';
 import type { Route, TFunction } from './types.js';
 
 import Component from '@polkadot/app-staking';
-import { ZERO_ACCOUNT } from '@polkadot/react-hooks/useWeight';
-import { unwrapStorageType } from '@polkadot/types/util';
-import { assert, BN_ONE } from '@polkadot/util';
 
 function needsApiCheck (api: ApiPromise): boolean {
-  try {
-    // Hide for every Asset Hub chain and for Relay chains which have stakingAhClient storage
-    if (api.query.stakingAhClient || api.tx.stakingRcClient) {
-      return false;
-    }
+  // Hide for Asset Hub chains and Relay chains with stakingAhClient
+  if (api.query.stakingAhClient || api.tx.stakingRcClient) {
+    return false;
+  }
 
-    // Check for newer erasStakersOverview first (Polkadot/Kusama style)
-    if (typeof api.query.staking.erasStakersOverview === 'function') {
-      const { nominatorCount, own, pageCount, total } = api.registry.createType<SpStakingPagedExposureMetadata>(
-        unwrapStorageType(api.registry, api.query.staking.erasStakersOverview.creator.meta.type),
-        { nominatorCount: BN_ONE, own: BN_ONE, pageCount: BN_ONE, total: BN_ONE }
-      );
+  // Check if staking pallet exists with erasStakers or erasStakersOverview
+  const hasErasStakers = typeof api.query.staking?.erasStakers === 'function';
+  const hasErasStakersOverview = typeof api.query.staking?.erasStakersOverview === 'function';
 
-      assert(total && own && nominatorCount && pageCount && total.eq(BN_ONE) && own.eq(BN_ONE), 'Needs a known Exposure type');
-    } else if (typeof api.query.staking.erasStakers === 'function') {
-      // Fallback to erasStakers for XX Network and other chains using older staking pallet
-      const { others, own, total } = api.registry.createType<SpStakingExposure>(
-        unwrapStorageType(api.registry, api.query.staking.erasStakers.creator.meta.type),
-        { others: [{ value: BN_ONE, who: ZERO_ACCOUNT }], own: BN_ONE, total: BN_ONE }
-      );
-
-      assert(total && own && others && total.eq(BN_ONE) && own.eq(BN_ONE), 'Needs a known Exposure type');
-    } else {
-      console.warn('No known erasStakers or erasStakersOverview, disabling staking route');
-
-      return false;
-    }
-  } catch {
-    console.warn('Unable to create known-shape Exposure type, disabling staking route');
+  if (!hasErasStakers && !hasErasStakersOverview) {
+    console.warn('No erasStakers or erasStakersOverview found, disabling staking route');
 
     return false;
   }
 
-  try {
-    // we need to be able to bond
-    if (api.tx.staking.bond.meta.args.length === 3) {
-      // previous generation, controller account is required
-      // @ts-expect-error Previous generation
-      api.tx.staking.bond(ZERO_ACCOUNT, BN_ONE, { Account: ZERO_ACCOUNT });
-    } else if (api.tx.staking.bond.meta.args.length === 2) {
-      // current, no controller account
-      api.tx.staking.bond(BN_ONE, { Account: ZERO_ACCOUNT });
-    } else {
-      // unknown
-      return false;
-    }
-  } catch {
-    console.warn('Unable to create staking bond transaction, disabling staking route');
+  // Verify staking.bond transaction exists
+  if (typeof api.tx.staking?.bond !== 'function') {
+    console.warn('No staking.bond transaction found, disabling staking route');
 
     return false;
-  }
-
-  // For compatibility - check for claimedRewards or legacyClaimedRewards
-  try {
-    // First try the newer claimedRewards query
-    if (typeof api.query.staking.claimedRewards === 'function') {
-      const v = api.registry.createType<Vec<u32>>(
-        unwrapStorageType(api.registry, api.query.staking.claimedRewards.creator.meta.type),
-        [0]
-      );
-
-      assert(v.eq([0]), 'Needs a claimedRewards array');
-    } else {
-      // Fallback to checking ledger for claimedRewards/legacyClaimedRewards (XX Network style)
-      const v = api.registry.createType<PalletStakingStakingLedger>(
-        unwrapStorageType(api.registry, api.query.staking.ledger.creator.meta.type),
-        { claimedRewards: [1, 2, 3] }
-      );
-
-      if ((v as unknown as { claimedRewards: Vec<u32> }).claimedRewards) {
-        assert((v as unknown as { claimedRewards: Vec<u32> }).claimedRewards.eq([1, 2, 3]), 'Needs a claimedRewards array');
-      } else {
-        const v2 = api.registry.createType<PalletStakingStakingLedger>(
-          unwrapStorageType(api.registry, api.query.staking.ledger.creator.meta.type),
-          { legacyClaimedRewards: [1, 2, 3] }
-        );
-
-        assert(v2.legacyClaimedRewards.eq([1, 2, 3]), 'Needs a legacyClaimedRewards array');
-      }
-    }
-  } catch {
-    // XX Network may not have claimedRewards - allow staking anyway if bond works
-    console.warn('No known claimedRewards check passed, but allowing staking route');
   }
 
   return true;

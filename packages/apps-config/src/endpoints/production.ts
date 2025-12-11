@@ -728,7 +728,7 @@ export const prodChains: Omit<EndpointOption, 'teleport'>[] = [
     info: 'xxnetwork',
     providers: {
       'xx foundation': 'wss://rpc.xx.network',
-      dwellir: 'wss://xxnetwork-rpc.dwellir.com'
+      dwellir: 'wss://xxnetwork-rpc.n.dwellir.com'
     },
     text: 'xx network',
     ui: {

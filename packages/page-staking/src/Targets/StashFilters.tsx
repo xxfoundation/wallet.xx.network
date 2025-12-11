@@ -3,9 +3,8 @@
 
 import React, { useCallback } from 'react';
 import { Dropdown } from 'semantic-ui-react';
-import styled from 'styled-components';
 
-import { AccountName } from '@polkadot/react-components';
+import { AccountName, styled } from '@polkadot/react-components';
 import { toShortAddress } from '@polkadot/react-components/util';
 
 type Props = {

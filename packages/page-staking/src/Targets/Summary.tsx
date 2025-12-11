@@ -77,7 +77,7 @@ function Summary ({ avgStaked, custodyRewardsActive, lastEra, lowStaked, minNomi
         {progressStake && (
           <CardSummary
             help={custodyRewardsActive && helpStaked}
-            label={t<string>('total staked')}
+            label={t('total staked')}
             progress={progressStake}
           >
             <FormatBalance
@@ -96,7 +96,7 @@ function Summary ({ avgStaked, custodyRewardsActive, lastEra, lowStaked, minNomi
         {(stakedReturn > 0) && Number.isFinite(stakedReturn) && (
           <CardSummary
             help={helpReturns}
-            label={t<string>('returns')}
+            label={t('returns')}
           >
             {stakedReturn.toFixed(1)}%
           </CardSummary>
@@ -106,7 +106,7 @@ function Summary ({ avgStaked, custodyRewardsActive, lastEra, lowStaked, minNomi
         {progressAvg && (
           <CardSummary
             help={custodyRewardsActive && helpLowest}
-            label={`${t<string>('lowest / avg staked')}`}
+            label={`${t('lowest / avg staked')}`}
             progress={progressAvg}
           >
             <FormatBalance
@@ -128,8 +128,8 @@ function Summary ({ avgStaked, custodyRewardsActive, lastEra, lowStaked, minNomi
             className='media--1600'
             label={
               minNominatorBond
-                ? t<string>('min nominated / threshold')
-                : t<string>('min nominated')}
+                ? t('min nominated / threshold')
+                : t('min nominated')}
           >
             <FormatBalance
               value={minNominated}
@@ -150,7 +150,7 @@ function Summary ({ avgStaked, custodyRewardsActive, lastEra, lowStaked, minNomi
       </section>
       <section>
         {lastReward?.gt(BN_ZERO) && (
-          <CardSummary label={t<string>('last reward')}>
+          <CardSummary label={t('last reward')}>
             <FormatBalance
               value={lastReward}
               withSi

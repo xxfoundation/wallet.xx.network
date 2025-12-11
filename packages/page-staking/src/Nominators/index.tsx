@@ -6,7 +6,7 @@ import type { StakerState } from '@polkadot/react-hooks/types';
 import type { Option, StorageKey } from '@polkadot/types';
 import type { Nominations } from '@polkadot/types/interfaces';
 import type { AccountId32 } from '@polkadot/types/interfaces/runtime';
-import type { Nominator, NominatorStake } from './types';
+import type { Nominator, NominatorStake } from './types.js';
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
@@ -14,10 +14,10 @@ import { Icon, PaginationAdvanced, Table, Toggle } from '@polkadot/react-compone
 import { useApi, useCall, useLoadingDelay, usePagination, useSavedFlags } from '@polkadot/react-hooks';
 import { arrayFlatten, BN, BN_ZERO } from '@polkadot/util';
 
-import Filtering from '../Filtering';
-import { useTranslation } from '../translate';
-import useIdentities from '../useIdentities';
-import NominatorRow from './Nominator';
+import Filtering from '../Filtering.js';
+import { useTranslation } from '../translate.js';
+import useIdentities from '../useIdentities.js';
+import NominatorRow from './Nominator.js';
 
 const DEFAULT_NAME = { isQueryFiltered: false, nameFilter: '' };
 
@@ -275,7 +275,7 @@ function Nominators ({ ownStashes }: Props): React.ReactElement<Props> {
       >
         <Toggle
           className='staking--buttonToggle'
-          label={t<string>('your nominations')}
+          label={t('your nominations')}
           onChange={setToggle.withAccountNominations}
           value={toggles.withAccountNominations}
         />
@@ -286,10 +286,10 @@ function Nominators ({ ownStashes }: Props): React.ReactElement<Props> {
   return (
     <>
       <Table
-        empty={(nominators && t<string>('No active nominators'))}
+        empty={(nominators && t('No active nominators'))}
         emptySpinner={
           <>
-            {!nominators && <div>{t<string>('Retrieving nominators')}</div>}
+            {!nominators && <div>{t('Retrieving nominators')}</div>}
           </>
         }
         filter={filter}

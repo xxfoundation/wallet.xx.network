@@ -2,9 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useMemo, useState } from 'react';
-import styled from 'styled-components';
 
-import { Button, Input } from '@polkadot/react-components';
+import { Button, Input, styled } from '@polkadot/react-components';
 import { useStepper } from '@polkadot/react-hooks';
 
 import { useTranslation } from '../../translate.js';

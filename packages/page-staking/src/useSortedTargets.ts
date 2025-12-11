@@ -42,6 +42,7 @@ interface PalletStakingExposureWithCustody extends PalletStakingExposure {
 
 interface DeriveStakingQueryWithCustody extends DeriveStakingQuery {
   exposure: PalletStakingExposureWithCustody;
+  exposureEraStakers: PalletStakingExposureWithCustody;
 }
 
 interface DeriveStakingElectedWithCustody extends DeriveStakingElected {
@@ -53,8 +54,8 @@ interface DeriveStakingWaitingWithCustody extends DeriveStakingWaiting {
 }
 
 const EMPTY_PARTIAL: Partial<SortedTargets> = {};
-const DEFAULT_FLAGS_ELECTED = { withController: true, withExposure: true, withPrefs: true };
-const DEFAULT_FLAGS_WAITING = { withController: true, withPrefs: true };
+const DEFAULT_FLAGS_ELECTED = { withController: true, withExposure: true, withExposureErasStakersLegacy: true, withPrefs: true };
+const DEFAULT_FLAGS_WAITING = { withController: true, withExposure: true, withExposureErasStakersLegacy: true, withPrefs: true };
 
 const OPT_MULTI = {
   defaultValue: {},
@@ -142,11 +143,13 @@ function extractSingle (api: ApiPromise, allAccounts: string[], custodyRewardsAc
   const list = new Array<ValidatorInfo>(derive.info.length);
 
   for (let i = 0; i < derive.info.length; i++) {
-    const { accountId, cmixId, exposure, stakingLedger, validatorPrefs } = derive.info[i];
+    const { accountId, cmixId, exposure, exposureEraStakers, stakingLedger, validatorPrefs } = derive.info[i];
+    // Use exposureEraStakers (new API) or fall back to exposure (legacy/custom derive)
+    const activeExposure = exposureEraStakers || exposure;
 
     // some overrides (e.g. Darwinia Crab) does not have the own/total field in Exposure
-    let [bondOwn, bondTotal] = exposure.total
-      ? [exposure.own.unwrap(), exposure.total.unwrap()]
+    let [bondOwn, bondTotal] = activeExposure?.total
+      ? [activeExposure.own.unwrap(), activeExposure.total.unwrap()]
       : [BN_ZERO, BN_ZERO];
 
     const skipRewards = bondTotal.isZero();
@@ -156,7 +159,7 @@ function extractSingle (api: ApiPromise, allAccounts: string[], custodyRewardsAc
     }
 
     // some overrides (e.g. Darwinia Crab) does not have the value field in IndividualExposure
-    const minNominated = (exposure.others || []).reduce((min: BN, { value = api.createType('Compact<Balance>') }): BN => {
+    const minNominated = (activeExposure?.others || []).reduce((min: BN, { value = api.createType('Compact<Balance>') }): BN => {
       const actual = value.unwrap();
 
       return min.isZero() || actual.lt(min)
@@ -169,7 +172,7 @@ function extractSingle (api: ApiPromise, allAccounts: string[], custodyRewardsAc
       ? stakingLedger.claimedRewards[stakingLedger.claimedRewards.length - 1]
       : undefined;
 
-    const validatorNominators = (exposure.others || []).map((indv) => indv.who.toString());
+    const validatorNominators = (activeExposure?.others || []).map((indv) => indv.who.toString());
     const ownNominatingAccounts = validatorNominators.filter((id) => allAccounts.includes(id));
     const currEraPrefs = erasPrefs && erasPrefs[erasPrefs.length - 1];
     const commission = (!isWaitingDerive(derive) && currEraPrefs?.validators[key]) ? currEraPrefs?.validators[key].commission : validatorPrefs.commission;
@@ -188,7 +191,7 @@ function extractSingle (api: ApiPromise, allAccounts: string[], custodyRewardsAc
 
     const teamMultiplier = (teamMultipliers && teamMultipliers[key]) || BN_ZERO;
     const bondTotalWithTM = custodyRewardsActive ? bondTotal.add(teamMultiplier) : bondTotal;
-    const electedMultiplier = (custodyRewardsActive && !skipRewards) ? exposure.custody.unwrap() : BN_ZERO;
+    const electedMultiplier = (custodyRewardsActive && !skipRewards && activeExposure) ? (activeExposure as PalletStakingExposureWithCustody).custody?.unwrap() || BN_ZERO : BN_ZERO;
     const electedStake = skipRewards ? BN_ZERO : bondTotal.add(electedMultiplier);
 
     list[i] = {
@@ -202,13 +205,13 @@ function extractSingle (api: ApiPromise, allAccounts: string[], custodyRewardsAc
       commission,
       commissionPer,
       electedStake,
-      exposure,
+      exposure: activeExposure,
       isActive: !skipRewards,
       isBlocking: !!(validatorPrefs.blocked && validatorPrefs.blocked.isTrue),
       isCommissionReducing,
       isElected: !isWaitingDerive(derive) && derive.nextElected.some((e) => e.eq(accountId)),
       isFavorite: favorites.includes(key),
-      isNominating: (exposure.others || []).reduce((isNominating, indv): boolean => {
+      isNominating: (activeExposure?.others || []).reduce((isNominating, indv): boolean => {
         const nominator = indv.who.toString();
 
         nominators[nominator] = (nominators[nominator] || BN_ZERO).add(indv.value?.toBn() || BN_ZERO);
@@ -223,7 +226,7 @@ function extractSingle (api: ApiPromise, allAccounts: string[], custodyRewardsAc
         : undefined,
       minNominated,
       nominatingAccounts: ownNominatingAccounts,
-      numNominators: (exposure.others || []).length,
+      numNominators: (activeExposure?.others || []).length,
       numRecentPayouts: earliestEra
         ? stakingLedger.claimedRewards.filter((era) => era.gte(earliestEra)).length
         : 0,
@@ -387,8 +390,23 @@ function useSortedTargetsImpl (favorites: string[]): SortedTargets {
   const lastEraInfo = useCall<LastEra>(api.derive.session.info, undefined, transformEra);
   const lastErasPoints = useCall<DeriveEraPoints[]>(lastEraInfo?.lastEras && api.derive.staking._erasPoints, [lastEraInfo?.lastEras, false]);
   const teamNominations = useTeamMultipliers();
-  const eras = (lastEraInfo && lastEraInfo.lastEras.length > 1) ? lastEraInfo?.lastEras.slice(1).concat(lastEraInfo?.activeEra) : [lastEraInfo?.activeEra];
-  const erasPrefs = useCall<DeriveEraPrefs[]>(api.derive.staking._erasPrefs, [eras, false]);
+  const eras = lastEraInfo
+    ? (lastEraInfo.lastEras.length > 1 ? lastEraInfo.lastEras.slice(1).concat(lastEraInfo.activeEra) : [lastEraInfo.activeEra])
+    : undefined;
+  const erasPrefs = useCall<DeriveEraPrefs[]>(eras && api.derive.staking._erasPrefs, [eras, false]);
+
+  // DEBUG: Log electedInfo to check exposure data
+  if (electedInfo) {
+    console.log('[useSortedTargets] electedInfo received:', {
+      infoCount: electedInfo.info.length,
+      firstValidator: electedInfo.info[0]?.accountId?.toString(),
+      firstValidatorKeys: electedInfo.info[0] ? Object.keys(electedInfo.info[0]) : [],
+      hasExposure: !!electedInfo.info[0]?.exposure,
+      hasExposureEraStakers: !!electedInfo.info[0]?.exposureEraStakers,
+      exposureTotal: electedInfo.info[0]?.exposure?.total?.toString(),
+      exposureEraStakersTotal: electedInfo.info[0]?.exposureEraStakers?.total?.toString()
+    });
+  }
 
   const custodyRewardsActive = electedInfo ? ('custody' in electedInfo.info[0].exposure) : false;
   const totalTeamMultipliers = custodyRewardsActive ? teamNominations && Object.values(teamNominations).reduce((total, val) => total.add(val), BN_ZERO) : BN_ZERO;

@@ -7,6 +7,7 @@ export { default as BalanceVoting } from './BalanceVoting.js';
 export { default as BestFinalized } from './BestFinalized.js';
 export { default as BestNumber } from './BestNumber.js';
 export { BlockAuthors, BlockAuthorsContext, ValidatorsContext } from './BlockAuthors.js';
+export type { Authors } from './BlockAuthors.js';
 export { default as BlockToTime } from './BlockToTime.js';
 export { default as Bonded } from './Bonded.js';
 export { default as Chain } from './Chain.js';

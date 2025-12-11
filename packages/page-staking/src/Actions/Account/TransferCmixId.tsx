@@ -9,7 +9,7 @@ import { InputAddress, MarkError, Modal, Static, TxButton } from '@polkadot/reac
 import { useApi } from '@polkadot/react-hooks';
 import { DisplayValue } from '@polkadot/react-query';
 
-import { useTranslation } from '../../translate';
+import { useTranslation } from '../../translate.js';
 
 interface Props {
   onClose: () => void;
@@ -26,13 +26,13 @@ function TransferCmixId ({ cmixId, ledgers, onClose, stashId, stashes }: Props):
   const [destErrorNoCmixId, setDestErrorNoCmixId] = useState<boolean>(false);
   const [destErrorNotStash, setDestErrorNotStash] = useState<boolean>(false);
 
-  const cmixHint = t<string>('The cMix ID is the identifier of your cMix Node in the xx network. Validators are required to have a cMix ID set on-chain. This can be found in your cmix-IDF.json file, under the field “hexNodeID”.');
+  const cmixHint = t('The cMix ID is the identifier of your cMix Node in the xx network. Validators are required to have a cMix ID set on-chain. This can be found in your cmix-IDF.json file, under the field "hexNodeID".');
 
   const _setDest = useCallback(
     (address: string | null) => {
       const hasNoCmixId = ledgers
         .filter((elem) => elem.stash.toString() === address)
-        .some((elem) => !elem.cmixId.isEmpty);
+        .some((elem) => !(elem as unknown as { cmixId: { isEmpty: boolean } }).cmixId?.isEmpty);
 
       setDestErrorNoCmixId(hasNoCmixId);
 
@@ -46,7 +46,7 @@ function TransferCmixId ({ cmixId, ledgers, onClose, stashId, stashes }: Props):
 
   return (
     <Modal
-      header={t<string>('Transfer Cmix ID')}
+      header={t('Transfer Cmix ID')}
       onClose={onClose}
       size='large'
     >
@@ -55,11 +55,11 @@ function TransferCmixId ({ cmixId, ledgers, onClose, stashId, stashes }: Props):
           <InputAddress
             defaultValue={stashId}
             isDisabled
-            label={t<string>('stash account')}
+            label={t('stash account')}
           />
           <Static
-            help={t<string>('The cMix ID is the identifier of your cMix Node in the xx network. Validators are required to have a cMix ID set on-chain. This can be found in your cmix-IDF.json file, under the field “hexNodeID”.')}
-            label={t<string>('cmix ID')}
+            help={t('The cMix ID is the identifier of your cMix Node in the xx network. Validators are required to have a cMix ID set on-chain. This can be found in your cmix-IDF.json file, under the field "hexNodeID".')}
+            label={t('cmix ID')}
           >
             <DisplayValue value={cmixId.toString()} />
           </Static>
@@ -67,17 +67,17 @@ function TransferCmixId ({ cmixId, ledgers, onClose, stashId, stashes }: Props):
         {
           <Modal.Columns>
             <InputAddress
-              label={t<string>('destination stash account')}
+              label={t('destination stash account')}
               onChange={_setDest}
             />
             {destErrorNoCmixId &&
               <MarkError
-                content={t<string>('The selected account already has a cmixID. Please choose a valid stash account to transfer the cmixID.')}
+                content={t('The selected account already has a cmixID. Please choose a valid stash account to transfer the cmixID.')}
               />
             }
             {destErrorNotStash &&
               <MarkError
-                content={t<string>('The selected account is not a stash account. Please choose a valid stash account to transfer the cmixID.')}
+                content={t('The selected account is not a stash account. Please choose a valid stash account to transfer the cmixID.')}
               />
             }
           </Modal.Columns>
@@ -88,7 +88,7 @@ function TransferCmixId ({ cmixId, ledgers, onClose, stashId, stashes }: Props):
           accountId={stashId}
           icon='sign-in-alt'
           isDisabled={destErrorNoCmixId || destErrorNotStash}
-          label={t<string>('Submit')}
+          label={t('Submit')}
           onStart={onClose}
           params={[dest]}
           tx={api.tx.staking.transferCmixId}

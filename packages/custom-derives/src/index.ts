@@ -5,8 +5,8 @@ import type { DeriveCustom } from '@polkadot/types/types';
 
 import * as stakingOriginal from '@polkadot/api-derive/staking';
 
-import * as stakingOverride from './staking';
-import * as xxCustody from './xxCustody';
+import * as stakingOverride from './staking/index.js';
+import * as xxCustody from './xxCustody/index.js';
 
 const derive: DeriveCustom = {
   staking: {

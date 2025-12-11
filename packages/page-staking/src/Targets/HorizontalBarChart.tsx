@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useCallback, useState } from 'react';
-import styled from 'styled-components';
 
+import { styled } from '@polkadot/react-components';
 import { FormatBalance } from '@polkadot/react-query';
 import { BN, BN_ZERO } from '@polkadot/util';
 
 type TooltipProps = {
-  visible: boolean;
-  color: string;
+  $visible: boolean;
+  $color: string;
 };
 
 export const Tooltip = styled.span<TooltipProps>`
@@ -17,7 +17,7 @@ export const Tooltip = styled.span<TooltipProps>`
   transform: translateX(-50%);
   pointer-events: none;
   position: absolute;
-  opacity: ${({ visible }) => (visible ? '1' : '0')};
+  opacity: ${({ $visible }) => ($visible ? '1' : '0')};
   min-width: 100px;
   text-align: center;
   border-radius: 5px;
@@ -31,7 +31,7 @@ export const Tooltip = styled.span<TooltipProps>`
   border-style: solid;
   background-color: white;
   box-shadow: 0 3px 3px rgba(0,0,0,.2);
-  border-color: ${({ color }) => color};
+  border-color: ${({ $color }) => $color};
 
   &:after {
     content: '';
@@ -41,11 +41,11 @@ export const Tooltip = styled.span<TooltipProps>`
     margin-left: -5px;
     border-width: 5px;
     border-style: solid;
-    border-color: ${({ color }) => `${color} transparent transparent transparent`};
+    border-color: ${({ $color }) => `${$color} transparent transparent transparent`};
   }
 `;
 
-const ProgressBar = styled.div<{ color: string }>`
+const ProgressBar = styled.div<{ $color: string }>`
   display: flex;
   justify-content: center;
   align-items: center;
@@ -57,7 +57,7 @@ const ProgressBar = styled.div<{ color: string }>`
   height: 100%;
   font-size: 0.75rem;
   font-weight: 300;
-  background-color: ${({ color }) => color};
+  background-color: ${({ $color }) => $color};
   text-overflow: clip;
 
   &:first-child {
@@ -101,8 +101,8 @@ const HorizontalBarChart: React.FC<Props> = ({ items }) => {
       {
         items.map((item, index) => percents[index] !== 0 && (
           <ProgressBar
+            $color={colors[index]}
             className='progress-bar'
-            color={colors[index]}
             key={index}
             onMouseEnter={_setHovered(index)}
             onMouseLeave={_setHovered(undefined)}
@@ -112,8 +112,8 @@ const HorizontalBarChart: React.FC<Props> = ({ items }) => {
             title={`${item.label}`}
           >
             <Tooltip
-              color={colors[index]}
-              visible={hovered === index}
+              $color={colors[index]}
+              $visible={hovered === index}
             >
               {item.label}: <FormatBalance value={item.value} />
             </Tooltip>

@@ -2,9 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useCallback, useEffect, useState } from 'react';
-import styled from 'styled-components';
 
-import { Button, Checkbox, MarkWarning } from '@polkadot/react-components';
+import { Button, Checkbox, MarkWarning, styled } from '@polkadot/react-components';
 import { bip39Generate, waitReady as waitReadyPolkadot } from '@polkadot/wasm-crypto';
 import { generateSleeve, waitReady } from '@xxnetwork/wasm-crypto';
 

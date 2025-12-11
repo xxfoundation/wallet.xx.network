@@ -6,9 +6,8 @@ import type { Data, Option } from '@polkadot/types';
 import type { IdentityInfoAdditional, Registration } from '@polkadot/types/interfaces';
 
 import React, { useEffect, useState } from 'react';
-import styled from 'styled-components';
 
-import { Input, InputBalance, Modal, TextArea, Toggle, TxButton } from '@polkadot/react-components';
+import { Input, InputBalance, Modal, styled, TextArea, Toggle, TxButton } from '@polkadot/react-components';
 import { getAddressMeta } from '@polkadot/react-components/util';
 import { useApi, useCall } from '@polkadot/react-hooks';
 import { u8aToString } from '@polkadot/util';
@@ -69,7 +68,7 @@ function WrapToggle ({ children, onChange, value }: WrapProps): React.ReactEleme
       {children}
       <Toggle
         isOverlay
-        label={t<string>('include field')}
+        label={t('include field')}
         onChange={onChange}
         value={value}
       />
@@ -199,15 +198,15 @@ function IdentityMain ({ address, className = '', onClose }: Props): React.React
   return (
     <Modal
       className={className}
-      header={t<string>('Register identity')}
+      header={t('Register identity')}
       onClose={onClose}
     >
       <Modal.Content>
         <Input
           autoFocus
-          help={t<string>('The name that will be displayed in your accounts list.')}
+          help={t('The name that will be displayed in your accounts list.')}
           isError={!okDisplay}
-          label={t<string>('display name')}
+          label={t('display name')}
           maxLength={32}
           onChange={setValDisplay}
           placeholder={t('My On-Chain Name')}
@@ -219,13 +218,13 @@ function IdentityMain ({ address, className = '', onClose }: Props): React.React
             value={hasBlurb}
           >
             <TextArea
-              help={t<string>('A text message of up to {{size}} characters to display in the cMix dashboard', { size: BLURB_MAX_SIZE })}
+              help={t('A text message of up to {{size}} characters to display in the cMix dashboard', { replace: { size: BLURB_MAX_SIZE } })}
               isError={hasBlurb && !okBlurb}
               isReadOnly={!hasBlurb}
-              label={t<string>('blurb')}
+              label={t('blurb')}
               maxLength={BLURB_MAX_SIZE}
               onChange={setValBlurb}
-              placeholder={t<string>('Brief description')}
+              placeholder={t('Brief description')}
               seed={hasBlurb ? valBlurb : '<none>'}
             />
           </WrapToggle>
@@ -235,10 +234,10 @@ function IdentityMain ({ address, className = '', onClose }: Props): React.React
           value={hasLegal}
         >
           <Input
-            help={t<string>('The legal name for this identity.')}
+            help={t('The legal name for this identity.')}
             isDisabled={!hasLegal}
             isError={!okLegal}
-            label={t<string>('legal name')}
+            label={t('legal name')}
             maxLength={32}
             onChange={setValLegal}
             placeholder={t('Full Legal Name')}
@@ -250,10 +249,10 @@ function IdentityMain ({ address, className = '', onClose }: Props): React.React
           value={hasEmail}
         >
           <Input
-            help={t<string>('The email address associated with this identity.')}
+            help={t('The email address associated with this identity.')}
             isDisabled={!hasEmail}
             isError={!okEmail}
-            label={t<string>('email')}
+            label={t('email')}
             maxLength={32}
             onChange={setValEmail}
             placeholder={t('somebody@example.com')}
@@ -265,10 +264,10 @@ function IdentityMain ({ address, className = '', onClose }: Props): React.React
           value={hasDiscord}
         >
           <Input
-            help={t<string>('The discord username associated with this identity.')}
+            help={t('The discord username associated with this identity.')}
             isDisabled={!hasDiscord}
             isError={!okDiscord}
-            label={t<string>('discord')}
+            label={t('discord')}
             maxLength={32}
             onChange={setValDiscord}
             placeholder={t('user#1337')}
@@ -280,10 +279,10 @@ function IdentityMain ({ address, className = '', onClose }: Props): React.React
           value={hasWeb}
         >
           <Input
-            help={t<string>('An URL that is linked to this identity.')}
+            help={t('An URL that is linked to this identity.')}
             isDisabled={!hasWeb}
             isError={!okWeb}
-            label={t<string>('web')}
+            label={t('web')}
             maxLength={32}
             onChange={setValWeb}
             placeholder={t('https://example.com')}
@@ -295,10 +294,10 @@ function IdentityMain ({ address, className = '', onClose }: Props): React.React
           value={hasTwitter}
         >
           <Input
-            help={t<string>('The twitter name for this identity.')}
+            help={t('The twitter name for this identity.')}
             isDisabled={!hasTwitter}
             isError={!okTwitter}
-            label={t<string>('twitter')}
+            label={t('twitter')}
             onChange={setValTwitter}
             placeholder={t('@YourTwitterName')}
             value={hasTwitter ? valTwitter : '<none>'}
@@ -309,10 +308,10 @@ function IdentityMain ({ address, className = '', onClose }: Props): React.React
           value={hasRiot}
         >
           <Input
-            help={t<string>('a riot name linked to this identity')}
+            help={t('a riot name linked to this identity')}
             isDisabled={!hasRiot}
             isError={!okRiot}
-            label={t<string>('riot name')}
+            label={t('riot name')}
             maxLength={32}
             onChange={setValRiot}
             placeholder={t('@yourname:matrix.org')}
@@ -321,9 +320,9 @@ function IdentityMain ({ address, className = '', onClose }: Props): React.React
         </WrapToggle>
         <InputBalance
           defaultValue={api.consts.identity?.basicDeposit}
-          help={t<string>('Total amount of fund that will be reserved. These funds are returned when the identity is cleared')}
+          help={t('Total amount of fund that will be reserved. These funds are returned when the identity is cleared')}
           isDisabled
-          label={t<string>('total deposit')}
+          label={t('total deposit')}
         />
       </Modal.Content>
       <Modal.Actions>
@@ -331,14 +330,14 @@ function IdentityMain ({ address, className = '', onClose }: Props): React.React
           accountId={address}
           icon={'trash-alt'}
           isDisabled={!gotPreviousIdentity}
-          label={t<string>('Clear Identity')}
+          label={t('Clear Identity')}
           onStart={onClose}
           tx={api.tx.identity.clearIdentity}
         />
         <TxButton
           accountId={address}
           isDisabled={!okAll}
-          label={t<string>('Set Identity')}
+          label={t('Set Identity')}
           onStart={onClose}
           params={[info]}
           tx={api.tx.identity.setIdentity}

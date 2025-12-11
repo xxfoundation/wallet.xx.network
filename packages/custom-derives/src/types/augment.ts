@@ -4,7 +4,7 @@ import '@polkadot/api-derive';
 
 import type { Observable } from 'rxjs';
 
-import { DeriveCustodyAccounts } from './.';
+import type { DeriveCustodyAccounts } from './index.js';
 
 declare module '@polkadot/api-derive/staking/types' {
   export interface DeriveStakingQuery {

@@ -6,7 +6,7 @@
 import type { DeriveApi } from '@polkadot/api-derive/types';
 import type { Option } from '@polkadot/types';
 import type { Nominations } from '@polkadot/types/interfaces';
-import type { DeriveCustodyAccounts } from '../types';
+import type { DeriveCustodyAccounts } from '../types/index.js';
 
 import { map, switchMap } from 'rxjs';
 

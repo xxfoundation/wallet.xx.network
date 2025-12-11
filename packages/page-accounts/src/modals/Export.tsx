@@ -45,7 +45,7 @@ function Export ({ className = '', onClose, onStatusChange }: Props): React.Reac
           onClose();
           onStatusChange({
             action: 'export',
-            message: t<string>('{{count}} accounts successfully exported', { count: exported.accounts.length }),
+            message: t('{{count}} accounts successfully exported', { replace: { count: exported.accounts.length } }),
             status: 'success'
           });
         })
@@ -68,30 +68,30 @@ function Export ({ className = '', onClose, onStatusChange }: Props): React.Reac
   return (
     <Modal
       className={className}
-      header={t<string>('Export accounts')}
+      header={t('Export accounts')}
       onClose={onClose}
       size='large'
     >
       <Modal.Content>
         <Modal.Columns
-          hint={t<string>('Select which accounts you would like to export in a json format. All of them are selected by default.')}
+          hint={t('Select which accounts you would like to export in a json format. All of them are selected by default.')}
         >
           <InputAddressMulti
             available={selectableAccounts}
-            availableLabel={t<string>('exportable accounts')}
+            availableLabel={t('exportable accounts')}
             defaultValue={selectableAccounts}
-            help={t<string>('Filter available accounts based on name, address or short account index.')}
+            help={t('Filter available accounts based on name, address or short account index.')}
             maxCount={Number.POSITIVE_INFINITY}
             onChange={setSelected}
-            valueLabel={t<string>('selected accounts to export')}
+            valueLabel={t('selected accounts to export')}
           />
         </Modal.Columns>
-        <Modal.Columns hint={t<string>('Choose a password that will be used to encrypt the json backup file. This is a different password than the one you sign transactions with. If you lose it you will lose access to the backup file forever.')}>
+        <Modal.Columns hint={t('Choose a password that will be used to encrypt the json backup file. This is a different password than the one you sign transactions with. If you lose it you will lose access to the backup file forever.')}>
           <Password
             className='full'
-            help={t<string>('Password for encrypting your json backup file.')}
+            help={t('Password for encrypting your json backup file.')}
             isError={!!error || !password}
-            label={t<string>('password')}
+            label={t('password')}
             onChange={onPassChange}
             onEnter={_export}
             value={password}
@@ -103,7 +103,7 @@ function Export ({ className = '', onClose, onStatusChange }: Props): React.Reac
           icon='sync'
           isBusy={isBusy}
           isDisabled={!password || selected.length === 0}
-          label={t<string>('Export')}
+          label={t('Export')}
           onClick={_export}
         />
       </Modal.Actions>

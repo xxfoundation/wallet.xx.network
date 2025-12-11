@@ -18,6 +18,7 @@ import { isFunction } from '@polkadot/util';
 
 import Actions from './Actions/index.js';
 import Bags from './Bags/index.js';
+import NodeLocationsProvider from './NodeLocationContext/Provider.js';
 import Payouts from './Payouts/index.js';
 import Query from './Query/index.js';
 import Slashes from './Slashes/index.js';
@@ -129,95 +130,97 @@ function StakingApp ({ basePath, className = '' }: Props): React.ReactElement<Pr
   ].filter((q): q is { name: string; text: string } => !!q), [api, hasStashes, slashes, t]);
 
   return (
-    <StyledMain className={`${className} staking--App`}>
-      <Tabs
-        basePath={basePath}
-        hidden={
-          areAccountsLoaded && !hasAccounts
-            ? HIDDEN_ACC
-            : undefined
-        }
-        items={items}
-      />
-      <Routes>
-        <Route path={basePath}>
-          <Route
-            element={
-              <Bags ownStashes={ownStashes} />
-            }
-            path='bags'
-          />
-          <Route
-            element={
-              <Payouts
-                historyDepth={targets.historyDepth}
-                isInElection={isInElection}
-                ownPools={ownPools}
-                ownValidators={ownValidators}
-              />
-            }
-            path='payout'
-          />
-          <Route
-            element={
-              <Pools ownPools={ownPools} />
-            }
-            path='pools'
-          />
-          <Route
-            element={
-              <Query basePath={basePath} />
-            }
-            path='query/:value?'
-          />
-          <Route
-            element={
-              <Slashes
-                ownStashes={ownStashes}
-                slashes={slashes}
-              />
-            }
-            path='slashes'
-          />
-          <Route
-            element={
-              <Targets
-                isInElection={isInElection}
-                nominatedBy={nominatedBy}
-                ownStashes={ownStashes}
-                targets={targets}
-                toggleFavorite={toggleFavorite}
-                toggleLedger={toggleLedger}
-                toggleNominatedBy={toggleNominatedBy}
-              />
-            }
-            path='targets'
-          />
-        </Route>
-      </Routes>
-      <Actions
-        className={pathname === `${basePath}/actions` ? '' : '--hidden'}
-        isInElection={isInElection}
-        minCommission={minCommission}
-        ownPools={ownPools}
-        ownStashes={ownStashes}
-        targets={targets}
-      />
-      <Validators
-        className={basePath === pathname ? '' : '--hidden'}
-        favorites={favorites}
-        hasAccounts={hasAccounts}
-        hasQueries={hasQueries}
-        minCommission={minCommission}
-        nominatedBy={nominatedBy}
-        ownStashes={ownStashes}
-        paraValidators={paraValidators}
-        stakingOverview={stakingOverview}
-        targets={targets}
-        toggleFavorite={toggleFavorite}
-        toggleNominatedBy={toggleNominatedBy}
-      />
-    </StyledMain>
+    <NodeLocationsProvider>
+      <StyledMain className={`${className} staking--App`}>
+        <Tabs
+          basePath={basePath}
+          hidden={
+            areAccountsLoaded && !hasAccounts
+              ? HIDDEN_ACC
+              : undefined
+          }
+          items={items}
+        />
+        <Routes>
+          <Route path={basePath}>
+            <Route
+              element={
+                <Bags ownStashes={ownStashes} />
+              }
+              path='bags'
+            />
+            <Route
+              element={
+                <Payouts
+                  historyDepth={targets.historyDepth}
+                  isInElection={isInElection}
+                  ownPools={ownPools}
+                  ownValidators={ownValidators}
+                />
+              }
+              path='payout'
+            />
+            <Route
+              element={
+                <Pools ownPools={ownPools} />
+              }
+              path='pools'
+            />
+            <Route
+              element={
+                <Query basePath={basePath} />
+              }
+              path='query/:value?'
+            />
+            <Route
+              element={
+                <Slashes
+                  ownStashes={ownStashes}
+                  slashes={slashes}
+                />
+              }
+              path='slashes'
+            />
+            <Route
+              element={
+                <Targets
+                  isInElection={isInElection}
+                  nominatedBy={nominatedBy}
+                  ownStashes={ownStashes}
+                  targets={targets}
+                  toggleFavorite={toggleFavorite}
+                  toggleLedger={toggleLedger}
+                  toggleNominatedBy={toggleNominatedBy}
+                />
+              }
+              path='targets'
+            />
+          </Route>
+        </Routes>
+        <Actions
+          className={pathname === `${basePath}/actions` ? '' : '--hidden'}
+          isInElection={isInElection}
+          minCommission={minCommission}
+          ownPools={ownPools}
+          ownStashes={ownStashes}
+          targets={targets}
+        />
+        <Validators
+          className={basePath === pathname ? '' : '--hidden'}
+          favorites={favorites}
+          hasAccounts={hasAccounts}
+          hasQueries={hasQueries}
+          minCommission={minCommission}
+          nominatedBy={nominatedBy}
+          ownStashes={ownStashes}
+          paraValidators={paraValidators}
+          stakingOverview={stakingOverview}
+          targets={targets}
+          toggleFavorite={toggleFavorite}
+          toggleNominatedBy={toggleNominatedBy}
+        />
+      </StyledMain>
+    </NodeLocationsProvider>
   );
 }
 

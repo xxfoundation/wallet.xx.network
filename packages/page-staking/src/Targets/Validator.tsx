@@ -18,7 +18,6 @@ import { NodeLocationContext } from '../NodeLocationContext/context.js';
 import { useTranslation } from '../translate.js';
 import Favorite from '../Validators/Address/Favorite.js';
 import CommissionHover from './CommissionHover.js';
-import HorizontalBarChart from './HorizontalBarChart.js';
 
 interface Props {
   allSlashes?: [BN, UnappliedSlash[]][];
@@ -53,8 +52,7 @@ function Validator ({ allSlashes, canSelect, filterName, info, isNominated, isSe
     predictedElected,
     predictedStake,
     rankOverall,
-    stakedReturnCmp,
-    teamMultiplier } = info;
+    stakedReturnCmp } = info;
   const { t } = useTranslation();
   const { api } = useApi();
   const accountInfo = useDeriveAccountInfo(accountId);
@@ -93,17 +91,6 @@ function Validator ({ allSlashes, canSelect, filterName, info, isNominated, isSe
     () => toggleSelected(key),
     [key, toggleSelected]
   );
-
-  const barchartItems = useMemo(() => [{
-    label: t<string>('Team Multipler'),
-    value: teamMultiplier
-  }, {
-    label: t<string>('Own Stake'),
-    value: bondOwn
-  }, {
-    label: t<string>('Other Stake'),
-    value: bondOther
-  }], [bondOwn, bondOther, teamMultiplier, t]);
 
   if (!isVisible) {
     return null;
@@ -145,7 +132,7 @@ function Validator ({ allSlashes, canSelect, filterName, info, isNominated, isSe
         {slashes.length !== 0 && (
           <Badge
             color='red'
-            hover={t<string>('Slashed in era {{eras}}', {
+            hover={t('Slashed in era {{eras}}', {
               replace: {
                 eras: slashes.map(({ era }) => formatNumber(era)).join(', ')
               }
@@ -179,11 +166,11 @@ function Validator ({ allSlashes, canSelect, filterName, info, isNominated, isSe
           isCommissionReducing={isCommissionReducing}
         />
       </td>
-      <td
-        className='together'
-        colSpan={3}
-      >
-        <HorizontalBarChart items={barchartItems} />
+      <td className='number together'>
+        {!bondOwn.isZero() && <FormatBalance value={bondOwn} />}
+      </td>
+      <td className='number together'>
+        {!bondOther.isZero() && <FormatBalance value={bondOther} />}
       </td>
       <td className='number together'>{!bondTotalWithTM.isZero() && <FormatBalance value={bondTotalWithTM} />}</td>
       <td

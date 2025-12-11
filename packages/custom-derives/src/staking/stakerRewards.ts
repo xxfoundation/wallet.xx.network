@@ -4,8 +4,7 @@
 import type { Observable } from 'rxjs';
 import type { DeriveStakingQuery } from '@polkadot/api-derive/staking/types';
 import type { DeriveApi, DeriveEraPoints, DeriveEraPrefs, DeriveEraRewards, DeriveEraValPoints, DeriveEraValPrefs, DeriveStakerExposure, DeriveStakerReward, DeriveStakerRewardValidator } from '@polkadot/api-derive/types';
-import type { AccountId, EraIndex } from '@polkadot/types/interfaces';
-import type { PalletStakingStakingLedger } from '@polkadot/types/lookup';
+import type { AccountId, EraIndex, StakingLedger } from '@polkadot/types/interfaces';
 import type { BN } from '@polkadot/util';
 
 import { combineLatest, map, of, switchMap } from 'rxjs';
@@ -109,7 +108,7 @@ function removeClaimed (validators: string[], queryValidators: DeriveStakingQuer
   });
 }
 
-function filterRewards (eras: EraIndex[], valInfo: [string, DeriveStakingQuery][], { rewards, stakingLedger }: { rewards: DeriveStakerReward[]; stakingLedger: PalletStakingStakingLedger }): DeriveStakerReward[] {
+function filterRewards (eras: EraIndex[], valInfo: [string, DeriveStakingQuery][], { rewards, stakingLedger }: { rewards: DeriveStakerReward[]; stakingLedger: StakingLedger }): DeriveStakerReward[] {
   const filter = eras.filter((e) => !stakingLedger.claimedRewards.some((s) => s.eq(e)));
   const validators = valInfo.map(([v]) => v);
   const queryValidators = valInfo.map(([, q]) => q);

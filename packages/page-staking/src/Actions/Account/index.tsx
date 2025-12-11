@@ -10,10 +10,9 @@ import type { SortedTargets } from '../../types.js';
 import type { Slash } from '../types.js';
 
 import React, { useCallback, useContext, useMemo } from 'react';
-import styled from 'styled-components';
 
 import { ApiPromise } from '@polkadot/api';
-import { AddressInfo, AddressMini, AddressSmall, Badge, Button, Menu, Popup, StakingBonded, StakingRedeemable, StakingUnbonding, StatusContext, TxButton } from '@polkadot/react-components';
+import { AddressInfo, AddressMini, AddressSmall, Badge, Button, Menu, Popup, StakingBonded, StakingRedeemable, StakingUnbonding, StatusContext, styled, TxButton } from '@polkadot/react-components';
 import { useApi, useCall, useToggle } from '@polkadot/react-hooks';
 import { BN, formatNumber, isFunction } from '@polkadot/util';
 
@@ -136,7 +135,7 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
         {slashes.length !== 0 && (
           <Badge
             color='red'
-            hover={t<string>('Slashed in era {{eras}}', {
+            hover={t('Slashed in era {{eras}}', {
               replace: {
                 eras: slashes.map(({ era }) => formatNumber(era)).join(', ')
               }
@@ -279,7 +278,7 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
                   icon='stop'
                   isDisabled={!isOwnController || isDisabled}
                   key='stop'
-                  label={t<string>('Stop')}
+                  label={t('Stop')}
                   tx={api.tx.staking.chill}
                 />
               )
@@ -291,7 +290,7 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
                         icon='sign-in-alt'
                         isDisabled={!isOwnController || isDisabled}
                         key='set'
-                        label={t<string>('Session Key')}
+                        label={t('Session Key')}
                         onClick={toggleSetSession}
                       />
                     )
@@ -300,7 +299,7 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
                         icon='certificate'
                         isDisabled={!isOwnController || isDisabled || !hasBonded}
                         key='validate'
-                        label={t<string>('Validate')}
+                        label={t('Validate')}
                         onClick={toggleValidate}
                       />
                     )
@@ -309,7 +308,7 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
                     icon='hand-paper'
                     isDisabled={!isOwnController || isDisabled || !hasBonded}
                     key='nominate'
-                    label={t<string>('Nominate')}
+                    label={t('Nominate')}
                     onClick={toggleNominate}
                   />
                 </Button.Group>
@@ -322,41 +321,41 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
                 <Menu>
                   <Menu.Item
                     isDisabled={!isOwnStash || !balancesAll?.freeBalance.gtn(0)}
-                    label={t<string>('Bond more funds')}
+                    label={t('Bond more funds')}
                     onClick={toggleBondExtra}
                   />
                   <Menu.Item
                     isDisabled={!isOwnController || !stakingAccount || !stakingAccount.stakingLedger || stakingAccount.stakingLedger.active?.isEmpty}
-                    label={t<string>('Unbond funds')}
+                    label={t('Unbond funds')}
                     onClick={toggleUnbond}
                   />
                   <Menu.Item
                     isDisabled={!isOwnController || !stakingAccount || !stakingAccount.unlocking || !stakingAccount.unlocking.length}
-                    label={t<string>('Rebond funds')}
+                    label={t('Rebond funds')}
                     onClick={toggleRebond}
                   />
                   <Menu.Item
                     isDisabled={!isOwnController || !stakingAccount || !stakingAccount.redeemable || !stakingAccount.redeemable.gtn(0)}
-                    label={t<string>('Withdraw unbonded funds')}
+                    label={t('Withdraw unbonded funds')}
                     onClick={withdrawFunds}
                   />
                   <Menu.Divider />
                   <Menu.Item
                     isDisabled={!isOwnStash}
-                    label={t<string>('Change controller account')}
+                    label={t('Change controller account')}
                     onClick={toggleSetController}
                   />
                   {isStashValidating && (
                     <>
                       <Menu.Item
                         isDisabled={!isOwnController}
-                        label={t<string>('Change validator preferences')}
+                        label={t('Change validator preferences')}
                         onClick={toggleValidate}
                       />
                       {isFunction(api.tx.staking.kick) && (
                         <Menu.Item
                           isDisabled={!isOwnController}
-                          label={t<string>('Remove nominees')}
+                          label={t('Remove nominees')}
                           onClick={toggleKick}
                         />
                       )}
@@ -366,20 +365,20 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
                   {!isStashNominating && (
                     <Menu.Item
                       isDisabled={!isOwnController}
-                      label={t<string>('Change session keys')}
+                      label={t('Change session keys')}
                       onClick={toggleSetSession}
                     />
                   )}
                   {isStashNominating && (
                     <Menu.Item
                       isDisabled={!isOwnController || !targets.validators?.length}
-                      label={t<string>('Set nominees')}
+                      label={t('Set nominees')}
                       onClick={toggleNominate}
                     />
                   )}
                   {!isStashNominating && (
                     <Menu.Item
-                      label={t<string>('Inject session keys (advanced)')}
+                      label={t('Inject session keys (advanced)')}
                       onClick={toggleInject}
                     />
                   )}
@@ -389,7 +388,7 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
                       isDisabled={!!cmixId}
                       onClick={toggleSetCmixId}
                     >
-                      {t<string>('Set Cmix ID')}
+                      {t('Set Cmix ID')}
                     </Menu.Item>
                   }
                   {
@@ -397,7 +396,7 @@ function Account ({ allSlashes, className = '', info: { controllerId, destinatio
                       isDisabled={!validToTransferCmixId}
                       onClick={toggleTransferCmixId}
                     >
-                      {t<string>('Transfer Cmix ID')}
+                      {t('Transfer Cmix ID')}
                     </Menu.Item>
                   }
                 </Menu>

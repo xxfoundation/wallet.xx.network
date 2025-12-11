@@ -5,13 +5,13 @@ import type { DeriveHeartbeatAuthor } from '@polkadot/api-derive/types';
 import type { Option } from '@polkadot/types';
 import type { SlashingSpans, ValidatorPrefs } from '@polkadot/types/interfaces';
 import type { BN } from '@polkadot/util';
-import type { NominatedBy as NominatedByType, ValidatorInfo } from '../../types';
-import type { NominatorValue } from './types';
+import type { NominatedBy as NominatedByType, ValidatorInfo } from '../../types.js';
+import type { NominatorValue } from './types.js';
 
 import React, { useContext, useMemo } from 'react';
 
 import { ApiPromise } from '@polkadot/api';
-import { NodeLocationContext } from '@polkadot/app-staking/NodeLocationContext/context';
+import { NodeLocationContext } from '../../NodeLocationContext/context.js';
 import { AddressSmall, Icon, LinkExternal } from '@polkadot/react-components';
 import CmixAddress from '@polkadot/react-components/CmixAddress';
 import { checkVisibility } from '@polkadot/react-components/util';
@@ -19,10 +19,10 @@ import { useApi, useCall, useDeriveAccountInfo } from '@polkadot/react-hooks';
 import { FormatBalance } from '@polkadot/react-query';
 import { BN_ZERO } from '@polkadot/util';
 
-import Favorite from './Favorite';
-import NominatedBy from './NominatedBy';
-import StakeOther from './StakeOther';
-import Status from './Status';
+import Favorite from './Favorite.js';
+import NominatedBy from './NominatedBy.js';
+import StakeOther from './StakeOther.js';
+import Status from './Status.js';
 
 interface Props {
   address: string;
@@ -110,7 +110,7 @@ function Address ({ address, className = '', filterName, hasQueries, isElected, 
       : null;
   }, [locationContext, validatorInfo]);
 
-  const { commission, isChilled, nominators, pastAvgCommission, stakeOther, stakeOwn, teamMultiplier } = useMemo(
+  const { commission, isChilled, nominators, pastAvgCommission, stakeOther, stakeOwn } = useMemo(
     () => validatorInfo
       ? expandInfo(validatorInfo)
       : { nominators: [], pastAvgCommission: 0.0 },
@@ -184,11 +184,6 @@ function Address ({ address, className = '', filterName, hasQueries, isElected, 
           <td className='number media--1100'>
             {stakeOwn?.gtn(0) && (
               <FormatBalance value={stakeOwn} />
-            )}
-          </td>
-          <td className='number media--1100'>
-            {teamMultiplier?.gtn(0) && (
-              <FormatBalance value={teamMultiplier} />
             )}
           </td>
         </>

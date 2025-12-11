@@ -6,7 +6,7 @@ import React, { useState, useCallback } from 'react';
 import { useApi } from '@polkadot/react-hooks';
 import { InputAddress, InputCmixAddress, MarkWarning, Modal, TxButton } from '@polkadot/react-components';
 
-import { useTranslation } from '../../translate';
+import { useTranslation } from '../../translate.js';
 import { isHex } from '@polkadot/util';
 
 interface Props {
@@ -21,7 +21,7 @@ function SetCmixId ({ onClose, stashId, controllerId }: Props): React.ReactEleme
   const [cmixId, setCmixId] = useState<string | null>(null);
   const [cmixError, setCmixError] = useState<boolean>(false);
 
-  const cmixHint = t<string>('The cMix ID is the identifier of your cMix Node in the xx network. Validators are required to have a cMix ID set on-chain. This can be found in your cmix-IDF.json file, under the field “hexNodeID”.');
+  const cmixHint = t('The cMix ID is the identifier of your cMix Node in the xx network. Validators are required to have a cMix ID set on-chain. This can be found in your cmix-IDF.json file, under the field "hexNodeID".');
 
   const _validateCmixId = useCallback(
     (value: string) => {
@@ -33,7 +33,7 @@ function SetCmixId ({ onClose, stashId, controllerId }: Props): React.ReactEleme
 
   return (
     <Modal
-      header={t<string>('Set Cmix ID')}
+      header={t('Set Cmix ID')}
       onClose={onClose}
       size='large'
     >
@@ -42,12 +42,12 @@ function SetCmixId ({ onClose, stashId, controllerId }: Props): React.ReactEleme
           <InputAddress
             defaultValue={stashId}
             isDisabled
-            label={t<string>('stash account')}
+            label={t('stash account')}
           />
           <InputAddress
             defaultValue={controllerId}
             isDisabled
-            label={t<string>('controller account')}
+            label={t('controller account')}
           />
         </Modal.Columns>
         {
@@ -59,7 +59,7 @@ function SetCmixId ({ onClose, stashId, controllerId }: Props): React.ReactEleme
               includeToggle={false}
             />
             <MarkWarning
-              content={t<string>('Please make sure you set your cMix ID correctly. If you don’t, you will need to fully UNBOND your stash, and wait for the bonding duration specified above, before you can correct your cMix ID. Be aware you will NOT EARN any potential rewards during this unbonding period.')}
+              content={t("Please make sure you set your cMix ID correctly. If you don't, you will need to fully UNBOND your stash, and wait for the bonding duration specified above, before you can correct your cMix ID. Be aware you will NOT EARN any potential rewards during this unbonding period.")}
             />
           </Modal.Columns>
         }
@@ -69,7 +69,7 @@ function SetCmixId ({ onClose, stashId, controllerId }: Props): React.ReactEleme
           accountId={stashId}
           icon='sign-in-alt'
           isDisabled={cmixError}
-          label={t<string>('Submit')}
+          label={t('Submit')}
           onStart={onClose}
           params={[cmixId]}
           tx={api.tx.staking.setCmixId}

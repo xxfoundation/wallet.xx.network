@@ -3,8 +3,8 @@
 
 import React from 'react';
 
-import { NodeLocationContext } from './context';
-import useNodeLocationMap from './useNodeLocationMap';
+import { NodeLocationContext } from './context.js';
+import useNodeLocationMap from './useNodeLocationMap.js';
 
 const NodeLocationsProvider: React.FC<{ children: JSX.Element | JSX.Element[] }> = ({ children }) => {
   const nodeLocations = useNodeLocationMap();

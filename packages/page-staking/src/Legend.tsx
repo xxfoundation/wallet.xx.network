@@ -4,11 +4,10 @@
 import type { BN } from '@polkadot/util';
 
 import React from 'react';
-import styled from 'styled-components';
 
-import { Badge, Icon } from '@polkadot/react-components';
+import { Badge, Icon, styled } from '@polkadot/react-components';
 
-import { useTranslation } from './translate';
+import { useTranslation } from './translate.js';
 
 interface Props {
   className?: string;

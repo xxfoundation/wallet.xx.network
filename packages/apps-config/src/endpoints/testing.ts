@@ -1122,6 +1122,7 @@ export const testChains: Omit<EndpointOption, 'teleport'>[] = [
   },
   {
     info: 'xxnetwork',
+    isPeopleForIdentity: false,
     providers: {
       'xx labs': 'wss://test.xxlabs.net'
     },

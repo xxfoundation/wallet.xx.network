@@ -726,6 +726,7 @@ export const prodChains: Omit<EndpointOption, 'teleport'>[] = [
   },
   {
     info: 'xxnetwork',
+    isPeopleForIdentity: false,
     providers: {
       'xx foundation': 'wss://rpc.xx.network',
       dwellir: 'wss://xxnetwork-rpc.n.dwellir.com'

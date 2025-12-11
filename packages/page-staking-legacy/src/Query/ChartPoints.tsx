@@ -29,7 +29,7 @@ function extractPoints (labels: string[], points: DeriveStakerPoints[]): LineDat
     const avg = avgCount > 0
       ? Math.ceil(total * 100 / avgCount) / 100
       : 0;
-    const index = labels.indexOf(era.toHuman());
+    const index = labels.indexOf(String(era));
 
     if (index !== -1) {
       avgSet[index] = avg;

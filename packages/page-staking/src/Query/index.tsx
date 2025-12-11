@@ -31,7 +31,7 @@ function Query ({ basePath, className }: Props): React.ReactElement<Props> {
   const eras = useCall<INumber[]>(api.derive.staking.erasHistoric);
 
   const labels = useMemo(
-    () => eras?.map((e) => e.toHuman() as string),
+    () => eras?.map((e) => String(e)),
     [eras]
   );
 

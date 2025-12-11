@@ -13,27 +13,24 @@ import Chart from './Chart.js';
 
 const COLORS_POINTS = [undefined, '#acacac'];
 
-function extractPoints (labels: string[], points: DeriveStakerPoints[]): LineData {
+function extractPoints (labels: string[], points: DeriveStakerPoints[], erasRewardPoints?: any[], validatorCount?: number): LineData {
   const avgSet = new Array<number>(labels.length);
   const idxSet = new Array<number>(labels.length);
-  const [total, avgCount] = points.reduce(([total, avgCount], { points }) => {
-    if (points.gtn(0)) {
-      total += points.toNumber();
-      avgCount++;
-    }
-
-    return [total, avgCount];
-  }, [0, 0]);
 
   points.forEach(({ era, points }): void => {
-    const avg = avgCount > 0
-      ? Math.ceil(total * 100 / avgCount) / 100
-      : 0;
-    const index = labels.indexOf(era.toHuman());
-
+    const index = labels.indexOf(String(era));
+    
     if (index !== -1) {
-      avgSet[index] = avg;
       idxSet[index] = points.toNumber();
+      
+      // Calculate network average for this era
+      if (erasRewardPoints && erasRewardPoints[index] && validatorCount) {
+        const eraRewards = erasRewardPoints[index];
+        const totalPoints = eraRewards.total?.toNumber() || 0;
+        avgSet[index] = totalPoints > 0 && validatorCount > 0
+          ? Math.ceil((totalPoints / validatorCount) * 100) / 100
+          : 0;
+      }
     }
   });
 
@@ -46,6 +43,13 @@ function ChartPoints ({ labels, validatorId }: Props): React.ReactElement<Props>
   const params = useMemo(() => [validatorId, false], [validatorId]);
   const stakerPoints = useCall<DeriveStakerPoints[]>(api.derive.staking.stakerPoints, params);
   const [values, setValues] = useState<LineData>([]);
+  
+  // Fetch network-wide era reward points for all eras
+  const eras = useMemo(() => labels.map((l) => api.registry.createType('EraIndex', l)), [api, labels]);
+  const erasRewardPoints = useCall<any[]>(api.query.staking.erasRewardPoints?.multi, [eras]);
+  
+  // Get current validator count
+  const validatorCount = useCall<number>(api.query.staking.validatorCount);
 
   useEffect(
     () => setValues([]),
@@ -53,13 +57,13 @@ function ChartPoints ({ labels, validatorId }: Props): React.ReactElement<Props>
   );
 
   useEffect(
-    () => stakerPoints && setValues(extractPoints(labels, stakerPoints)),
-    [labels, stakerPoints]
+    () => stakerPoints && setValues(extractPoints(labels, stakerPoints, erasRewardPoints, validatorCount)),
+    [labels, stakerPoints, erasRewardPoints, validatorCount]
   );
 
   const legendsRef = useRef([
     t('points'),
-    t('average')
+    t('network average')
   ]);
 
   return (

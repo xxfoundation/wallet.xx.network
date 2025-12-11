@@ -15,30 +15,18 @@ import Chart from './Chart.js';
 const MULT = new BN(100 * 100);
 const COLORS_POINTS = [undefined, '#acacac'];
 
-function extractPrefs (labels: string[], prefs: DeriveStakerPrefs[]): LineData {
+function extractPrefs (labels: string[], prefs: DeriveStakerPrefs[], networkAvgCommission?: number): LineData {
   const avgSet = new Array<number>(labels.length);
   const idxSet = new Array<number>(labels.length);
-  const [total, avgCount] = prefs.reduce(([total, avgCount], { validatorPrefs }) => {
-    const comm = validatorPrefs.commission.unwrap().mul(MULT).div(BN_BILLION).toNumber() / 100;
-
-    if (comm !== 0) {
-      total += comm;
-      avgCount++;
-    }
-
-    return [total, avgCount];
-  }, [0, 0]);
 
   prefs.forEach(({ era, validatorPrefs }): void => {
     const comm = validatorPrefs.commission.unwrap().mul(MULT).div(BN_BILLION).toNumber() / 100;
-    const avg = avgCount > 0
-      ? Math.ceil(total * 100 / avgCount) / 100
-      : 0;
-    const index = labels.indexOf(era.toHuman());
+    const index = labels.indexOf(String(era));
 
     if (index !== -1) {
-      avgSet[index] = avg;
       idxSet[index] = comm;
+      // Use network average if available
+      avgSet[index] = networkAvgCommission || 0;
     }
   });
 
@@ -51,6 +39,23 @@ function ChartPrefs ({ labels, validatorId }: Props): React.ReactElement<Props> 
   const params = useMemo(() => [validatorId, false], [validatorId]);
   const stakerPrefs = useCall<DeriveStakerPrefs[]>(api.derive.staking.stakerPrefs, params);
   const [values, setValues] = useState<LineData>([]);
+  
+  // Fetch all validator commissions to calculate network average
+  const allValidators = useCall<any[]>(api.query.staking.validators.entries);
+  
+  // Calculate network average commission
+  const networkAvgCommission = useMemo(() => {
+    if (!allValidators || allValidators.length === 0) {
+      return 0;
+    }
+    
+    const total = allValidators.reduce((sum, [, prefs]) => {
+      const comm = prefs.commission.unwrap().mul(MULT).div(BN_BILLION).toNumber() / 100;
+      return sum + comm;
+    }, 0);
+    
+    return Math.ceil((total / allValidators.length) * 100) / 100;
+  }, [allValidators]);
 
   useEffect(
     () => setValues([]),
@@ -58,20 +63,31 @@ function ChartPrefs ({ labels, validatorId }: Props): React.ReactElement<Props> 
   );
 
   useEffect(
-    () => stakerPrefs && setValues(extractPrefs(labels, stakerPrefs)),
-    [labels, stakerPrefs]
+    () => stakerPrefs && setValues(extractPrefs(labels, stakerPrefs, networkAvgCommission)),
+    [labels, stakerPrefs, networkAvgCommission]
   );
 
   const legendsRef = useRef([
     t('commission'),
-    t('average')
+    t('network average')
   ]);
+
+  // Set Y-axis to always show 0-100% range
+  const chartOptions = useMemo(() => ({
+    scales: {
+      y: {
+        max: 100,
+        min: 0
+      }
+    }
+  }), []);
 
   return (
     <Chart
       colors={COLORS_POINTS}
       labels={labels}
       legends={legendsRef.current}
+      options={chartOptions}
       title={t('commission')}
       values={values}
     />

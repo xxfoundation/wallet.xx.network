@@ -15,23 +15,10 @@ import { balanceToNumber } from './util.js';
 
 const COLORS_REWARD = ['#8c2200', '#008c22', '#acacac'];
 
-function extractRewards (labels: string[], erasRewards: DeriveEraRewards[], ownSlashes: DeriveOwnSlashes[], allPoints: DeriveStakerPoints[], divisor: BN): LineData {
+function extractRewards (labels: string[], erasRewards: DeriveEraRewards[], ownSlashes: DeriveOwnSlashes[], allPoints: DeriveStakerPoints[], divisor: BN, erasValidatorReward?: any[], validatorCount?: number): LineData {
   const slashSet = new Array<number>(labels.length);
   const rewardSet = new Array<number>(labels.length);
   const avgSet = new Array<number>(labels.length);
-  const [total, avgCount] = erasRewards.reduce(([total, avgCount], { era, eraReward }) => {
-    const points = allPoints.find((points) => points.era.eq(era));
-    const reward = points?.eraPoints.gtn(0)
-      ? balanceToNumber(points.points.mul(eraReward).div(points.eraPoints), divisor)
-      : 0;
-
-    if (reward > 0) {
-      total += reward;
-      avgCount++;
-    }
-
-    return [total, avgCount];
-  }, [0, 0]);
 
   erasRewards.forEach(({ era, eraReward }): void => {
     const points = allPoints.find((points) => points.era.eq(era));
@@ -42,15 +29,19 @@ function extractRewards (labels: string[], erasRewards: DeriveEraRewards[], ownS
     const slash = slashed
       ? balanceToNumber(slashed.total, divisor)
       : 0;
-    const avg = avgCount > 0
-      ? Math.ceil(total * 100 / avgCount) / 100
-      : 0;
-    const index = labels.indexOf(era.toHuman());
+    const index = labels.indexOf(String(era));
 
     if (index !== -1) {
       rewardSet[index] = reward;
-      avgSet[index] = avg;
       slashSet[index] = slash;
+      
+      // Calculate network average reward for this era
+      if (erasValidatorReward && erasValidatorReward[index] && validatorCount) {
+        const totalReward = erasValidatorReward[index].unwrapOr(new BN(0));
+        avgSet[index] = totalReward.gtn(0) && validatorCount > 0
+          ? Math.ceil(balanceToNumber(totalReward, divisor) / validatorCount * 100) / 100
+          : 0;
+      }
     }
   });
 
@@ -65,6 +56,13 @@ function ChartRewards ({ labels, validatorId }: Props): React.ReactElement<Props
   const erasRewards = useCall<DeriveEraRewards[]>(api.derive.staking.erasRewards);
   const stakerPoints = useCall<DeriveStakerPoints[]>(api.derive.staking.stakerPoints, params);
   const [values, setValues] = useState<LineData>([]);
+  
+  // Fetch network-wide validator rewards for all eras
+  const eras = useMemo(() => labels.map((l) => api.registry.createType('EraIndex', l)), [api, labels]);
+  const erasValidatorReward = useCall<any[]>(api.query.staking.erasValidatorReward?.multi, [eras]);
+  
+  // Get current validator count
+  const validatorCount = useCall<number>(api.query.staking.validatorCount);
 
   const { currency, divisor } = useMemo(
     () => ({
@@ -80,14 +78,14 @@ function ChartRewards ({ labels, validatorId }: Props): React.ReactElement<Props
   );
 
   useEffect(
-    () => erasRewards && ownSlashes && stakerPoints && setValues(extractRewards(labels, erasRewards, ownSlashes, stakerPoints, divisor)),
-    [labels, divisor, erasRewards, ownSlashes, stakerPoints]
+    () => erasRewards && ownSlashes && stakerPoints && setValues(extractRewards(labels, erasRewards, ownSlashes, stakerPoints, divisor, erasValidatorReward, validatorCount)),
+    [labels, divisor, erasRewards, ownSlashes, stakerPoints, erasValidatorReward, validatorCount]
   );
 
   const legends = useMemo(() => [
     t('{{currency}} slashed', { replace: { currency } }),
     t('{{currency}} rewards', { replace: { currency } }),
-    t('{{currency}} average', { replace: { currency } })
+    t('{{currency}} network average', { replace: { currency } })
   ], [currency, t]);
 
   return (

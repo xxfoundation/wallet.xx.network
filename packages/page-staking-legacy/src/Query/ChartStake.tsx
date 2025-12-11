@@ -20,7 +20,12 @@ function extractStake (labels: string[], exposures: DeriveOwnExposure[], divisor
   const expSet = new Array<number>(labels.length);
   const avgSet = new Array<number>(labels.length);
   const [total, avgCount] = exposures.reduce(([total, avgCount], { clipped }) => {
-    const cli = balanceToNumber(clipped.total?.unwrap(), divisor);
+    const clippedData: any = (clipped as any)?.isSome ? (clipped as any).unwrap() : clipped;
+    // Handle Compact types with .toBn() and Options with .unwrap()
+    const totalValue = clippedData?.total
+      ? (typeof clippedData.total.toBn === 'function' ? clippedData.total.toBn() : (clippedData.total.unwrap ? clippedData.total.unwrap() : new BN(0)))
+      : new BN(0);
+    const cli = balanceToNumber(totalValue, divisor);
 
     if (cli > 0) {
       total += cli;
@@ -31,13 +36,28 @@ function extractStake (labels: string[], exposures: DeriveOwnExposure[], divisor
   }, [0, 0]);
 
   exposures.forEach(({ clipped, era, exposure }): void => {
-    // Darwinia Crab doesn't have the total field
-    const cli = balanceToNumber(clipped.total?.unwrap(), divisor);
-    const exp = balanceToNumber(exposure.total?.unwrap(), divisor);
+    const clippedData: any = (clipped as any)?.isSome ? (clipped as any).unwrap() : clipped;
+    const exposureData: any = (exposure as any)?.isSome ? (exposure as any).unwrap() : exposure;
+    
+    // Extract total from clipped (handle Compact types)
+    // Support both old (total) and new (pageTotal) formats
+    const clippedField = clippedData?.total || clippedData?.pageTotal;
+    const clippedValue = clippedField
+      ? (typeof clippedField.toBn === 'function' ? clippedField.toBn() : (clippedField.unwrap ? clippedField.unwrap() : new BN(0)))
+      : new BN(0);
+    const cli = balanceToNumber(clippedValue, divisor);
+    
+    // Extract total from exposure (handle Compact types)
+    const exposureField = exposureData?.total || exposureData?.pageTotal;
+    const exposureValue = exposureField
+      ? (typeof exposureField.toBn === 'function' ? exposureField.toBn() : (exposureField.unwrap ? exposureField.unwrap() : new BN(0)))
+      : new BN(0);
+    const exp = balanceToNumber(exposureValue, divisor);
+    
     const avg = avgCount > 0
       ? Math.ceil(total * 100 / avgCount) / 100
       : 0;
-    const index = labels.indexOf(era.toHuman());
+    const index = labels.indexOf(String(era));
 
     if (index !== -1) {
       avgSet[index] = avg;

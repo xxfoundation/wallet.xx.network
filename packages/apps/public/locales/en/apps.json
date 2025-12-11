@@ -1,5 +1,7 @@
 {
   "Accounts": "Accounts",
+  "Add Custom Endpoint": "Add Custom Endpoint",
+  "Connecting...": "Connecting...",
   "Developer": "Developer",
   "Files": "Files",
   "Fork Locally": "Fork Locally",
@@ -17,10 +19,13 @@
   "You are connecting from a secure location to an insecure WebSocket ({{wsUrl}}). Due to browser mixed-content security policies this connection type is not allowed. Change the RPC service to a secure 'wss' endpoint.": "You are connecting from a secure location to an insecure WebSocket ({{wsUrl}}). Due to browser mixed-content security policies this connection type is not allowed. Change the RPC service to a secure 'wss' endpoint.",
   "You are not connected to a node. Ensure that your node is running and that the Websocket endpoint is reachable.": "You are not connected to a node. Ensure that your node is running and that the Websocket endpoint is reachable.",
   "custom endpoint": "custom endpoint",
+  "nav.forum": "nav.forum",
+  "nav.git": "nav.git",
   "nav.github": "nav.github",
   "nav.wiki": "nav.wiki",
   "transfer received": "transfer received",
   "update on #{{index}}": "update on #{{index}}",
+  "xx wallet": "xx wallet",
   "{{relay}} Common": "{{relay}} Common",
   "{{relay}} Parachain": "{{relay}} Parachain",
   "{{relay}} System": "{{relay}} System"

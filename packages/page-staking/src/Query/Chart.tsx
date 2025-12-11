@@ -12,11 +12,12 @@ interface Props {
   colors: (string | undefined)[];
   labels: string[];
   legends: string[];
+  options?: any;
   title: string;
   values: LineData;
 }
 
-function ChartDisplay ({ className = '', colors, labels, legends, title, values }: Props): React.ReactElement<Props> {
+function ChartDisplay ({ className = '', colors, labels, legends, options, title, values }: Props): React.ReactElement<Props> {
   const isLoading = useMemo(
     () => !labels || labels.length === 0 || !values || values.length === 0 || !values[0]?.length,
     [labels, values]
@@ -28,6 +29,7 @@ function ChartDisplay ({ className = '', colors, labels, legends, title, values 
         colors={colors}
         labels={labels}
         legends={legends}
+        options={options}
         title={title}
         values={values}
       />

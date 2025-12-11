@@ -15,41 +15,50 @@ import { balanceToNumber } from './util.js';
 
 const COLORS_STAKE = [undefined, '#8c2200', '#acacac'];
 
-function extractStake (labels: string[], exposures: DeriveOwnExposure[], divisor: BN): LineData {
-  const expPagedSet = new Array<number>(labels.length);
-  const expMetaSet = new Array<number>(labels.length);
+function extractStake (labels: string[], exposures: DeriveOwnExposure[], divisor: BN, erasTotalStake?: any[], validatorCount?: number): LineData {
+  const ownStakeSet = new Array<number>(labels.length);
+  const electedStakeSet = new Array<number>(labels.length);
   const avgSet = new Array<number>(labels.length);
-  const [total, avgCount] = exposures.reduce(([total, avgCount], { exposureMeta }) => {
-    const expMeta = exposureMeta.isSome && exposureMeta.unwrap();
-    const expM = balanceToNumber((expMeta && expMeta.total?.unwrap()) || BN_ZERO, divisor);
-
-    if (expM > 0) {
-      total += expM;
-      avgCount++;
-    }
-
-    return [total, avgCount];
-  }, [0, 0]);
 
   exposures.forEach(({ era, exposureMeta, exposurePaged }): void => {
-    const expPaged = exposurePaged.isSome && exposurePaged.unwrap();
-    const expMeta = exposureMeta.isSome && exposureMeta.unwrap();
-    // Darwinia Crab doesn't have the total field
-    const expP = balanceToNumber((expPaged && expPaged.pageTotal?.unwrap()) || BN_ZERO, divisor);
-    const expM = balanceToNumber((expMeta && expMeta.total?.unwrap()) || BN_ZERO, divisor);
-    const avg = avgCount > 0
-      ? Math.ceil(total * 100 / avgCount) / 100
-      : 0;
-    const index = labels.indexOf(era.toHuman());
+    // Handle both Option<T> and direct value formats
+    const expPaged: any = exposurePaged?.isSome ? exposurePaged.unwrap() : exposurePaged;
+    const expMeta: any = exposureMeta?.isSome ? exposureMeta.unwrap() : exposureMeta;
+    
+    // Extract own stake (validator's own capital)
+    const ownField = expPaged?.own || expMeta?.own;
+    const ownValue = ownField
+      ? (typeof ownField.toBn === 'function' ? ownField.toBn() : (ownField.unwrap ? ownField.unwrap() : BN_ZERO))
+      : BN_ZERO;
+    const ownStake = balanceToNumber(ownValue, divisor);
+    
+    // Extract elected stake (total including nominators)
+    // Support both new format (pageTotal) and old format (total)
+    const totalField = expPaged?.pageTotal || expPaged?.total || expMeta?.total;
+    const totalValue = totalField
+      ? (typeof totalField.toBn === 'function' ? totalField.toBn() : (totalField.unwrap ? totalField.unwrap() : BN_ZERO))
+      : BN_ZERO;
+    const electedStake = balanceToNumber(totalValue, divisor);
+    
+    const index = labels.indexOf(String(era));
 
     if (index !== -1) {
-      avgSet[index] = avg;
-      expPagedSet[index] = expP;
-      expMetaSet[index] = expM;
+      ownStakeSet[index] = ownStake;
+      electedStakeSet[index] = electedStake;
+      
+      // Calculate network average stake for this era
+      if (erasTotalStake && erasTotalStake[index] && validatorCount) {
+        const eraStake = erasTotalStake[index];
+        // Handle both Option<Balance> and direct Balance types
+        const totalStake = eraStake?.unwrapOr ? eraStake.unwrapOr(BN_ZERO) : (eraStake || BN_ZERO);
+        avgSet[index] = totalStake.gtn && totalStake.gtn(0) && validatorCount > 0
+          ? Math.ceil(balanceToNumber(totalStake, divisor) / validatorCount * 100) / 100
+          : 0;
+      }
     }
   });
 
-  return [expPagedSet, expMetaSet, avgSet];
+  return [ownStakeSet, electedStakeSet, avgSet];
 }
 
 function ChartStake ({ labels, validatorId }: Props): React.ReactElement<Props> {
@@ -58,6 +67,13 @@ function ChartStake ({ labels, validatorId }: Props): React.ReactElement<Props> 
   const params = useMemo(() => [validatorId, false], [validatorId]);
   const ownExposures = useCall<DeriveOwnExposure[]>(api.derive.staking.ownExposures, params);
   const [values, setValues] = useState<LineData>([]);
+  
+  // Fetch network-wide total stake for all eras
+  const eras = useMemo(() => labels.map((l) => api.registry.createType('EraIndex', l)), [api, labels]);
+  const erasTotalStake = useCall<any[]>(api.query.staking.erasTotalStake?.multi, [eras]);
+  
+  // Get current validator count
+  const validatorCount = useCall<number>(api.query.staking.validatorCount);
 
   const { currency, divisor } = useMemo(
     () => ({
@@ -73,14 +89,14 @@ function ChartStake ({ labels, validatorId }: Props): React.ReactElement<Props> 
   );
 
   useEffect(
-    () => ownExposures && setValues(extractStake(labels, ownExposures, divisor)),
-    [labels, divisor, ownExposures]
+    () => ownExposures && setValues(extractStake(labels, ownExposures, divisor, erasTotalStake, validatorCount)),
+    [labels, divisor, ownExposures, erasTotalStake, validatorCount]
   );
 
   const legends = useMemo(() => [
-    t('{{currency}} paged', { replace: { currency } }),
-    t('{{currency}} total', { replace: { currency } }),
-    t('{{currency}} average', { replace: { currency } })
+    t('{{currency}} own stake', { replace: { currency } }),
+    t('{{currency}} elected stake', { replace: { currency } }),
+    t('{{currency}} network average', { replace: { currency } })
   ], [currency, t]);
 
   return (

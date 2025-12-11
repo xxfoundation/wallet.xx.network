@@ -351,21 +351,12 @@ function Endpoints ({ className = '', offset, onClose }: Props): React.ReactElem
   return (
     <StyledSidebar
       buttons={
-        <>
-          <Button
-            icon='code-fork'
-            isDisabled={canLocalFork}
-            label={t('Fork Locally')}
-            onClick={_onLocalFork}
-            tooltip='fork-locally-btn'
-          />
-          <Button
-            icon='sync'
-            isDisabled={canSwitch}
-            label={t('Switch')}
-            onClick={_onApply}
-          />
-        </>
+        <Button
+          icon='sync'
+          isDisabled={canSwitch}
+          label={t('Switch')}
+          onClick={_onApply}
+        />
       }
       className={className}
       offset={offset}

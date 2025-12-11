@@ -10,6 +10,7 @@ import { Tabs } from '@polkadot/react-components';
 import { useAccounts, useIpfs } from '@polkadot/react-hooks';
 
 import Accounts from './Accounts/index.js';
+import GenerateWallet from './Generate/index.js';
 import Vanity from './Vanity/index.js';
 import { useTranslation } from './translate.js';
 import useCounter from './useCounter.js';
@@ -30,6 +31,10 @@ function AccountsApp ({ basePath, onStatusChange }: Props): React.ReactElement<P
       text: t('My accounts')
     },
     {
+      name: 'generate',
+      text: t('Generate Account')
+    },
+    {
       name: 'vanity',
       text: t('Vanity generator')
     }
@@ -44,6 +49,12 @@ function AccountsApp ({ basePath, onStatusChange }: Props): React.ReactElement<P
       />
       <Routes>
         <Route path={basePath}>
+          <Route
+            element={
+              <GenerateWallet />
+            }
+            path='generate'
+          />
           <Route
             element={
               <Vanity onStatusChange={onStatusChange} />

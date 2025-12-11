@@ -8,9 +8,9 @@ import { Button, StatusContext } from '@polkadot/react-components';
 import { useToggle } from '@polkadot/react-hooks';
 import { keyring } from '@polkadot/ui-keyring';
 
-import CreateModal from '../../modals/Create';
-import { useTranslation } from '../../translate';
-import { Element } from '../index';
+import CreateModal from '../../modals/Create.js';
+import { useTranslation } from '../../translate.js';
+import { Element } from '../index.js';
 
 interface Props {
   className?: string;
@@ -51,7 +51,7 @@ function Step3 ({ className = '', onFinish, standardMnemonic }: Props): React.Re
       className={className}
       style={{ margin: '1em', width: '95%' }}
     >
-      <h2>{t<string>('Finish Wallet Setup')}</h2>
+      <h2>{t('Finish Wallet Setup')}</h2>
       {isCreateOpen && (
         <CreateModal
           onClose={toggleCreate}
@@ -60,7 +60,7 @@ function Step3 ({ className = '', onFinish, standardMnemonic }: Props): React.Re
         />
       )}
       <Element
-        header={t<string>('xx network PUBLIC address')}
+        header={t('xx network PUBLIC address')}
         noIndex={true}
         value={wallet.address}
       />
@@ -74,19 +74,19 @@ function Step3 ({ className = '', onFinish, standardMnemonic }: Props): React.Re
             <Button
               icon='plus'
               isDisabled={!standardMnemonic}
-              label={t<string>('Add Wallet to Accounts')}
+              label={t('Add Wallet to Accounts')}
               onClick={_openCreateModal}
             />
           }
           <Button
             icon='close'
             isDisabled={!standardMnemonic}
-            label={t<string>('Finish Setup')}
+            label={t('Finish Setup')}
             onClick={_onFinish}
           />
         </div>
         <p>
-          {t<string>('To setup a hardware wallet: ')}
+          {t('To setup a hardware wallet: ')}
           <a
             className='ml-1'
             href='https://learn.xx.network/tools/webWallet/accounts/ledger'

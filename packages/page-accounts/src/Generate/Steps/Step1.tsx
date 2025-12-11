@@ -153,9 +153,9 @@ function Step1 ({ className = '', onFinish, setMnemonics }: Props): React.ReactE
             {t('To learn more about our quantum-ready wallets: ')}
             <a
               className='ml-1'
-              href='https://github.com/xx-labs/sleeve'
+              href='https://github.com/xxfoundation/sleeve'
             >
-                https://github.com/xx-labs/sleeve
+                https://github.com/xxfoundation/sleeve
             </a>
           </strong>
         </p>

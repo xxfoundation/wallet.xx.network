@@ -5,9 +5,9 @@ import React, { useCallback, useState } from 'react';
 
 import { useStepper } from '@polkadot/react-hooks';
 
-import Step1 from './Steps/Step1';
-import Step2 from './Steps/Step2';
-import Step3 from './Steps/Step3';
+import Step1 from './Steps/Step1.js';
+import Step2 from './Steps/Step2.js';
+import Step3 from './Steps/Step3.js';
 
 interface ElementProps {
   className?: string;

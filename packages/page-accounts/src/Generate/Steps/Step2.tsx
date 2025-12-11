@@ -7,7 +7,7 @@ import styled from 'styled-components';
 import { Button, Input } from '@polkadot/react-components';
 import { useStepper } from '@polkadot/react-hooks';
 
-import { useTranslation } from '../../translate';
+import { useTranslation } from '../../translate.js';
 
 interface Props {
   className?: string;
@@ -105,7 +105,7 @@ function Step2 ({ className = '', mnemonics, onFinish }: Props): React.ReactElem
       className={className}
       style={{ margin: '1em', width: '95%' }}
     >
-      <h2>{t<string>('Confirm Mnemonics')}</h2>
+      <h2>{t('Confirm Mnemonics')}</h2>
       {step === 1 &&
       <div style={{ margin: '1.5em 0' }}>
         <p className='quantum'><b>QUANTUM</b> mnemonic</p>
@@ -128,7 +128,7 @@ function Step2 ({ className = '', mnemonics, onFinish }: Props): React.ReactElem
       }
       {step === 3 &&
       <div style={{ margin: '1.5em 0' }}>
-        <p>{t<string>('Nicely done! You are now ready to use your wallet.')}</p>
+        <p>{t('Nicely done! You are now ready to use your wallet.')}</p>
         <div style={{ textAlign: 'end' }}>
           <Button
             activeOnEnter
